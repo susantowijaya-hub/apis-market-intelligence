@@ -230,7 +230,7 @@ jobs:
                   const at=new Date('2026-11-17T08:14:00.000Z');
                   const cached={symbol:'^JKSE',price:5337.99,previousClose:5344.40,marketState:'CLOSED',status:'LAST_AVAILABLE_CLOSE',
                     observedAt:Date.parse('2026-11-16T09:00:00Z')/1000,retrievedAt:Date.parse('2026-11-17T08:14:05Z')};
-                  return {session:exchangeSession(item,at).state,label:marketSessionLabel(cached,item),stamp:marketFeedTimestampLabel(cached,item)};
+                  return {session:exchangeSession(item,at).state,label:marketSessionLabel(cached,item,at),stamp:marketFeedTimestampLabel(cached,item)};
                 });
                 if (idxSession.session!=='OPEN' || idxSession.label!=='SESSION OPEN · STALE' ||
                     !idxSession.stamp.includes('Last close 16:00 WIB') || !idxSession.stamp.includes('16 Nov'))

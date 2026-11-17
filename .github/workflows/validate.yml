@@ -33,7 +33,7 @@ jobs:
             catch (error) { throw new Error('Inline script ' + (index + 1) + ': ' + error.message); }
           });
           const checks = {
-            version: /build-version" content="2\.4\.2"/.test(html),
+            version: /build-version" content="2\.4\.3"/.test(html),
             freeMode: html.includes('Free-data mode · no paid API key'),
             stooqAdapter: html.includes('async function fetchStooqQuote'),
             yahooFallback: html.includes('async function fetchYahooQuote'),

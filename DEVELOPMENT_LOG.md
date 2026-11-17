@@ -96,3 +96,34 @@
 - Both inline JavaScript scripts compile after the CSS update.
 - Static checks confirm v2.4.2, coarse-pointer media rules, full-width group container, nested one-column market rows, and touch-device stacked watchlist.
 - A live iPhone screenshot/browser execution has not been available in this session; verify the deployed page after GitHub Pages publishes the commit.
+
+## 2026-11-17 — v2.4.3 iPhone layout deployment verified
+
+### Root cause of the unchanged/broken live page
+- The v2.4.2 touch-first CSS and stacked watchlist were already present in the main source, but GitHub Pages had not published them.
+- The deployment workflow contained an over-escaped JavaScript regular expression in its local static file server (requested.replace). Node raised SyntaxError: Invalid regular expression: missing / before browser tests, so upload and deploy were skipped.
+- After the regex was corrected, the browser test initially measured the Markets view while it was hidden on the initial Home route. Its dimensions were correctly reported as zero. The test now activates Markets before measuring layout.
+
+### Delivered changes
+- APIS version marker: v2.4.3.
+- Touch-first layout applies to narrow viewports and coarse-pointer/touch devices, including iOS Safari desktop-width mode.
+- Market overview group container is forced into one vertical column. Each region group occupies the available width; instrument rows use readable instrument/price and change/status/time alignment.
+- Market instrument names wrap as words instead of being squeezed into character-per-line columns.
+- Watchlist on touch devices is converted from the wide seven-column table into full-width labelled rows. Table headers are hidden in the stacked mode; all fields retain explicit labels. No horizontal scroll is required to read the watchlist.
+- The deployment test now opens the Markets route before checking computed dimensions and overflow.
+- The deployment workflow's static-file-server regex was corrected.
+
+### Verified GitHub Actions browser results
+- APIS static validation: success.
+- Chromium, 390px iPhone viewport: PASS.
+- Chromium, 826px touch/desktop-width viewport: PASS.
+- WebKit, 390px iPhone viewport: PASS.
+- WebKit, 826px touch/desktop-width viewport: PASS.
+- Each browser test also verified application boot, eight Home market pulse rows, one-column market groups, no sideways watchlist table, News/Macro navigation, dark theme control, and Refresh action.
+- GitHub Pages deployment: success. GitHub reported "Reported success!" for build version commit 4f976a7d92f02e40526a8d3a64772f18399b0a60.
+- Public site URL: https://susantowijaya-hub.github.io/apis-market-intelligence/
+
+### Current release state
+- User constraint remains: free public data only; no paid quote API or API key.
+- Market-data source caveats remain unchanged: public feeds may be delayed, rate-limited, blocked by browser CORS, or omit instruments.
+- Current visual release: v2.4.3.

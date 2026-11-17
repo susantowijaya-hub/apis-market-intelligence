@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f5">
-<meta name="build-version" content="2.1.5">
+<meta name="build-version" content="2.2.0">
 <meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — The Market Terminal v2.1.5</title>
+<title>APIS — The Market Terminal v2.2.0</title>
 <style>
 :root{
   color-scheme:light;
@@ -152,6 +152,42 @@ html[data-theme="dark"] .footer{border-color:var(--line);background:var(--surfac
 .treasury-links{display:flex;gap:10px;flex-wrap:wrap}.treasury-links a{font-size:10px;font-weight:650}
 html[data-theme="dark"] .treasury-links a{color:#a9e8c9}
 
+/* APIS v2.2.0 — responsive terminal polish and interaction motion */
+:root{--motion-fast:150ms;--motion-base:220ms;--motion-ease:cubic-bezier(.2,.75,.25,1)}
+html{scroll-behavior:smooth}
+button,.button,.icon-button,.nav a,.card,.quote-card,.snapshot-item,.module-card,.source-row,.mover-row,.event-row,.news-item{transition:background-color var(--motion-base) var(--motion-ease),border-color var(--motion-base) var(--motion-ease),box-shadow var(--motion-base) var(--motion-ease),transform var(--motion-base) var(--motion-ease),opacity var(--motion-base) var(--motion-ease)}
+button:not(:disabled):active,.button:not(:disabled):active,.icon-button:active{transform:translateY(1px) scale(.975)}
+button:disabled{opacity:.55;cursor:progress}
+.card:hover,.quote-card:hover,.snapshot-item:hover,.module-card:hover{box-shadow:0 8px 24px rgba(19,36,61,.09);transform:translateY(-2px)}
+.nav a.active{box-shadow:inset 0 0 0 1px rgba(23,105,194,.10)}
+.quote-name,.snapshot-item-name,.asset-name{min-width:0;overflow-wrap:anywhere;white-space:normal}
+.snapshot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,205px),1fr));gap:9px;min-width:0}
+.snapshot-item{min-width:0;overflow:hidden}
+.snapshot-item-price,.quote-value,.mover-value{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.snapshot-item-price{max-width:100%;overflow-wrap:anywhere}
+.quote-grid,.snapshot-grid,.grid,.section,.card,.table-wrap{min-width:0}
+.quote-bottom{flex-wrap:wrap}
+.quote-asof{overflow-wrap:anywhere}
+.feed-state{transition:color var(--motion-base),background var(--motion-base),border-color var(--motion-base)}
+input[type=checkbox],input[type=radio]{accent-color:var(--blue);cursor:pointer;transition:filter var(--motion-fast)}
+input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3px rgba(23,105,194,.28))}
+.toggle,.switch,.theme-toggle{transition:background var(--motion-base),box-shadow var(--motion-base),transform var(--motion-base)}
+@media(max-width:720px){
+ .snapshot-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .snapshot-item{padding:10px;min-width:0}
+ .snapshot-item-price{font-size:clamp(17px,5vw,22px);letter-spacing:-.035em}
+ .snapshot-item-name{font-size:10px;line-height:1.3}
+ .snapshot-item-symbol{font-size:9px;white-space:nowrap}
+ .quote-card{min-width:0}
+ .quote-value{font-size:clamp(17px,5.1vw,21px)}
+ .quote-top{align-items:flex-start}
+ .quote-name{line-height:1.3}
+ .quote-bottom{align-items:flex-start}
+ .status-label{white-space:normal;text-align:right}
+ .table-wrap{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+}
+@media(max-width:390px){.snapshot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.snapshot-item-price{font-size:17px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 </style>
 </head>
 <body>
@@ -368,7 +404,7 @@ html[data-theme="dark"] .treasury-links a{color:#a9e8c9}
   <div class="note" style="margin-top:14px"><strong>Cara menjalankan:</strong> simpan file ini di komputer lalu buka dengan Chrome, Edge, Safari, atau Firefox yang terhubung ke internet. Sebagian jaringan memblokir penyedia data pasar publik atau widget eksternal; dashboard akan menandainya unavailable dan tidak mengganti data dengan simulasi. Untuk akses provider yang lebih konsisten, file dapat dijalankan melalui web server statis lokal (opsional)—tanpa backend API.</div>
 </section>
 </main>
-<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.1.5</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
+<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.2.0</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -463,6 +499,9 @@ const WATCHLIST=[
   {symbol:'000001.SS',name:'Shanghai Composite',short:'Shanghai',group:'Index',tv:'SSE:000001'},
   {symbol:'^TWII',name:'Taiwan Weighted',short:'Taiwan',group:'Index',tv:'TWSE:IX0001'},
   {symbol:'^KS11',name:'KOSPI Composite',short:'KOSPI',group:'Index',tv:'KRX:KOSPI'},
+  {symbol:'^NSEI',name:'NIFTY 50',short:'NIFTY 50',group:'Index',tv:'NSE:NIFTY'},
+  {symbol:'NQ=F',name:'Nasdaq-100 E-mini Futures',short:'NQ Futures',group:'Index',tv:'CME_MINI:NQ1!'},
+  {symbol:'^N225',name:'Nikkei 225',short:'Nikkei 225',group:'Index',tv:'TVC:NI225'},
   {symbol:'^VIX',name:'CBOE Volatility Index',short:'VIX',group:'Risk',tv:'TVC:VIX'},
   {symbol:'EIDO',name:'iShares MSCI Indonesia ETF',short:'EIDO',group:'ETF',tv:'AMEX:EIDO'},
   {symbol:'IDR=X',name:'USD / IDR',short:'USD/IDR',group:'FX',tv:'FX_IDC:USDIDR'},
@@ -632,8 +671,8 @@ function renderMarketOverview(){
  const host=document.getElementById('marketSnapshotGrid');if(!host)return;
  host.replaceChildren();
  const groups=[
-  {title:'United States',symbols:['^GSPC','^IXIC','^DJI']},
-  {title:'Asia & Indonesia',symbols:['000001.SS','^TWII','^KS11','^JKSE','EIDO']},
+  {title:'United States',symbols:['^GSPC','^IXIC','NQ=F','^DJI']},
+  {title:'Asia & Indonesia',symbols:['^NSEI','^N225','000001.SS','^TWII','^KS11','^JKSE','EIDO']},
   {title:'Cross assets',symbols:['IDR=X','BZ=F','GC=F','^VIX','BTCUSDT']}
  ];
  let count=0;
@@ -667,7 +706,7 @@ function renderMarketOverview(){
 }
 function renderQuoteViews(){
  renderMarketOverview();
- const featured=['^JKSE','^GSPC','^IXIC','^DJI','^VIX','IDR=X','BZ=F','GC=F'];
+ const featured=['^JKSE','^GSPC','^IXIC','NQ=F','^DJI','^NSEI','^N225','^VIX','IDR=X','BZ=F','GC=F'];
  const grid=document.getElementById('featuredQuotes');
  if(grid){grid.replaceChildren();featured.forEach(sym=>{const item=WATCHLIST.find(x=>x.symbol===sym);if(item)grid.append(createQuoteCard(item,QUOTES.get(sym)))});}
  const body=document.getElementById('watchlistBody');if(body){
@@ -692,7 +731,7 @@ function renderQuoteViews(){
 function renderTape(){
  const tape=document.getElementById('tickerTape');if(!tape)return;tape.replaceChildren();let any=false;
  const add=(symbol,value,change,sub='')=>{const node=document.createElement('div');node.className='tape-item';const s=document.createElement('strong');s.textContent=symbol;const v=document.createElement('span');v.textContent=value;const c=document.createElement('span');c.className='change '+(change>0?'up':change<0?'down':'flat');c.textContent=Number.isFinite(change)?((change>0?'+':'')+change.toFixed(2)+'%'):'—';node.append(s,v,c);if(sub){const x=document.createElement('span');x.className='minor';x.textContent=sub;node.append(x)}tape.append(node);any=true};
- ['^JKSE','^GSPC','^IXIC','^DJI','^VIX','IDR=X','BZ=F','GC=F'].forEach(sym=>{const item=WATCHLIST.find(x=>x.symbol===sym),q=QUOTES.get(sym);if(q&&item){const change=q.previousClose?((q.price/q.previousClose)-1)*100:NaN;add(item.short,fmtPrice(q),change,quoteStatusLabel(q.status))}});
+ ['^JKSE','^GSPC','^IXIC','NQ=F','^DJI','^NSEI','^N225','^VIX','IDR=X','BZ=F','GC=F'].forEach(sym=>{const item=WATCHLIST.find(x=>x.symbol===sym),q=QUOTES.get(sym);if(q&&item){const change=q.previousClose?((q.price/q.previousClose)-1)*100:NaN;add(item.short,fmtPrice(q),change,quoteStatusLabel(q.status))}});
  if(APP.btc&&num(APP.btc.price)!==null)add('BTC/USDT',fmt(APP.btc.price,2)+' USD',num(APP.btc.changePct),APP.btc.transport==='WEBSOCKET'?'LIVE TICK':'REST SNAPSHOT');
  if(!any){const n=document.createElement('div');n.className='tape-item';const b=document.createElement('strong');b.textContent='APIS';const t=document.createElement('span');t.className='minor';t.textContent='No validated provider observations yet.';n.append(b,t);tape.append(n)}
 }
@@ -891,18 +930,33 @@ async function loadTreasuryCurve(){
  renderQuality();
 }
 function zonedDateToUtc(year,month,day,hour,minute,timeZone){
- const guess=Date.UTC(year,month-1,day,hour,minute,0);
- const parts=new Intl.DateTimeFormat('en-US',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(guess));
- const map={};parts.forEach(part=>{if(part.type!=='literal')map[part.type]=Number(part.value)});
- const represented=Date.UTC(map.year,map.month-1,map.day,map.hour,map.minute,0);
- return new Date(guess-(represented-guess));
+ const parts=[year,month,day,hour,minute].map(Number);
+ if(parts.some(value=>!Number.isInteger(value))||year<1970||year>2200||month<1||month>12||day<1||day>31||hour<0||hour>23||minute<0||minute>59)return null;
+ const [y,m,d,h,min]=parts,guess=Date.UTC(y,m-1,d,h,min,0);
+ const check=new Date(guess);
+ if(check.getUTCFullYear()!==y||check.getUTCMonth()!==m-1||check.getUTCDate()!==d)return null;
+ let zone=String(timeZone||'America/New_York').trim();
+ const aliases={'Eastern Standard Time':'America/New_York','Eastern Daylight Time':'America/New_York','Central Standard Time':'America/Chicago','Pacific Standard Time':'America/Los_Angeles','GMT Standard Time':'Europe/London'};
+ zone=aliases[zone]||zone;
+ let formatter;
+ try{formatter=new Intl.DateTimeFormat('en-US',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})}
+ catch{formatter=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})}
+ try{
+  const formatted=formatter.formatToParts(check),map={};
+  formatted.forEach(part=>{if(part.type!=='literal')map[part.type]=Number(part.value)});
+  if(![map.year,map.month,map.day,map.hour,map.minute].every(Number.isFinite))return null;
+  const represented=Date.UTC(map.year,map.month-1,map.day,map.hour,map.minute,0);
+  const result=new Date(guess-(represented-guess));
+  return Number.isFinite(result.getTime())?result:null;
+ }catch{return null}
 }
 function parseIcsDate(value,timeZone){
  if(!value)return null;
- const match=value.match(/^(\d{4})(\d{2})(\d{2})T?(\d{2})?(\d{2})?(\d{2})?Z?$/);
+ const match=String(value).match(/^(\\d{4})(\\d{2})(\\d{2})T?(\\d{2})?(\\d{2})?(\\d{2})?Z?$/);
  if(!match)return null;
  const year=Number(match[1]),month=Number(match[2]),day=Number(match[3]),hour=Number(match[4]||8),minute=Number(match[5]||30),second=Number(match[6]||0);
- if(value.endsWith('Z'))return new Date(Date.UTC(year,month-1,day,hour,minute,second));
+ if(![year,month,day,hour,minute,second].every(Number.isInteger)||second<0||second>59)return null;
+ if(value.endsWith('Z')){const date=new Date(Date.UTC(year,month-1,day,hour,minute,second));return Number.isFinite(date.getTime())&&date.getUTCFullYear()===year&&date.getUTCMonth()===month-1&&date.getUTCDate()===day?date:null}
  return zonedDateToUtc(year,month,day,hour,minute,timeZone||'America/New_York');
 }
 function macroImpact(title){
@@ -998,8 +1052,10 @@ async function loadMacroCalendar(){
    if(!dateMatch)return;
    const monthNames=['january','february','march','april','may','june','july','august','september','october','november','december'];
    const month=monthNames.indexOf(dateMatch[1].toLowerCase())+1,day=Number(dateMatch[2]);
-   let year=new Date().getFullYear();if(month<new Date().getMonth()+1-1)year++;
+   let year=Number((combined.match(/\\b20\\d{2}\\b/)||[])[0])||new Date().getFullYear();
+   if(month<new Date().getMonth()+1-1&&year===new Date().getFullYear())year++;
    let hour=timeMatch?Number(timeMatch[1]):8,minute=timeMatch?Number(timeMatch[2]):30;
+   if(month<1||day<1||day>31||hour<0||hour>12||minute<0||minute>59)return;
    if(timeMatch&&timeMatch[3].toUpperCase()==='PM'&&hour<12)hour+=12;
    if(timeMatch&&timeMatch[3].toUpperCase()==='AM'&&hour===12)hour=0;
    const link=row.querySelector('a[href]');
@@ -1019,7 +1075,7 @@ async function loadMacroCalendar(){
   }
  }else errors.push('Federal Reserve: '+String(results[2].reason?.message||results[2].reason));
  const unique=new Map();
- events.forEach(item=>{const key=item.title+'|'+item.date.toISOString().slice(0,10);if(!unique.has(key))unique.set(key,item)});
+ events.forEach(item=>{if(!(item.date instanceof Date)||!Number.isFinite(item.date.getTime()))return;const key=item.title+'|'+item.date.toISOString().slice(0,10);if(!unique.has(key))unique.set(key,item)});
  APP.calendarEvents=[...unique.values()].sort((a,b)=>a.date-b.date);
  APP.calendarState=APP.calendarEvents.length?'loaded':'unavailable';
  APP.calendarError=errors.join(' · ');

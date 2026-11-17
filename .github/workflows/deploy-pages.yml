@@ -138,10 +138,22 @@ jobs:
                       data_state:{status:'fresh',source:'upstream',age_seconds:20}
                     });
                   }
+                  if (url.hostname === 'www.twse.com.tw' && url.pathname.endsWith('/exchangeReport/MI_INDEX')) {
+                    const rocDate='115'+today.slice(5,7)+today.slice(8,10);
+                    return json(route,{
+                      stat:'OK',date:rocDate,
+                      tables:[{
+                        fields:['指數','收盤指數','漲跌(+/-)','漲跌點數','漲跌百分比(%)'],
+                        data:[
+                          ['發行量加權股價指數','40092.11','-','947.97','-2.31'],
+                          ['寶島股價指數','44101.62','-','1089.24','-2.41']
+                        ]
+                      }]
+                    });
+                  }
                   if (url.hostname === 'openapi.twse.com.tw' && url.pathname.endsWith('/MI_5MINS_HIST')) {
                     return json(route,[
-                      {Date:'1151116',ClosingIndex:'41040.08'},
-                      {Date:'1151117',ClosingIndex:'40092.11'}
+                      {Date:'1151116',ClosingIndex:'41040.08'}
                     ]);
                   }
                   if (url.hostname === 'fred.stlouisfed.org' && url.pathname.endsWith('/fredgraph.csv')) {
@@ -213,8 +225,9 @@ jobs:
                 });
                 if (xauTwse.xauPrice!==4000 || Math.abs(xauTwse.xauChange-1.27)>0.01 || !xauTwse.xauSource.includes('XAUS'))
                   throw new Error(engine.name+' XAU spot adapter failed: '+JSON.stringify(xauTwse));
-                if (xauTwse.twPrice!==40092.11 || xauTwse.twPrev!==41040.08 || Math.abs(xauTwse.twChange-(-2.31))>0.01)
-                  throw new Error(engine.name+' official Taiwan percent failed: '+JSON.stringify(xauTwse));
+                if (xauTwse.twPrice!==40092.11 || xauTwse.twPrev!==41040.08 || Math.abs(xauTwse.twChange-(-2.31))>0.01 ||
+                    !xauTwse.twSource.includes('dated daily close'))
+                  throw new Error(engine.name+' official dated Taiwan report failed: '+JSON.stringify(xauTwse));
                 await page.locator('#homeSearchToggle').click();
                 await page.locator('#homeSearch').fill('Brent');
                 if (await page.locator('#featuredQuotes .ios-stock-item').count() !== 1)

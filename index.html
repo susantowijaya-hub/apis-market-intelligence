@@ -653,8 +653,8 @@ const WATCHLIST=[
   {symbol:'^GSPC',name:'S&P 500',short:'S&P 500',group:'Index',tv:'SP:SPX',tdSymbol:'SPX'},
   {symbol:'^IXIC',name:'Nasdaq Composite',short:'Nasdaq',group:'Index',tv:'NASDAQ:IXIC',tdSymbol:'IXIC'},
   {symbol:'^DJI',name:'Dow Jones Industrial Average',short:'Dow Jones',group:'Index',tv:'DJ:DJI',tdSymbol:'DJI'},
-  {symbol:'000001.SS',name:'Shanghai Composite',short:'Shanghai',group:'Index',tv:'SSE:000001',tdSymbol:'000001'},
-  {symbol:'^TWII',name:'Taiwan Weighted',short:'Taiwan',group:'Index',tv:'TWSE:IX0001',tdSymbol:'TAIEX'},
+  {symbol:'000001.SS',name:'Shanghai Composite',short:'Shanghai',group:'Index',tv:'SSE:000001'},
+  {symbol:'^TWII',name:'Taiwan Weighted',short:'Taiwan',group:'Index',tv:'TWSE:IX0001'},
   {symbol:'^KS11',name:'KOSPI Composite',short:'KOSPI',group:'Index',tv:'KRX:KOSPI',tdSymbol:'KS11'},
   {symbol:'^NSEI',name:'NIFTY 50',short:'NIFTY 50',group:'Index',tv:'NSE:NIFTY',tdSymbol:'NIFTY'},
   {symbol:'NQ=F',name:'Nasdaq-100 E-mini Futures',short:'NQ Futures',group:'Index',tv:'CME_MINI:NQ1!'},
@@ -736,14 +736,18 @@ function normalizeProviderQuote(item,payload,provider,sourceUrl){
  const raw=Array.isArray(payload)?payload[0]:payload;
  if(!raw||typeof raw!=='object'||raw.status==='error'||raw.code>=400)throw new Error(raw?.message||raw?.error||'Provider returned an invalid quote');
  const price=num(Number(raw.price??raw.close??raw.last??raw.lastPrice));
- const previousClose=num(Number(raw.previous_close??raw.previousClose??raw.prevClose));
+ const providerChange=num(Number(raw.change??raw.changeAmount??raw.priceChange));
+ const providerPct=num(Number(raw.percent_change??raw.changePercentage??raw.percentChange));
+ const explicitPrevious=num(Number(raw.previous_close??raw.previousClose??raw.prevClose));
+ const previousClose=explicitPrevious??(providerChange!==null?price-providerChange:null);
  const timestamp=num(Number(raw.timestamp??raw.lastTradeTimestamp??raw.time));
  if(price===null||price<=0||timestamp===null||timestamp<=0)throw new Error('Price or provider timestamp missing');
+ if(timestamp>Date.now()/1000+300)throw new Error('Provider timestamp is ahead of current time');
  const age=Math.max(0,Date.now()/1000-timestamp);
  const status=age>48*3600?'STALE_OBSERVATION':age>20*60?'LAST_AVAILABLE_CLOSE':'PROVIDER_QUOTE';
  return {
   symbol:item.symbol,name:item.name,short:item.short,group:item.group,
-  price,previousClose,currency:String(raw.currency||item.currency||''),
+  price,previousClose,change:providerChange,changePct:providerPct,currency:String(raw.currency||item.currency||''),
   exchange:String(raw.exchange||raw.exchangeName||''),marketState:String(raw.marketState||'PROVIDER'),
   observedAt:timestamp,observedAge:age,status,
   source:provider,sourceUrl,retrievedAt:Date.now(),proxy:'direct-provider-api'
@@ -819,14 +823,14 @@ async function fetchYahooQuote(item){
 async function fetchMarketQuote(item){
  const keys=marketProviderKeys(),errors=[];
  if(keys.twelveData){
-  try{return await fetchTwelveDataQuote(item,keys.twelveData)}
+  try{const quote=await fetchTwelveDataQuote(item,keys.twelveData);quote.providerFallbacks=errors.slice();return quote}
   catch(error){errors.push('Twelve Data: '+String(error?.message||error).slice(0,100))}
  }
  if(keys.fmp){
-  try{return await fetchFmpQuote(item,keys.fmp)}
+  try{const quote=await fetchFmpQuote(item,keys.fmp);quote.providerFallbacks=errors.slice();return quote}
   catch(error){errors.push('FMP: '+String(error?.message||error).slice(0,100))}
  }
- try{return await fetchYahooQuote(item)}
+ try{const quote=await fetchYahooQuote(item);quote.providerFallbacks=errors.slice();return quote}
  catch(error){errors.push('Yahoo fallback: '+String(error?.message||error).slice(0,150))}
  throw new Error(errors.join(' · ')||'All configured market providers failed');
 }
@@ -874,6 +878,11 @@ async function fetchQuoteBatch(){
       const firstFailure=APP.failures.values().next().value||'No provider response';
       setText('feedState','Market data unavailable · '+firstFailure.slice(0,72));
     }
+  }catch(error){
+    console.error('[APIS quote refresh]',error);
+    APP.yahooState=successes?'partial':'unavailable';
+    setText('lastRefresh','Refresh interrupted · '+String(error?.message||error).slice(0,100));
+    renderQuality();updateFeedState();
   }finally{buttons.forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=false});if(!APP.nextRefreshAt)APP.nextRefreshAt=Date.now()+60000;}
 }
 function btcIsFresh(){if(!APP.btc)return false;const age=Date.now()-APP.btc.receivedAt;if(APP.btc.transport==='WEBSOCKET')return !!(typeof WebSocket!=='undefined'&&APP.ws&&APP.ws.readyState===WebSocket.OPEN&&age<=15000&&(Date.now()-APP.btc.observedAt)<=15000);return APP.btc.transport==='REST'&&age<=90000&&(Date.now()-APP.btc.observedAt)<=90000;}
@@ -986,7 +995,7 @@ function renderQuoteViews(){
    const pc=document.createElement('td');pc.setAttribute('data-label','Perubahan %');pc.textContent=q&&q.previousClose?pct((q.price/q.previousClose-1)*100):'—';if(q)pc.className='change '+changeClass(q.price-q.previousClose);cells.push(pc);
    const st=document.createElement('td');st.setAttribute('data-label','Status feed');st.textContent=q?quoteStatusLabel(q.status):'UNAVAILABLE';st.className='status-label '+(q?quoteStatusClass(q.status):'bad');cells.push(st);
    const t=document.createElement('td');t.setAttribute('data-label','Waktu observasi');t.textContent=q?fmtTime(q.observedAt):'—';cells.push(t);
-   const src=document.createElement('td');src.setAttribute('data-label','Sumber');if(q){const a=document.createElement('a');a.href=q.sourceUrl||'#';a.target='_blank';a.rel='noopener';a.textContent=q.source||'Provider';src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
+   const src=document.createElement('td');src.setAttribute('data-label','Sumber');if(q){const a=document.createElement('a');a.href=q.sourceUrl||'#';a.target='_blank';a.rel='noopener';a.textContent=q.source||'Provider';a.title=(q.providerFallbacks||[]).join(' → ');src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
    cells.forEach(cell=>tr.append(cell));body.append(tr);
   });
   setText('quoteCount',usable+' / '+WATCHLIST.length+' observations');

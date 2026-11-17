@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f5">
-<meta name="build-version" content="2.2.1">
+<meta name="build-version" content="2.3.0">
 <meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — The Market Terminal v2.2.1</title>
+<title>APIS — The Market Terminal v2.3.0</title>
 <style>
 :root{
   color-scheme:light;
@@ -153,7 +153,7 @@ html[data-theme="dark"] .footer{border-color:var(--line);background:var(--surfac
 html[data-theme="dark"] .treasury-links a{color:#a9e8c9}
 
 
-/* APIS v2.2.1 — stable quote rendering and page/toggle feedback */
+/* APIS v2.3.0 — stable quote rendering and page/toggle feedback */
 @keyframes apis-page-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 @keyframes apis-card-in{from{opacity:.72;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 .page-view.active{animation:apis-page-in .24s var(--motion-ease) both}
@@ -197,6 +197,81 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 }
 @media(max-width:390px){.snapshot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.snapshot-item-price{font-size:17px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
+
+/* APIS v2.3.0 — clean mobile terminal, provider settings and table-first quote layout */
+.provider-settings{margin-top:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);overflow:hidden}
+.provider-settings>summary{padding:12px 14px;cursor:pointer;font-size:12px;font-weight:750;list-style:none}
+.provider-settings>summary::-webkit-details-marker{display:none}
+.provider-settings>summary:after{content:"＋";float:right;color:var(--secondary)}
+.provider-settings[open]>summary:after{content:"−"}
+.provider-settings-body{padding:0 14px 14px;border-top:1px solid var(--line)}
+.provider-settings-intro,.provider-settings-note{font-size:10px;line-height:1.5;color:var(--secondary)}
+.provider-key-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.provider-key-field{display:grid;gap:6px;font-size:10px;font-weight:700;color:var(--secondary);min-width:0}
+.provider-key-field input{width:100%;min-width:0;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:12px inherit}
+.provider-key-field small{font-weight:500;font-size:9px}
+.provider-settings-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.provider-settings-note{margin:9px 0 0}
+.market-pulse-list{display:block;border:1px solid var(--line);background:var(--surface);border-radius:12px;overflow:hidden}
+.market-pulse-header,.market-pulse-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(100px,.8fr) minmax(85px,.7fr) minmax(88px,.65fr);gap:12px;align-items:center;padding:9px 13px}
+.market-pulse-header{background:var(--surface-2);border-bottom:1px solid var(--line);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--secondary);font-weight:750}
+.market-pulse-row{border-bottom:1px solid var(--line);font-size:11px;min-width:0}
+.market-pulse-row:last-child{border-bottom:0}
+.market-pulse-instrument{display:grid;gap:2px;min-width:0}
+.market-pulse-instrument strong{font-size:11px;overflow-wrap:anywhere}
+.market-pulse-instrument small{font-size:9px;color:var(--secondary)}
+.market-pulse-price{font-size:13px;font-weight:750;font-variant-numeric:tabular-nums;white-space:nowrap}
+.market-pulse-change{font-size:11px;font-weight:750;font-variant-numeric:tabular-nums}
+.market-pulse-change.up{color:var(--green)}.market-pulse-change.down{color:var(--red)}.market-pulse-change.flat{color:var(--secondary)}
+.market-pulse-status{font-size:9px;color:var(--secondary);text-transform:uppercase;white-space:normal}
+.snapshot-group{margin-top:14px}
+.snapshot-group h4{font-size:11px;color:var(--secondary);text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px;padding:0 0 6px;border-bottom:1px solid var(--line)}
+.snapshot-grid{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.snapshot-item{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(120px,.8fr) minmax(100px,.85fr) minmax(125px,.75fr);gap:10px;align-items:center;border:0;border-bottom:1px solid var(--line);border-radius:0;background:var(--surface);padding:10px 12px;min-width:0}
+.snapshot-item:last-child{border-bottom:0}
+.snapshot-instrument{display:grid;gap:2px;min-width:0}
+.snapshot-item-name{font-size:11px;font-weight:700;white-space:normal;overflow-wrap:anywhere}
+.snapshot-item-symbol{font-size:9px;color:var(--secondary)}
+.snapshot-item-price{font-size:13px;font-weight:750;letter-spacing:-.02em;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.snapshot-item-details{display:grid;gap:2px;min-width:0}
+.snapshot-item-change{font-size:11px;font-weight:750}
+.snapshot-item-status{font-size:8px;white-space:normal}
+.snapshot-item-time{font-size:9px;color:var(--secondary);line-height:1.35;overflow-wrap:anywhere}
+.movers-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.calendar-terminal>.card-title{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px}
+.calendar-terminal>.card-title>div:first-child{flex:1 1 100%;min-width:0}
+.calendar-terminal>.card-title h2{font-size:20px;line-height:1.25;margin:0;overflow-wrap:normal}
+.calendar-terminal>.card-title p{font-size:11px;line-height:1.45;margin:5px 0 0}
+.calendar-terminal .calendar-tools{display:flex;gap:7px;width:100%;justify-content:flex-start}
+.calendar-terminal .calendar-tools select{flex:1;min-width:0;max-width:240px}
+.calendar-source-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.calendar-source-links a{border:1px solid var(--line);padding:7px 9px;border-radius:7px;font-size:10px;font-weight:650}
+.quote-card,.snapshot-item,.market-pulse-row{box-shadow:none!important;transform:none!important}
+@media(max-width:720px){
+ .quote-grid{display:block}
+ .market-pulse-header{display:none}
+ .market-pulse-row{grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 12px}
+ .market-pulse-instrument{grid-column:1;grid-row:1}
+ .market-pulse-price{grid-column:2;grid-row:1;text-align:right}
+ .market-pulse-change{grid-column:1;grid-row:2}
+ .market-pulse-status{grid-column:2;grid-row:2;text-align:right;font-size:8px}
+ .snapshot-item{grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;padding:9px 10px}
+ .snapshot-instrument{grid-column:1;grid-row:1}
+ .snapshot-item-price{grid-column:2;grid-row:1;text-align:right;max-width:145px}
+ .snapshot-item-details{grid-column:1;grid-row:2;display:flex;gap:7px;align-items:center}
+ .snapshot-item-time{grid-column:2;grid-row:2;text-align:right;max-width:150px;font-size:8px}
+ .provider-key-grid{grid-template-columns:1fr}
+ .movers-grid{grid-template-columns:1fr!important}
+ .calendar-terminal>.card-title h2{font-size:19px}
+ .calendar-terminal .calendar-tools{width:100%}
+ .calendar-terminal .calendar-tools select{max-width:none}
+}
+@media(max-width:390px){
+ .snapshot-item-price{font-size:12px;max-width:125px}
+ .market-pulse-price{font-size:12px}
+ .market-pulse-status{font-size:7px}
+}
+
 </style>
 </head>
 <body>
@@ -227,7 +302,7 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 <section class="section page-view" id="markets" data-page-view="markets">
   <div class="section-head"><div><div class="eyebrow">01 / Pemantauan pasar</div><h2>Pasar global</h2><p>Hanya harga dari penyedia data. Kutipan yang tidak tersedia atau terblokir tetap ditandai unavailable.</p></div><div class="section-tools"><span class="source-pill" id="quoteCount">0 / 19 observations</span><span class="source-pill" id="lastRefresh">Not refreshed</span></div></div>
   <div class="grid two-col" id="macroPanel">
-    <div class="card chart-card"><div class="card-title"><div><h3>Grafik pasar</h3><p id="chartSubtitle">Grafik interaktif dari TradingView</p></div><div class="chart-controls"><select class="symbol-select" id="chartSymbol" aria-label="Select chart symbol"><option value="IDX:COMPOSITE">IHSG · IDX Composite</option><option value="SP:SPX">S&P 500</option><option value="NASDAQ:IXIC">Nasdaq Composite</option><option value="DJ:DJI">Dow Jones</option><option value="SSE:000001">Shanghai Composite</option><option value="TWSE:IX0001">Taiwan Weighted</option><option value="KRX:KOSPI">KOSPI</option><option value="TVC:VIX">CBOE VIX</option><option value="AMEX:EIDO">EIDO</option><option value="FX_IDC:USDIDR">USD/IDR</option><option value="NYMEX:BZ1!">Brent Crude</option><option value="COMEX:GC1!">Gold</option><option value="BINANCE:BTCUSDT">Bitcoin</option></select><button class="button secondary" id="reloadChart">Reload chart</button></div></div><div class="widget-box" id="mainChart"><div class="widget-fallback"><div><strong>Loading TradingView chart</strong>Requires an internet connection and access to TradingView widgets.</div></div></div></div>
+    <div class="card chart-card"><div class="card-title"><div><h3>Grafik pasar</h3><p id="chartSubtitle">Grafik interaktif dari TradingView</p></div><div class="chart-controls"><select class="symbol-select" id="chartSymbol" aria-label="Select chart symbol"><option value="IDX:COMPOSITE">IHSG · IDX Composite</option><option value="SP:SPX">S&P 500</option><option value="NASDAQ:IXIC">Nasdaq Composite</option><option value="DJ:DJI">Dow Jones</option><option value="SSE:000001">Shanghai Composite</option><option value="TWSE:IX0001">Taiwan Weighted</option><option value="KRX:KOSPI">KOSPI</option><option value="NSE:NIFTY">NIFTY 50</option><option value="CME_MINI:NQ1!">Nasdaq-100 Futures</option><option value="TVC:NI225">Nikkei 225</option><option value="TVC:VIX">CBOE VIX</option><option value="AMEX:EIDO">EIDO</option><option value="FX_IDC:USDIDR">USD/IDR</option><option value="NYMEX:BZ1!">Brent Crude</option><option value="COMEX:GC1!">Gold</option><option value="BINANCE:BTCUSDT">Bitcoin</option></select><button class="button secondary" id="reloadChart">Reload chart</button></div></div><div class="widget-box" id="mainChart"><div class="widget-fallback"><div><strong>Loading TradingView chart</strong>Requires an internet connection and access to TradingView widgets.</div></div></div></div>
     <div class="card card-pad market-snapshot-card">
  <div class="card-title"><div><h3>Ikhtisar pasar</h3><p>Live provider snapshot · source time and status per instrument</p></div><span class="source-pill" id="snapshotStamp">Waiting for quotes</span></div>
  <div class="snapshot-grid" id="marketSnapshotGrid"><div class="empty-state">Waiting for validated market quotes.</div></div>
@@ -235,9 +310,31 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
  </div>
   </div>
   <div class="section watchlist-panel" id="watchlistPanel" style="margin-top:18px">
-    <div class="section-head"><div><h2>Daftar pantauan</h2><p>Observasi dari Yahoo Finance bila endpoint publik dapat diakses; timestamp mengikuti waktu observasi penyedia.</p></div><div class="section-tools"><button class="button secondary" id="exportWatchlist">Unduh CSV</button></div></div>
+    <div class="section-head"><div><h2>Daftar pantauan</h2><p>Observasi dari provider terpilih per instrumen; timestamp mengikuti waktu dari sumber yang memvalidasi harga.</p></div><div class="section-tools"><button class="button secondary" id="exportWatchlist">Unduh CSV</button></div></div>
     <div class="table-wrap"><table><thead><tr><th>Instrumen</th><th>Terakhir</th><th>Perubahan</th><th>Perubahan %</th><th>Status penyedia</th><th>Waktu observasi (WIB)</th><th>Sumber</th></tr></thead><tbody id="watchlistBody"><tr><td colspan="7" class="empty-row">Waiting for provider response. No sample or simulated quotes are displayed.</td></tr></tbody></table></div>
-    <div class="note" style="margin-top:10px"><strong>Cross-reference instrumen:</strong> kode Yahoo Finance dan TradingView dipasangkan per simbol. Kontrak komoditas diselaraskan: <strong>BZ=F ↔ NYMEX:BZ1!</strong> untuk Brent Last Day Financial Futures dan <strong>GC=F ↔ COMEX:GC1!</strong> untuk COMEX Gold Futures. Keduanya adalah kontrak futures, bukan harga spot.</div>
+    <div class="note" style="margin-top:10px"><strong>Cross-reference instrumen:</strong> simbol provider dipetakan terpisah dari simbol chart. Kontrak komoditas: <strong>BZ=F ↔ NYMEX:BZ1!</strong> untuk Brent futures dan <strong>GC=F ↔ COMEX:GC1!</strong> untuk Gold futures; bukan harga spot.</div>
+    <details class="provider-settings" id="providerSettings">
+      <summary>Konfigurasi multi-source market data</summary>
+      <div class="provider-settings-body">
+        <p class="provider-settings-intro">APIS mencoba Twelve Data → Financial Modeling Prep → Yahoo Finance fallback. Masukkan API key provider yang Anda miliki untuk mengaktifkan feed independen. Key tersimpan di local storage browser ini dan dikirim langsung ke endpoint provider terkait; jangan gunakan pada perangkat bersama.</p>
+        <div class="provider-key-grid">
+          <label class="provider-key-field">Twelve Data API key
+            <input id="twelveDataKey" type="password" autocomplete="off" placeholder="Masukkan Twelve Data key">
+            <small><a href="https://twelvedata.com/" target="_blank" rel="noopener">Twelve Data account & API access ↗</a></small>
+          </label>
+          <label class="provider-key-field">Financial Modeling Prep API key
+            <input id="fmpKey" type="password" autocomplete="off" placeholder="Masukkan FMP key">
+            <small><a href="https://site.financialmodelingprep.com/developer/docs" target="_blank" rel="noopener">FMP API documentation ↗</a></small>
+          </label>
+        </div>
+        <div class="provider-settings-actions">
+          <button class="button" id="saveProviderKeys" type="button">Simpan konfigurasi feed</button>
+          <button class="button secondary" id="clearProviderKeys" type="button">Hapus API keys</button>
+          <span class="source-pill" id="providerConfigStatus">Public fallback only</span>
+        </div>
+        <p class="provider-settings-note">Feed tanpa API key tidak menjamin real-time. Jika provider tidak memiliki izin atau cakupan instrumen tertentu, APIS otomatis mencoba sumber berikutnya dan mencatat sumber yang berhasil untuk setiap harga.</p>
+      </div>
+    </details>
   </div>
   
 <div class="grid three-col" style="margin-top:14px">
@@ -404,7 +501,7 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
         <li><span class="check-mark">✓</span><span>Only provider responses with a valid price and observation timestamp enter the quote table and CSV export.</span></li>
         <li><span class="check-mark">✓</span><span>Binance BTC/USDT is labelled live only when a timestamped WebSocket message is received.</span></li>
         <li><span class="check-miss">!</span><span>Yahoo chart endpoint is unofficial and accessed through a third-party CORS proxy; availability, usage terms and latency can change. It is not a licensed exchange feed.</span></li>
-        <li><span class="check-miss">!</span><span>Yahoo Finance public quote relay is unofficial and may be delayed; no free licensed tick-by-tick BEI feed is claimed.</span></li>
+        <li><span class="check-miss">!</span><span>Feed tanpa autentikasi tidak menjamin real-time. Data live berlisensi untuk indeks/futures/BEI memerlukan entitlement provider yang sesuai.</span></li>
         <li><span class="check-miss">!</span><span>No guaranteed live IDX equities feed is included. IDX real-time market data requires the appropriate licensed source.</span></li>
         <li><span class="check-miss">!</span><span>Full APIS Python orchestration, database, background automation, LLM features, issuer ingestion and persistent cloud storage are not ported into this single HTML file.</span></li>
       </ul>
@@ -427,7 +524,7 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
         panel=document.createElement('div');
         panel.id='apisRuntimeDiagnostic';
         panel.setAttribute('role','alert');
-        panel.style.cssText='position:fixed;left:10px;right:10px;bottom:14px;z-index:99999;padding:12px 14px;border:1px solid #d98b86;border-radius:10px;background:#fff1f0;color:#7f241f;box-shadow:0 8px 28px rgba(0,0,0,.18);font:600 12px/1.45 -apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;white-space:normal;word-break:break-word;max-height:35vh;overflow:auto';
+        panel.style.cssText='position:fixed;right:10px;bottom:10px;left:auto;max-width:min(420px,calc(100vw - 20px));z-index:99999;padding:8px 10px;border:1px solid #d98b86;border-radius:9px;background:#fff1f0;color:#7f241f;box-shadow:0 4px 18px rgba(0,0,0,.14);font:600 10px/1.35 -apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;white-space:normal;word-break:break-word;max-height:12vh;overflow:hidden;pointer-events:none;opacity:.94';
         document.body.appendChild(panel);
       }
       panel.textContent='APIS ENGINE ERROR · '+kind+' · '+String(message||'Unknown error')+(where?' · '+where:'');
@@ -501,17 +598,17 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 */
 const TZ='Asia/Jakarta';
 const WATCHLIST=[
-  {symbol:'^JKSE',name:'IDX Composite',short:'IHSG',group:'Index',tv:'IDX:COMPOSITE'},
-  {symbol:'^GSPC',name:'S&P 500',short:'S&P 500',group:'Index',tv:'SP:SPX'},
-  {symbol:'^IXIC',name:'Nasdaq Composite',short:'Nasdaq',group:'Index',tv:'NASDAQ:IXIC'},
-  {symbol:'^DJI',name:'Dow Jones Industrial Average',short:'Dow Jones',group:'Index',tv:'DJ:DJI'},
-  {symbol:'000001.SS',name:'Shanghai Composite',short:'Shanghai',group:'Index',tv:'SSE:000001'},
-  {symbol:'^TWII',name:'Taiwan Weighted',short:'Taiwan',group:'Index',tv:'TWSE:IX0001'},
-  {symbol:'^KS11',name:'KOSPI Composite',short:'KOSPI',group:'Index',tv:'KRX:KOSPI'},
-  {symbol:'^NSEI',name:'NIFTY 50',short:'NIFTY 50',group:'Index',tv:'NSE:NIFTY'},
+  {symbol:'^JKSE',name:'IDX Composite',short:'IHSG',group:'Index',tv:'IDX:COMPOSITE',tdSymbol:'JKSE'},
+  {symbol:'^GSPC',name:'S&P 500',short:'S&P 500',group:'Index',tv:'SP:SPX',tdSymbol:'SPX'},
+  {symbol:'^IXIC',name:'Nasdaq Composite',short:'Nasdaq',group:'Index',tv:'NASDAQ:IXIC',tdSymbol:'IXIC'},
+  {symbol:'^DJI',name:'Dow Jones Industrial Average',short:'Dow Jones',group:'Index',tv:'DJ:DJI',tdSymbol:'DJI'},
+  {symbol:'000001.SS',name:'Shanghai Composite',short:'Shanghai',group:'Index',tv:'SSE:000001',tdSymbol:'000001'},
+  {symbol:'^TWII',name:'Taiwan Weighted',short:'Taiwan',group:'Index',tv:'TWSE:IX0001',tdSymbol:'TAIEX'},
+  {symbol:'^KS11',name:'KOSPI Composite',short:'KOSPI',group:'Index',tv:'KRX:KOSPI',tdSymbol:'KS11'},
+  {symbol:'^NSEI',name:'NIFTY 50',short:'NIFTY 50',group:'Index',tv:'NSE:NIFTY',tdSymbol:'NIFTY'},
   {symbol:'NQ=F',name:'Nasdaq-100 E-mini Futures',short:'NQ Futures',group:'Index',tv:'CME_MINI:NQ1!'},
-  {symbol:'^N225',name:'Nikkei 225',short:'Nikkei 225',group:'Index',tv:'TVC:NI225'},
-  {symbol:'^VIX',name:'CBOE Volatility Index',short:'VIX',group:'Risk',tv:'TVC:VIX'},
+  {symbol:'^N225',name:'Nikkei 225',short:'Nikkei 225',group:'Index',tv:'TVC:NI225',tdSymbol:'N225'},
+  {symbol:'^VIX',name:'CBOE Volatility Index',short:'VIX',group:'Risk',tv:'TVC:VIX',tdSymbol:'VIX'},
   {symbol:'EIDO',name:'iShares MSCI Indonesia ETF',short:'EIDO',group:'ETF',tv:'AMEX:EIDO'},
   {symbol:'IDR=X',name:'USD / IDR',short:'USD/IDR',group:'FX',tv:'FX_IDC:USDIDR'},
   {symbol:'BZ=F',name:'Brent Crude Futures',short:'Brent',group:'Commodity',tv:'NYMEX:BZ1!'},
@@ -576,8 +673,56 @@ function restoreAuxCache(){
   }
 }
 
-/* Quote collection: Yahoo Finance chart endpoint through CORS.dev. No API key.
-   CORS.dev is an external intermediary; this adapter is best-effort and not a licensed real-time feed. */
+/* Multi-provider quote adapters.
+   Priority: Twelve Data (credentialed) -> Financial Modeling Prep (credentialed) -> Yahoo public fallback.
+   Credentials are entered by the user and are never sent to CORS relay services.
+*/
+function marketProviderKeys(){
+ const keys=loadJSON('apis_market_provider_keys',{twelveData:'',fmp:''})||{};
+ return {twelveData:String(keys.twelveData||''),fmp:String(keys.fmp||'')};
+}
+function normalizeProviderQuote(item,payload,provider,sourceUrl){
+ const raw=Array.isArray(payload)?payload[0]:payload;
+ if(!raw||typeof raw!=='object'||raw.status==='error'||raw.code>=400)throw new Error(raw?.message||raw?.error||'Provider returned an invalid quote');
+ const price=num(Number(raw.price??raw.close??raw.last??raw.lastPrice));
+ const previousClose=num(Number(raw.previous_close??raw.previousClose??raw.prevClose));
+ const timestamp=num(Number(raw.timestamp??raw.lastTradeTimestamp??raw.time));
+ if(price===null||price<=0||timestamp===null||timestamp<=0)throw new Error('Price or provider timestamp missing');
+ const age=Math.max(0,Date.now()/1000-timestamp);
+ const status=age>48*3600?'STALE_OBSERVATION':age>20*60?'LAST_AVAILABLE_CLOSE':'PROVIDER_QUOTE';
+ return {
+  symbol:item.symbol,name:item.name,short:item.short,group:item.group,
+  price,previousClose,currency:String(raw.currency||item.currency||''),
+  exchange:String(raw.exchange||raw.exchangeName||''),marketState:String(raw.marketState||'PROVIDER'),
+  observedAt:timestamp,observedAge:age,status,
+  source:provider,sourceUrl,retrievedAt:Date.now(),proxy:'direct-provider-api'
+ };
+}
+async function fetchTwelveDataQuote(item,key){
+ const symbol=item.tdSymbol;
+ if(!symbol)throw new Error('No verified Twelve Data symbol mapping for this instrument');
+ const url='https://api.twelvedata.com/quote?symbol='+encodeURIComponent(symbol)+'&apikey='+encodeURIComponent(key);
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
+ try{
+  const response=await fetch(url,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  const data=await response.json();
+  if(data.status==='error'||data.code)throw new Error(data.message||'Twelve Data rejected this symbol or plan');
+  return normalizeProviderQuote(item,data,'Twelve Data','https://twelvedata.com/indices');
+ }finally{clearTimeout(timer)}
+}
+async function fetchFmpQuote(item,key){
+ const symbol=item.fmpSymbol||item.symbol;
+ const url='https://financialmodelingprep.com/stable/quote?symbol='+encodeURIComponent(symbol)+'&apikey='+encodeURIComponent(key);
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
+ try{
+  const response=await fetch(url,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  const payload=await response.json();
+  if(!Array.isArray(payload)||!payload.length)throw new Error(payload?.message||'FMP has no quote for this symbol or plan');
+  return normalizeProviderQuote(item,payload[0],'Financial Modeling Prep','https://site.financialmodelingprep.com/developer/docs/stable/index-quote');
+ }finally{clearTimeout(timer)}
+}
 async function fetchYahooQuote(item){
  const encoded=encodeURIComponent(item.symbol);
  const plans=[
@@ -589,7 +734,7 @@ async function fetchYahooQuote(item){
  ];
  const errors=[];
  for(const plan of plans){
-  const target=`https://${plan.host}/v8/finance/chart/${encoded}?range=${plan.range}&interval=${plan.interval}&includePrePost=true`;
+  const target='https://'+plan.host+'/v8/finance/chart/'+encoded+'?range='+plan.range+'&interval='+plan.interval+'&includePrePost=true';
   const routes=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
   for(const route of routes){
    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);
@@ -611,15 +756,51 @@ async function fetchYahooQuote(item){
     const open=['REGULAR','PRE','POST','PREPRE','POSTPOST'].includes(state);
     const status=age>48*3600?'STALE_OBSERVATION':(!open||age>20*60?'LAST_AVAILABLE_CLOSE':'DELAYED_PROVIDER');
     return {symbol:item.symbol,name:item.name,short:item.short,group:item.group,price,previousClose:previous,
-     currency:meta.currency||'',exchange:meta.exchangeName||meta.fullExchangeName||'',marketState:state,
+     currency:meta.currency||item.currency||'',exchange:meta.exchangeName||meta.fullExchangeName||'',marketState:state,
      observedAt,observedAge:age,status,intervalUsed:plan.interval,
-     source:'Yahoo Finance chart · public endpoint via CORS relay',
-     sourceUrl:`https://finance.yahoo.com/quote/${encoded}/`,retrievedAt:Date.now(),proxy:new URL(route).host};
+     source:'Yahoo Finance · public fallback (unofficial)',sourceUrl:'https://finance.yahoo.com/quote/'+encoded+'/',retrievedAt:Date.now(),proxy:new URL(route).host};
    }catch(e){errors.push(new URL(route).host+': '+(e?.name==='AbortError'?'timeout':String(e?.message||e).slice(0,65)))}
    finally{clearTimeout(timer)}
   }
  }
  throw new Error(errors.slice(0,6).join(' | ')||'No free Yahoo endpoint responded');
+}
+async function fetchMarketQuote(item){
+ const keys=marketProviderKeys(),errors=[];
+ if(keys.twelveData){
+  try{return await fetchTwelveDataQuote(item,keys.twelveData)}
+  catch(error){errors.push('Twelve Data: '+String(error?.message||error).slice(0,100))}
+ }
+ if(keys.fmp){
+  try{return await fetchFmpQuote(item,keys.fmp)}
+  catch(error){errors.push('FMP: '+String(error?.message||error).slice(0,100))}
+ }
+ try{return await fetchYahooQuote(item)}
+ catch(error){errors.push('Yahoo fallback: '+String(error?.message||error).slice(0,150))}
+ throw new Error(errors.join(' · ')||'All configured market providers failed');
+}
+function initProviderSettings(){
+ const keys=marketProviderKeys();
+ const td=document.getElementById('twelveDataKey'),fmp=document.getElementById('fmpKey');
+ if(td)td.value=keys.twelveData;
+ if(fmp)fmp.value=keys.fmp;
+ const refreshLabel=()=>{
+  const latest=marketProviderKeys();
+  const text=(latest.twelveData?'Twelve Data configured':'Twelve Data not set')+' · '+(latest.fmp?'FMP configured':'FMP not set')+' · Yahoo fallback';
+  setText('providerConfigStatus',text);
+ };
+ const save=document.getElementById('saveProviderKeys'),clear=document.getElementById('clearProviderKeys');
+ if(save)save.onclick=()=>{
+  const next={twelveData:String(td?.value||'').trim(),fmp:String(fmp?.value||'').trim()};
+  saveJSON('apis_market_provider_keys',next);refreshLabel();toast('Provider configuration saved in this browser.');
+  fetchQuoteBatch();
+ };
+ if(clear)clear.onclick=()=>{
+  saveJSON('apis_market_provider_keys',{twelveData:'',fmp:''});
+  if(td)td.value='';if(fmp)fmp.value='';refreshLabel();toast('API keys removed from this browser.');
+  fetchQuoteBatch();
+ };
+ refreshLabel();
 }
 async function fetchQuoteBatch(){
   if(APP.yahooState==='loading')return;
@@ -627,7 +808,7 @@ async function fetchQuoteBatch(){
   const buttons=['refreshBtn','refreshTop'];buttons.forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true});
   setText('lastRefresh','Fetching '+WATCHLIST.length+' instruments…');
   let cursor=0,successes=0,failures=0;const queue=WATCHLIST.slice();
-  const workers=Array.from({length:8},async()=>{while(cursor<queue.length){const item=queue[cursor++];try{const q=await fetchYahooQuote(item);q.activeRunId=runId;QUOTES.set(item.symbol,q);APP.failures.delete(item.symbol);successes++}
+  const workers=Array.from({length:8},async()=>{while(cursor<queue.length){const item=queue[cursor++];try{const q=await fetchMarketQuote(item);q.activeRunId=runId;QUOTES.set(item.symbol,q);APP.failures.delete(item.symbol);successes++}
     catch(e){failures++;APP.failures.set(item.symbol,String(e?.message||'Provider request failed'));const old=QUOTES.get(item.symbol);if(old){const age=Date.now()/1000-old.observedAt;old.status=age>48*3600?'STALE_OBSERVATION':'STALE_CACHE';old.activeRunId=0;old.lastError=String(e?.message||'Refresh failed').slice(0,180);old.cacheRestored=true;QUOTES.set(item.symbol,old)}}
     APP.successCount=successes;setText('lastRefresh',`Fetching ${successes+failures}/${WATCHLIST.length} · ${successes} updated · ${failures} failed`);
   }});
@@ -640,7 +821,7 @@ async function fetchQuoteBatch(){
     renderQuoteViews();renderQuality();updateFeedState();
     if(!successes&&QUOTES.size===0){
       const firstFailure=APP.failures.values().next().value||'No provider response';
-      setText('feedState','Yahoo unavailable · '+firstFailure.slice(0,72));
+      setText('feedState','Market data unavailable · '+firstFailure.slice(0,72));
     }
   }finally{buttons.forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=false});if(!APP.nextRefreshAt)APP.nextRefreshAt=Date.now()+60000;}
 }
@@ -656,11 +837,13 @@ function quoteStatusLabel(status){
 function updateFeedState(){
  const dot=document.getElementById('feedDot'),label=document.getElementById('feedState');
  const cryptoLive=!!(APP.btc&&APP.btc.transport==='WEBSOCKET'&&btcIsFresh());
- const delayed=[...QUOTES.values()].filter(q=>q.activeRunId===APP.currentRunId&&q.status==='DELAYED_PROVIDER').length;
- const closed=[...QUOTES.values()].filter(q=>q.activeRunId===APP.currentRunId&&q.status==='LAST_AVAILABLE_CLOSE').length;
- if(dot)dot.className='dot'+(cryptoLive?' live':delayed?' warn':'');
- if(label){const suffix=APP.yahooState==='loading'?' · updating':APP.yahooState==='partial'?' · partial':APP.yahooState==='unavailable'?' · unavailable':'';
-  label.textContent=(cryptoLive?'BTC LIVE · ':'')+`YF ${APP.successCount||0}/${WATCHLIST.length}`+suffix;}
+ const updated=[...QUOTES.values()].filter(q=>q.activeRunId===APP.currentRunId&&APP.currentRunId!==0);
+ const hasFresh=updated.some(q=>q.status==='PROVIDER_QUOTE'||q.status==='DELAYED_PROVIDER');
+ if(dot)dot.className='dot'+(cryptoLive?' live':hasFresh?' warn':'');
+ if(label){
+  const suffix=APP.yahooState==='loading'?' · updating':APP.yahooState==='partial'?' · partial':APP.yahooState==='unavailable'?' · unavailable':'';
+  label.textContent=(cryptoLive?'BTC LIVE · ':'')+'MD '+(APP.successCount||0)+'/'+WATCHLIST.length+suffix;
+ }
 }
 
 function createQuoteCard(item,quote){const card=document.createElement('article');card.className='card quote-card'+(quote?'':' empty');const top=document.createElement('div');top.className='quote-top';const name=document.createElement('div');name.className='quote-name';name.textContent=item.name;const sym=document.createElement('span');sym.className='symbol';sym.textContent=item.short;top.append(name,sym);card.append(top);const value=document.createElement('div');value.className='quote-value';value.textContent=quote?fmtPrice(quote):'Unavailable';card.append(value);const bottom=document.createElement('div');bottom.className='quote-bottom';const ch=document.createElement('span');ch.className='change '+(quote?changeClass((quote.price-(quote.previousClose??quote.price))):'flat');ch.textContent=quote&&num(quote.previousClose)!==null?`${fmt(quote.price-quote.previousClose,2)} (${pct((quote.price/quote.previousClose-1)*100)})`:'No verified observation';const status=document.createElement('span');status.className='status-label '+(quote?quoteStatusClass(quote.status):'bad');status.textContent=quote?quoteStatusLabel(quote.status):'UNAVAILABLE';bottom.append(ch,status);card.append(bottom);const asof=document.createElement('div');asof.className='quote-asof';asof.textContent=quote?`Observed ${fmtTime(quote.observedAt)} · ${quote.exchange||'provider quote'}`:'No price shown because a valid provider observation was not received';card.append(asof);return card;}
@@ -686,38 +869,60 @@ function renderMarketOverview(){
  ];
  let count=0;
  groups.forEach(group=>{
-  const section=document.createElement('div');section.className='snapshot-group';
+  const section=document.createElement('section');section.className='snapshot-group';
   const heading=document.createElement('h4');heading.textContent=group.title;section.append(heading);
-  const grid=document.createElement('div');grid.className='snapshot-grid';
+  const list=document.createElement('div');list.className='snapshot-grid';
   group.symbols.forEach(symbol=>{
-   const item=WATCHLIST.find(x=>x.symbol===symbol),raw=symbol==='BTCUSDT'?APP.btc:QUOTES.get(symbol);
+   const item=WATCHLIST.find(x=>x.symbol===symbol);
+   const raw=symbol==='BTCUSDT'?APP.btc:QUOTES.get(symbol);
    if(!item&&!raw)return;
    const q=raw?{...raw,short:item?.short||'BTC',name:item?.name||'Bitcoin',group:item?.group||'Crypto',currency:item?.currency||(symbol==='BTCUSDT'?'USD':'')}:null;
-   const card=document.createElement('div');card.className='snapshot-item';
-   const head=document.createElement('div');head.className='snapshot-item-head';
-   const name=document.createElement('span');name.className='snapshot-item-name';name.textContent=q?q.name:(item?.name||symbol);
-   const ticker=document.createElement('span');ticker.className='snapshot-item-symbol';ticker.textContent=q?(q.short||symbol):symbol;head.append(name,ticker);
+   const row=document.createElement('article');row.className='snapshot-item';
+   const head=document.createElement('div');head.className='snapshot-instrument';
+   const name=document.createElement('span');name.className='snapshot-item-name';name.textContent=item?.name||'Bitcoin';
+   const ticker=document.createElement('span');ticker.className='snapshot-item-symbol';ticker.textContent=item?.short||'BTC/USDT';
+   head.append(name,ticker);
    const price=document.createElement('div');price.className='snapshot-item-price';price.textContent=q?fmtPrice(q):'—';
-   const details=document.createElement('div');details.className='snapshot-item-head';
-   const change=document.createElement('span'),pctValue=q&&num(q.previousClose)!==null&&q.previousClose!==0?((q.price/q.previousClose)-1)*100:null;
+   const details=document.createElement('div');details.className='snapshot-item-details';
+   const change=document.createElement('span');
+   const pctValue=q&&num(q.previousClose)!==null&&q.previousClose!==0?((q.price/q.previousClose)-1)*100:(q&&num(q.changePct)!==null?q.changePct:null);
    change.className='snapshot-item-change '+(pctValue===null?'flat':changeClass(pctValue));
-   change.textContent=pctValue===null?(q&&q.changePct!==undefined&&q.changePct!==null?pct(q.changePct):'Change n/a'):pct(pctValue);
+   change.textContent=pctValue===null?'Change n/a':pct(pctValue);
    const status=document.createElement('span');status.className='snapshot-item-status';
    status.textContent=q?(q.transport==='WEBSOCKET'?'LIVE TICK':quoteStatusLabel(q.status||q.transport||'OBSERVED')):'UNAVAILABLE';
-   details.append(change,status);card.append(head,price,details);
-   if(q&&q.observedAt){const time=document.createElement('div');time.className='quote-asof';time.textContent='As of '+fmtTime(q.observedAt);card.append(time)}
-   grid.append(card);count++;
+   details.append(change,status);
+   const observed=document.createElement('div');observed.className='snapshot-item-time';
+   const timeSec=q?(symbol==='BTCUSDT'?q.observedAt/1000:q.observedAt):null;
+   observed.textContent=q&&num(timeSec)!==null?'As of '+fmtTime(timeSec):'No validated observation';
+   row.append(head,price,details,observed);
+   list.append(row);count++;
   });
-  section.append(grid);host.append(section);
+  section.append(heading,list);host.append(section);
  });
- setText('snapshotStamp',count+' instruments · validated observations');
- if(!count){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='No verified provider observations yet. The snapshot will populate automatically when feeds respond.';host.append(empty)}
+ setText('snapshotStamp',count+' instruments · provider-validated observations');
+ if(!count){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='No verified provider observations yet.';host.append(empty)}
 }
 function renderQuoteViews(){
  renderMarketOverview();
- const featured=['^JKSE','^GSPC','^IXIC','NQ=F','^DJI','^NSEI','^N225','^VIX','IDR=X','BZ=F','GC=F'];
+ const featured=['^JKSE','^GSPC','^IXIC','NQ=F','^DJI','^NSEI','^N225','^VIX'];
  const grid=document.getElementById('featuredQuotes');
- if(grid){grid.replaceChildren();featured.forEach(sym=>{const item=WATCHLIST.find(x=>x.symbol===sym);if(item)grid.append(createQuoteCard(item,QUOTES.get(sym)))});}
+ if(grid){
+  grid.className='market-pulse-list';grid.replaceChildren();
+  const header=document.createElement('div');header.className='market-pulse-header';
+  ['Instrument','Last','Change','Feed status'].forEach(label=>{const cell=document.createElement('span');cell.textContent=label;header.append(cell)});grid.append(header);
+  featured.forEach(symbol=>{
+   const item=WATCHLIST.find(x=>x.symbol===symbol),q=QUOTES.get(symbol);if(!item)return;
+   const row=document.createElement('div');row.className='market-pulse-row';
+   const instrument=document.createElement('div');instrument.className='market-pulse-instrument';
+   const name=document.createElement('strong');name.textContent=item.name;
+   const ticker=document.createElement('small');ticker.textContent=item.short;instrument.append(name,ticker);
+   const price=document.createElement('strong');price.className='market-pulse-price';price.textContent=q?fmtPrice(q):'—';
+   const change=document.createElement('span');const pctValue=q&&num(q.previousClose)!==null&&q.previousClose!==0?(q.price/q.previousClose-1)*100:null;
+   change.className='market-pulse-change '+(pctValue===null?'flat':changeClass(pctValue));change.textContent=pctValue===null?'—':pct(pctValue);
+   const status=document.createElement('span');status.className='market-pulse-status';status.textContent=q?quoteStatusLabel(q.status):'UNAVAILABLE';
+   row.append(instrument,price,change,status);grid.append(row);
+  });
+ }
  const body=document.getElementById('watchlistBody');if(body){
   body.replaceChildren();let usable=0;
   WATCHLIST.forEach(item=>{
@@ -730,7 +935,7 @@ function renderQuoteViews(){
    const pc=document.createElement('td');pc.textContent=q&&q.previousClose?pct((q.price/q.previousClose-1)*100):'—';if(q)pc.className='change '+changeClass(q.price-q.previousClose);cells.push(pc);
    const st=document.createElement('td');st.textContent=q?quoteStatusLabel(q.status):'UNAVAILABLE';st.className='status-label '+(q?quoteStatusClass(q.status):'bad');cells.push(st);
    const t=document.createElement('td');t.textContent=q?fmtTime(q.observedAt):'—';cells.push(t);
-   const src=document.createElement('td');if(q){const a=document.createElement('a');a.href=q.sourceUrl;a.target='_blank';a.rel='noopener';a.textContent='Yahoo Finance ↗';src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
+   const src=document.createElement('td');if(q){const a=document.createElement('a');a.href=q.sourceUrl;a.target='_blank';a.rel='noopener';a.textContent='Market provider';src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
    cells.forEach(cell=>tr.append(cell));body.append(tr);
   });
   setText('quoteCount',usable+' / '+WATCHLIST.length+' observations');
@@ -768,7 +973,7 @@ function renderQuality(){
   const browserStatus=!navigator.onLine?'OFFLINE':(protocol==='content:'||protocol==='file:'?'LOCAL FILE CONTEXT':'ONLINE');
   const rows=[
     ['Browser network context',browserDetail,browserStatus,browserStatus==='ONLINE'?'good':'warn'],
-    ['Yahoo chart via cors.dev',yahooDetail,APP.yahooState==='ready'?'UPDATED':APP.yahooState==='partial'?'PARTIAL':APP.yahooState==='loading'?'FETCHING':'UNAVAILABLE',APP.yahooState==='ready'?'good':'warn'],
+    ['Multi-provider market quotes',updated+' of '+total+' valid observations; Twelve Data / FMP when configured, Yahoo public fallback otherwise.',APP.yahooState==='ready'?'UPDATED':APP.yahooState==='partial'?'PARTIAL':APP.yahooState==='loading'?'FETCHING':'UNAVAILABLE',APP.yahooState==='ready'?'good':'warn'],
     ['TradingView chart embed',APP.widgetError||'Optional chart only; quote snapshot is rendered by APIS and does not rely on this widget',APP.widgetError?'UNAVAILABLE':'OPTIONAL','warn'],
     ['Binance WebSocket',cryptoLive?'Timestamped BTC/USDT trade stream is fresh':cryptoRest?'BTC/USDT REST observation is fresh; not a live stream':cryptoCached?'Only a previously saved BTC observation is available':APP.btcError||'BTC/USDT unavailable',cryptoLive?'LIVE STREAM':cryptoRest?'REST UPDATE':cryptoCached?'STALE CACHE':'NOT LIVE',cryptoLive?'good':'warn'],
     ['Frankfurter FX',APP.fxState==='loaded'?'Daily reference-rate response received':APP.fxState==='cached'?'Saved dated reference rate; refresh failed':APP.fxError||'Reference-rate response unavailable',APP.fxState==='loaded'?'DAILY':APP.fxState==='cached'?'STALE':'UNAVAILABLE',APP.fxState==='loaded'?'good':'warn'],
@@ -939,29 +1144,44 @@ async function loadTreasuryCurve(){
  renderQuality();
 }
 function zonedDateToUtc(year,month,day,hour,minute,timeZone){
- const parts=[year,month,day,hour,minute].map(Number);
- if(parts.some(value=>!Number.isInteger(value))||year<1970||year>2200||month<1||month>12||day<1||day>31||hour<0||hour>23||minute<0||minute>59)return null;
- const [y,m,d,h,min]=parts,guess=Date.UTC(y,m-1,d,h,min,0);
- const check=new Date(guess);
- if(check.getUTCFullYear()!==y||check.getUTCMonth()!==m-1||check.getUTCDate()!==d)return null;
+ const values=[year,month,day,hour,minute].map(Number);
+ if(values.some(value=>!Number.isInteger(value)))return null;
+ const [y,m,d,hh,mm]=values;
+ if(y<1970||y>2200||m<1||m>12||d<1||d>31||hh<0||hh>23||mm<0||mm>59)return null;
+ const wall=new Date(Date.UTC(y,m-1,d,hh,mm,0));
+ if(wall.getUTCFullYear()!==y||wall.getUTCMonth()!==m-1||wall.getUTCDate()!==d)return null;
  let zone=String(timeZone||'America/New_York').trim();
- const aliases={'Eastern Standard Time':'America/New_York','Eastern Daylight Time':'America/New_York','Central Standard Time':'America/Chicago','Pacific Standard Time':'America/Los_Angeles','GMT Standard Time':'Europe/London'};
+ const aliases={'Eastern Standard Time':'America/New_York','Eastern Daylight Time':'America/New_York','EST':'America/New_York','EDT':'America/New_York','Central Standard Time':'America/Chicago','CST':'America/Chicago','CDT':'America/Chicago','Pacific Standard Time':'America/Los_Angeles','PST':'America/Los_Angeles','PDT':'America/Los_Angeles'};
  zone=aliases[zone]||zone;
- let formatter;
- try{formatter=new Intl.DateTimeFormat('en-US',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})}
- catch{formatter=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})}
- try{
-  const formatted=formatter.formatToParts(check),map={};
-  formatted.forEach(part=>{if(part.type!=='literal')map[part.type]=Number(part.value)});
-  if(![map.year,map.month,map.day,map.hour,map.minute].every(Number.isFinite))return null;
-  const represented=Date.UTC(map.year,map.month-1,map.day,map.hour,map.minute,0);
-  const result=new Date(guess-(represented-guess));
-  return Number.isFinite(result.getTime())?result:null;
- }catch{return null}
+ const weekday=(year,month,day)=>new Date(Date.UTC(year,month-1,day)).getUTCDay();
+ const nthSunday=(year,month,nth)=>{const first=weekday(year,month,1);return 1+((7-first)%7)+(nth-1)*7};
+ let standardOffset=-5;
+ if(zone==='UTC'||zone==='Etc/UTC'||zone==='GMT')standardOffset=0;
+ else if(zone==='America/Chicago')standardOffset=-6;
+ else if(zone==='America/Denver')standardOffset=-7;
+ else if(zone==='America/Los_Angeles')standardOffset=-8;
+ else if(zone==='America/New_York'||zone==='America/Chicago'||zone==='America/Denver'||zone==='America/Los_Angeles'){
+  standardOffset=zone==='America/New_York'?-5:zone==='America/Chicago'?-6:zone==='America/Denver'?-7:-8;
+ }else{
+  // The public BLS/BEA/Fed calendars use US Eastern time. Unknown TZIDs are
+  // deliberately treated as Eastern Standard/Daylight time rather than thrown.
+  standardOffset=-5;
+ }
+ let offset=standardOffset;
+ if(standardOffset!==0){
+  const startDay=nthSunday(y,3,2),endDay=nthSunday(y,11,1);
+  const localScalar=Date.UTC(y,m-1,d,hh,mm,0);
+  const dstStart=Date.UTC(y,2,startDay,2,0,0);
+  const dstEnd=Date.UTC(y,10,endDay,2,0,0);
+  if(localScalar>=dstStart&&localScalar<dstEnd)offset=standardOffset+1;
+ }
+ const result=new Date(Date.UTC(y,m-1,d,hh,mm,0)-offset*3600000);
+ return Number.isFinite(result.getTime())?result:null;
 }
 function parseIcsDate(value,timeZone){
- if(!value)return null;
- const match=String(value).match(/^(\d{4})(\d{2})(\d{2})T?(\d{2})?(\d{2})?(\d{2})?Z?$/);
+ if(value===null||value===undefined)return null;
+ value=String(value).trim();
+ const match=value.match(/^(\d{4})(\d{2})(\d{2})T?(\d{2})?(\d{2})?(\d{2})?Z?$/);
  if(!match)return null;
  const year=Number(match[1]),month=Number(match[2]),day=Number(match[3]),hour=Number(match[4]||8),minute=Number(match[5]||30),second=Number(match[6]||0);
  if(![year,month,day,hour,minute,second].every(Number.isInteger)||second<0||second>59)return null;
@@ -982,6 +1202,11 @@ function renderMacroCalendar(){
   const empty=document.createElement('div');empty.className='empty-state';
   empty.textContent=(APP.calendarEvents||[]).length?'No major releases in the selected period.':'No official calendar data was received.';
   host.append(empty);
+  if(!(APP.calendarEvents||[]).length){
+   const links=document.createElement('div');links.className='calendar-source-links';
+   [['BLS release calendar','https://www.bls.gov/schedule/'],['BEA release schedule','https://www.bea.gov/news/schedule'],['Federal Reserve calendar','https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm']].forEach(([label,url])=>{const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';a.textContent=label+' ↗';links.append(a)});
+   host.append(links);
+  }
  }
  events.forEach(item=>{
   const row=document.createElement('div');row.className='event-row';
@@ -1002,13 +1227,14 @@ function renderMacroCalendar(){
  setText('calendarCount',events.length+' scheduled releases · '+(mode==='high'?'high impact only':'high + medium'));
 }
 async function loadMacroCalendar(){
- const sources=[
+
+ try{ const sources=[
   'https://www.bls.gov/schedule/news_release/bls.ics',
   'https://www.bea.gov/news/schedule/',
   'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm'
  ];
  const fetchPublic=async target=>{
-  const routes=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target)];
+  const routes=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
   let lastError='No public response';
   for(const route of routes){
    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
@@ -1091,6 +1317,14 @@ async function loadMacroCalendar(){
  renderMacroCalendar();
  setText('calendarUpdatedAt',APP.calendarEvents.length?'Updated '+new Date().toLocaleTimeString('en-GB',{timeZone:TZ})+' WIB · BLS / BEA / Fed':APP.calendarError||'Official schedule unavailable');
  renderQuality();
+ }catch(error){
+  APP.calendarState='error';APP.calendarError=String(error?.message||error).slice(0,180);APP.calendarEvents=[];
+  console.error('[APIS macro calendar]',APP.calendarError);
+  renderMacroCalendar();setText('calendarUpdatedAt','Calendar source unavailable · retry scheduled');
+  const host=document.getElementById('calendarEvents');
+  if(host&&!host.children.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='Official schedule temporarily unavailable. Use the source links below or retry.';host.append(empty)}
+  renderQuality();
+ }
 }
 /* TradingView widgets.
 /* TradingView widgets. Widget content remains provider-controlled and does not feed calculations. */
@@ -1409,7 +1643,21 @@ function initCalendarControls(){
 }
 ['refreshBtn','refreshTop'].forEach(id=>{const e=document.getElementById(id);if(e)e.onclick=()=>fetchQuoteBatch()});const reload=document.getElementById('reloadChart');if(reload)reload.onclick=loadChart;const chartSelect=document.getElementById('chartSymbol');if(chartSelect)chartSelect.onchange=loadChart;
 function safeInit(label,fn){
- try{fn();return true}catch(error){const message=label+': '+String(error?.message||error).slice(0,160);console.error('[APIS]',message);setText('feedState','ERROR · '+message);if(window.__APIS_REPORT_ERROR__)window.__APIS_REPORT_ERROR__('Startup '+label,message);return false}
+ try{
+  const result=fn();
+  if(result&&typeof result.catch==='function')result.catch(error=>{
+   const message=label+': '+String(error?.message||error).slice(0,160);
+   console.error('[APIS async]',message);
+   if(label==='Major economic releases'){APP.calendarState='error';APP.calendarError=message;setText('calendarUpdatedAt','Calendar feed error · retry scheduled');renderQuality();}
+   else if(window.__APIS_REPORT_ERROR__)window.__APIS_REPORT_ERROR__('Async '+label,message);
+  });
+  return true;
+ }catch(error){
+  const message=label+': '+String(error?.message||error).slice(0,160);
+  console.error('[APIS]',message);setText('feedState','ERROR · '+message);
+  if(window.__APIS_REPORT_ERROR__)window.__APIS_REPORT_ERROR__('Startup '+label,message);
+  return false;
+ }
 }
 function setMarketSession(){
  const el=document.getElementById('marketSession');if(!el)return;
@@ -1429,6 +1677,7 @@ function bootstrap(){
  safeInit('Theme controls',initThemeControls);
  safeInit('News controls',initNewsControls);
  safeInit('Calendar controls',initCalendarControls);
+ safeInit('Market data provider settings',initProviderSettings);
  safeInit('Clock',()=>{tickClock();setInterval(tickClock,1000);setMarketSession();setInterval(setMarketSession,60000)});
  safeInit('Quote view',renderQuoteViews);
  safeInit('Source health',renderQuality);

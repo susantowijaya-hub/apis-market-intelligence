@@ -23,6 +23,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Validate dashboard JavaScript
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script>/gi)].filter(m => m[1].trim());
+          if (scripts.length !== 1) throw new Error('Expected exactly one inline application script; found ' + scripts.length);
+          const ids = [...html.matchAll(/\\bid=["']([^"']+)["']/g)].map(m => m[1]);
+          const duplicates = ids.filter((id, i) => ids.indexOf(id) !== i);
+          if (duplicates.length) throw new Error('Duplicate HTML ids: ' + [...new Set(duplicates)].join(', '));
+          fs.writeFileSync('/tmp/apis-inline.js', scripts[0][1]);
+          console.log('HTML checks passed; inline JS bytes:', scripts[0][1].length);
+          NODE
+          node --check /tmp/apis-inline.js
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload site artifact

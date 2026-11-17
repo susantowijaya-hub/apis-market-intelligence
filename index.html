@@ -161,7 +161,7 @@ html[data-theme="dark"] .treasury-links a{color:#a9e8c9}
 .theme-menu [data-theme-choice],.news-filter,[data-news-filter],.nav a{transition:background-color .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
 .theme-menu [data-theme-choice]:active,[data-news-filter]:active{transform:scale(.97)}
 .quote-value,.snapshot-item-price{transition:color .18s ease,opacity .18s ease}
-/* APIS v2.2.0 — responsive terminal polish and interaction motion */
+/* APIS v2.3.0 — responsive terminal polish and interaction motion */
 :root{--motion-fast:150ms;--motion-base:220ms;--motion-ease:cubic-bezier(.2,.75,.25,1)}
 html{scroll-behavior:smooth}
 button,.button,.icon-button,.nav a,.card,.quote-card,.snapshot-item,.module-card,.source-row,.mover-row,.event-row,.news-item{transition:background-color var(--motion-base) var(--motion-ease),border-color var(--motion-base) var(--motion-ease),box-shadow var(--motion-base) var(--motion-ease),transform var(--motion-base) var(--motion-ease),opacity var(--motion-base) var(--motion-ease)}
@@ -538,20 +538,24 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
   <div class="section-head"><div><div class="eyebrow">04 / Tata kelola</div><h2>Sumber data & catatan operasional</h2><p>Asal-usul data, batasan penyedia, dan batas kemampuan edisi browser.</p></div></div>
   <div class="grid two-col">
     <div class="card card-pad"><div class="card-title"><div><h3>Registri sumber</h3><p>Dependensi data dan visualisasi</p></div></div><div class="source-list">
-      <div class="source-row"><div><strong>Yahoo Finance public quote relay</strong><small>Index / equity / ETF / futures / FX observations; unofficial Yahoo endpoint through a third-party public CORS proxy. Exchange delays and update intervals can vary.</small></div><span class="badge warn">BEST EFFORT</span></div>
+      <div class="source-row"><div><strong>Twelve Data API</strong><small>Optional authenticated REST quote adapter for supported indices and instruments. Symbol coverage, real-time access, delay and credits depend on the subscription/entitlement.</small></div><span class="badge warn">API KEY REQUIRED</span></div>
+      <div class="source-row"><div><strong>Financial Modeling Prep (FMP)</strong><small>Optional authenticated quote adapter and index quote endpoint. Availability of specific indices/futures depends on account plan and instrument coverage.</small></div><span class="badge warn">API KEY / PLAN</span></div>
+      <div class="source-row"><div><strong>Yahoo Finance public fallback</strong><small>Unofficial quote endpoint through public CORS relays; used only when configured providers are absent or fail. May be delayed and is not a licensed exchange feed.</small></div><span class="badge warn">FALLBACK ONLY</span></div>
       <div class="source-row"><div><strong>TradingView chart embed (optional)</strong><small>Optional chart only. APIS market snapshot, news feed and macro calendar are rendered internally from their respective sources.</small></div><span class="badge warn">EXTERNAL EMBED</span></div>
       <div class="source-row"><div><strong>Binance / Coinbase / Kraken public streams</strong><small>BTC spot WebSocket tickers with REST snapshot fallback. Tick-by-tick label only while a provider WebSocket message is fresh.</small></div><span class="badge good">PUBLIC STREAM</span></div>
       <div class="source-row"><div><strong>U.S. Treasury / FRED H.15</strong><small>Daily par yield curve 2Y/5Y/10Y/30Y; official Treasury table first, free FRED CSV fallback; not intraday.</small></div><span class="badge good">DAILY</span></div>
-      <div class="source-row"><div><strong>Publisher RSS feeds</strong><small>CNBC, BBC Business, Guardian Business, Federal Reserve, BIS. Publication timestamps preserved.</small></div><span class="badge good">PUBLIC RSS</span></div>
+      <div class="source-row"><div><strong>Publisher RSS / news aggregation</strong><small>CNBC, BBC, Guardian, Reuters, Bloomberg and Investing.com headlines. Reuters/Bloomberg/Investing headlines are discovered via Google News RSS; these are news sources, not price feeds.</small></div><span class="badge good">PUBLIC HEADLINES</span></div>
+      <div class="source-row"><div><strong>Google Finance</strong><small>GOOGLEFINANCE is a Google Sheets function, not a public JavaScript quote API; some futures are unsupported and quotes may be delayed.</small></div><span class="badge warn">SHEETS FUNCTION</span></div>
+      <div class="source-row"><div><strong>Reuters / Bloomberg professional data</strong><small>Reuters news/data is delivered through LSEG services; Bloomberg market data through SAPI, B-PIPE or Data License. Access and display require licensed entitlements.</small></div><span class="badge warn">LICENSED FEEDS</span></div>
       <div class="source-row"><div><strong>BLS / BEA / Federal Reserve calendars</strong><small>Official release schedules filtered to major macro releases.</small></div><span class="badge good">OFFICIAL SCHEDULE</span></div>
       <div class="source-row"><div><strong>Frankfurter reference-rate API</strong><small>USD/IDR central-bank reference rate; not a live executable FX quote.</small></div><span class="badge warn">REFERENCE</span></div>
     </div></div>
     <div class="card card-pad"><div class="card-title"><div><h3>Batasan yang diketahui</h3><p>Kemampuan yang tersedia dan yang tidak diklaim</p></div></div>
       <ul class="check-list">
-        <li><span class="check-mark">✓</span><span>Runs as a local HTML file in a modern browser; no private API key or custom server is required for the included public feeds.</span></li>
+        <li><span class="check-mark">✓</span><span>Runs as a local HTML file in a modern browser. Public fallback feeds work without keys; Twelve Data and FMP adapters require user-supplied API credentials and provider entitlements.</span></li>
         <li><span class="check-mark">✓</span><span>Only provider responses with a valid price and observation timestamp enter the quote table and CSV export.</span></li>
         <li><span class="check-mark">✓</span><span>Binance BTC/USDT is labelled live only when a timestamped WebSocket message is received.</span></li>
-        <li><span class="check-miss">!</span><span>Yahoo chart endpoint is unofficial and accessed through a third-party CORS proxy; availability, usage terms and latency can change. It is not a licensed exchange feed.</span></li>
+        <li><span class="check-miss">!</span><span>Yahoo is retained only as a public fallback. With no Twelve Data/FMP key configured, most public equity/index quotes will still depend on this fallback; APIS does not invent replacement prices.</span></li>
         <li><span class="check-miss">!</span><span>Feed tanpa autentikasi tidak menjamin real-time. Data live berlisensi untuk indeks/futures/BEI memerlukan entitlement provider yang sesuai.</span></li>
         <li><span class="check-miss">!</span><span>No guaranteed live IDX equities feed is included. IDX real-time market data requires the appropriate licensed source.</span></li>
         <li><span class="check-miss">!</span><span>Full APIS Python orchestration, database, background automation, LLM features, issuer ingestion and persistent cloud storage are not ported into this single HTML file.</span></li>
@@ -642,7 +646,7 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 'use strict';
 /* APIS The Market Terminal 2.3.0 · Multi-provider mobile terminal
    - No synthetic market data or fabricated news.
-   - Yahoo Finance chart endpoint is unofficial and accessed through the public CORS.dev proxy.
+   - Yahoo Finance is an unofficial public fallback accessed through third-party CORS relays.
    - TradingView widgets are visual embeds; their data is not read back into calculations.
    - Binance websocket is used for genuine public BTC/USDT market-data messages.
    - Local browser tools are a subset, not a replacement for the APIS Python runtime.
@@ -739,7 +743,7 @@ function normalizeProviderQuote(item,payload,provider,sourceUrl){
  const providerChange=num(Number(raw.change??raw.changeAmount??raw.priceChange));
  const providerPct=num(Number(raw.percent_change??raw.changePercentage??raw.percentChange));
  const explicitPrevious=num(Number(raw.previous_close??raw.previousClose??raw.prevClose));
- const previousClose=explicitPrevious??(providerChange!==null?price-providerChange:null);
+ const previousClose=explicitPrevious??(providerChange!==null?price-providerChange:(providerPct!==null&&price!==null&&1+providerPct/100!==0?price/(1+providerPct/100):null));
  const timestamp=num(Number(raw.timestamp??raw.lastTradeTimestamp??raw.time));
  if(price===null||price<=0||timestamp===null||timestamp<=0)throw new Error('Price or provider timestamp missing');
  if(timestamp>Date.now()/1000+300)throw new Error('Provider timestamp is ahead of current time');

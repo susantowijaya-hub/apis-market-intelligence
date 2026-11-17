@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f5">
-<meta name="build-version" content="2.10.0">
+<meta name="build-version" content="2.10.1">
 <meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — The Market Terminal v2.10.0</title>
+<title>APIS — The Market Terminal v2.10.1</title>
 <style>
 :root{
   color-scheme:light;
@@ -1156,18 +1156,18 @@ html[data-theme="dark"] .calendar-event-metric.actual.good,html[data-theme="dark
 */
 const TZ='Asia/Jakarta';
 const WATCHLIST=[
-  {symbol:'^JKSE',name:'IDX Composite',short:'IHSG',group:'Index',region:'Indonesia',tv:'IDX:COMPOSITE'},
+  {symbol:'^JKSE',name:'IDX Composite',short:'IHSG',group:'Index',region:'Indonesia',tv:'IDX:COMPOSITE',googleFinanceSymbol:'COMPOSITE:IDX'},
   {symbol:'^JKLQ45',name:'IDX LQ45',short:'LQ45',group:'Index',region:'Indonesia',tv:'IDX:LQ45'},
-  {symbol:'^GSPC',name:'S&P 500',short:'S&P 500',group:'Index',region:'United States',tv:'SP:SPX',tdSymbol:'SPX',stooqSymbol:'^spx'},
-  {symbol:'^IXIC',name:'Nasdaq Composite',short:'Nasdaq',group:'Index',region:'United States',tv:'NASDAQ:IXIC',tdSymbol:'IXIC',stooqSymbol:'^ndq'},
-  {symbol:'^DJI',name:'Dow Jones Industrial Average',short:'Dow Jones',group:'Index',region:'United States',tv:'DJ:DJI',tdSymbol:'DJI',stooqSymbol:'^dji'},
-  {symbol:'000001.SS',name:'Shanghai Composite',short:'Shanghai',group:'Index',region:'Greater China',tv:'SSE:000001'},
-  {symbol:'^TWII',name:'Taiwan Weighted',short:'Taiwan',group:'Index',region:'Greater China',tv:'TWSE:IX0001'},
-  {symbol:'^KS11',name:'KOSPI Composite',short:'KOSPI',group:'Index',region:'North Asia',tv:'KRX:KOSPI',tdSymbol:'KS11',stooqSymbol:'^kospi'},
-  {symbol:'^NSEI',name:'NIFTY 50',short:'NIFTY 50',group:'Index',region:'South Asia',tv:'NSE:NIFTY',tdSymbol:'NIFTY'},
+  {symbol:'^GSPC',name:'S&P 500',short:'S&P 500',group:'Index',region:'United States',tv:'SP:SPX',tdSymbol:'SPX',stooqSymbol:'^spx',googleFinanceSymbol:'.INX:INDEXSP'},
+  {symbol:'^IXIC',name:'Nasdaq Composite',short:'Nasdaq',group:'Index',region:'United States',tv:'NASDAQ:IXIC',tdSymbol:'IXIC',stooqSymbol:'^ndq',googleFinanceSymbol:'.IXIC:INDEXNASDAQ'},
+  {symbol:'^DJI',name:'Dow Jones Industrial Average',short:'Dow Jones',group:'Index',region:'United States',tv:'DJ:DJI',tdSymbol:'DJI',stooqSymbol:'^dji',googleFinanceSymbol:'.DJI:INDEXDJX'},
+  {symbol:'000001.SS',name:'Shanghai Composite',short:'Shanghai',group:'Index',region:'Greater China',tv:'SSE:000001',googleFinanceSymbol:'000001:SHA'},
+  {symbol:'^TWII',name:'Taiwan Weighted',short:'Taiwan',group:'Index',region:'Greater China',tv:'TWSE:IX0001',googleFinanceSymbol:'IX0001:TPE'},
+  {symbol:'^KS11',name:'KOSPI Composite',short:'KOSPI',group:'Index',region:'North Asia',tv:'KRX:KOSPI',tdSymbol:'KS11',stooqSymbol:'^kospi',googleFinanceSymbol:'KOSPI:KRX'},
+  {symbol:'^NSEI',name:'NIFTY 50',short:'NIFTY 50',group:'Index',region:'South Asia',tv:'NSE:NIFTY',tdSymbol:'NIFTY',googleFinanceSymbol:'NIFTY_50:NSE'},
   {symbol:'NQ=F',name:'Nasdaq-100 E-mini Futures',short:'NQ Futures',group:'Index',region:'United States',tv:'CME_MINI:NQ1!'},
-  {symbol:'^N225',name:'Nikkei 225',short:'Nikkei 225',group:'Index',region:'North Asia',tv:'TVC:NI225'},
-  {symbol:'^HSI',name:'Hang Seng Index',short:'HSI',group:'Index',region:'Greater China',tv:'HKEX:HSI'},
+  {symbol:'^N225',name:'Nikkei 225',short:'Nikkei 225',group:'Index',region:'North Asia',tv:'TVC:NI225',googleFinanceSymbol:'NI225:INDEXNIKKEI'},
+  {symbol:'^HSI',name:'Hang Seng Index',short:'HSI',group:'Index',region:'Greater China',tv:'HKEX:HSI',googleFinanceSymbol:'HSI:INDEXHANGSENG'},
   {symbol:'^VIX',name:'CBOE Volatility Index',short:'VIX',group:'Risk',region:'United States',tv:'TVC:VIX',tdSymbol:'VIX',stooqSymbol:'^vix'},
   {symbol:'EIDO',name:'iShares MSCI Indonesia ETF',short:'EIDO',group:'ETF',region:'Indonesia',tv:'AMEX:EIDO',stooqSymbol:'eido.us'},
   {symbol:'IDR=X',name:'USD / IDR',short:'USD/IDR',group:'FX',tv:'FX_IDC:USDIDR',stooqSymbol:'usdidr'},
@@ -1556,9 +1556,100 @@ async function fetchXauSpotQuote(item){
   providerFallbacks:[]
  };
 }
+const GOOGLE_FINANCE_CACHE=new Map();
+function googleFinancePageNumber(value){
+ if(value===null||value===undefined)return null;
+ const normalized=String(value).replace(/[,\s]/g,'').replace(/−/g,'-').replace(/^\+/,'');
+ const n=Number(normalized);return Number.isFinite(n)?n:null;
+}
+function parseGoogleFinanceQuotePage(html,item,now=Date.now()){
+ if(typeof html!=='string'||html.length<500)throw new Error('Google Finance page is empty or incomplete');
+ const attr=name=>{
+  const match=html.match(new RegExp(name+'=["\\\\']([^"\\\\']+)["\\\\']','i'));
+  return match?match[1]:null;
+ };
+ const price=googleFinancePageNumber(attr('data-last-price'));
+ const change=googleFinancePageNumber(attr('data-last-price-change'));
+ const pct=googleFinancePageNumber(attr('data-last-percentage-change'));
+ if(price===null||price<=0)throw new Error('Google Finance price attribute not found');
+ let changePct=pct;
+ if(changePct===null&&change!==null){
+  const previous=price-change;if(previous>0)changePct=(price/previous-1)*100;
+ }
+ if(changePct===null||changePct<=-100||changePct>100)throw new Error('Google Finance daily percentage is missing or invalid');
+ const previousClose=price/(1+changePct/100);
+ if(!Number.isFinite(previousClose)||previousClose<=0)throw new Error('Google Finance previous close cannot be derived');
+ const timeMatch=html.match(/([A-Z][a-z]{2}\\s+\\d{1,2},\\s+\\d{1,2}:\\d{2}:\\d{2}\\s+[AP]M\\s+GMT[+-]\\d{1,2})/);
+ if(!timeMatch)throw new Error('Google Finance source timestamp is missing');
+ const stamped=Date.parse(timeMatch[1]+' '+new Date(now).getUTCFullYear());
+ if(!Number.isFinite(stamped)||stamped>now+5*60*1000||now-stamped>36*3600*1000)throw new Error('Google Finance source timestamp is invalid or stale');
+ const age=Math.max(0,(now-stamped)/1000);
+ const session=exchangeSession(item,new Date(stamped));
+ const status=age>30*60?'LAST_AVAILABLE_CLOSE':'DELAYED_PROVIDER';
+ return {
+  symbol:item.symbol,name:item.name,short:item.short,group:item.group,region:item.region||'',
+  price,previousClose,changePct,currency:item.currency||'',exchange:'Google Finance',
+  marketState:'GOOGLE FINANCE PUBLIC QUOTE',observedAt:stamped/1000,observedAge:age,
+  retrievedAt:now,status,source:'Google Finance · public quote page',sourceUrl:'https://www.google.com/finance/quote/'+encodeURIComponent(item.googleFinanceSymbol),
+  observationDate:session?exchangeDateKey(stamped/1000,session.zone):new Date(stamped).toISOString().slice(0,10),
+  googleFinanceSymbol:item.googleFinanceSymbol,providerQuoteVerified:true,sparkline:[],providerFallbacks:[]
+ };
+}
+async function fetchGoogleFinanceQuote(item){
+ if(!item.googleFinanceSymbol)throw new Error('Google Finance symbol is not mapped');
+ const cached=GOOGLE_FINANCE_CACHE.get(item.symbol);
+ if(cached&&Date.now()-cached.retrievedAt<15000)return {...cached};
+ const target='https://www.google.com/finance/quote/'+encodeURIComponent(item.googleFinanceSymbol)+'?hl=en&gl=US';
+ const routes=[
+  'https://corsproxy.io/?url='+encodeURIComponent(target),
+  'https://api.allorigins.win/raw?url='+encodeURIComponent(target),
+  'https://proxy.cors.dev/'+target
+ ];
+ const errors=[];
+ for(const route of routes){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);
+  try{
+   const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'text/html,application/xhtml+xml'}});
+   if(!response.ok)throw new Error('HTTP '+response.status);
+   const html=await response.text();
+   const quote=parseGoogleFinanceQuotePage(html,item);
+   quote.proxy=new URL(route).host;
+   GOOGLE_FINANCE_CACHE.set(item.symbol,quote);
+   return {...quote};
+  }catch(error){errors.push(new URL(route).host+': '+String(error?.message||error).slice(0,90))}
+  finally{clearTimeout(timer)}
+ }
+ throw new Error(errors.join(' · ')||'Google Finance public page unavailable');
+}
+async function fetchIndexProviderComparison(item,googleQuote){
+ const session=exchangeSession(item);
+ try{
+  let backup;
+  if(session?.state==='CLOSED'||session?.state==='PREOPEN'){
+   try{backup=await fetchStooqQuote(item)}catch(_){backup=await fetchYahooQuote(item)}
+  }else backup=await fetchYahooQuote(item);
+  const differencePct=(backup.price/googleQuote.price-1)*100;
+  return {
+   source:backup.source||backup.exchange||'Secondary provider',price:backup.price,
+   changePct:stockChangePct(backup),differencePct,
+   status:Math.abs(differencePct)>0.35?'DIVERGENCE':'ALIGNED',
+   observationDate:backup.observationDate||null,retrievedAt:Date.now()
+  };
+ }catch(error){
+  return {source:'Secondary provider unavailable',price:null,changePct:null,differencePct:null,status:'UNAVAILABLE',error:String(error?.message||error).slice(0,160),retrievedAt:Date.now()};
+ }
+}
 async function fetchMarketQuote(item){
  const errors=[];
  if(item.symbol==='XAUUSD=X')return fetchXauSpotQuote(item);
+ if(item.googleFinanceSymbol){
+  try{
+   const googleQuote=await fetchGoogleFinanceQuote(item);
+   googleQuote.providerComparison=await fetchIndexProviderComparison(item,googleQuote);
+   if(googleQuote.providerComparison.status==='DIVERGENCE')googleQuote.source+=' · secondary source divergence';
+   return googleQuote;
+  }catch(error){errors.push('Google Finance public page: '+String(error?.message||error).slice(0,150))}
+ }
  if(item.symbol==='^TWII'){
   const taiwanSession=exchangeSession(item);
   if(taiwanSession?.state==='OPEN'||taiwanSession?.state==='PRECLOSE')return fetchYahooQuote(item);
@@ -1723,7 +1814,7 @@ function renderMovers(){
 }
 function stockChangePct(quote){
  if(!quote)return null;
- if(quote.symbol==='^TWII'&&!String(quote.source||'').toUpperCase().includes('TWSE'))return null;
+ if(quote.symbol==='^TWII'&&!['TWSE','GOOGLE FINANCE'].some(token=>String(quote.source||'').toUpperCase().includes(token)))return null;
  if(num(quote.changePct)!==null)return Number(quote.changePct);
  if(num(quote.previousClose)!==null&&quote.previousClose>0&&num(quote.price)!==null)return (quote.price/quote.previousClose-1)*100;
  return null;

@@ -24,7 +24,12 @@ function parsePage(html, symbol, now = Date.now()) {
   }
   const change = number(attr('data-last-price-change'));
   const pct = number(attr('data-last-percentage-change'));
-  if (price === null || price <= 0) throw new Error('price not found');
+  if (price === null || price <= 0) {
+    const markers=['data-last-price','YMlKec','fxKbKc','IX0001','TAIEX','__NEXT_DATA__'];
+    const diagnostics=markers.map(marker=>marker+':'+html.indexOf(marker)).join(' ');
+    const snippets=markers.map(marker=>{const at=html.indexOf(marker);return at>=0?html.slice(Math.max(0,at-100),at+260).replace(/\\s+/g,' '):''}).filter(Boolean).join(' || ');
+    throw new Error('price not found · '+diagnostics+' · '+snippets.slice(0,900));
+  }
   let changePct = pct;
   if (changePct === null && change !== null && price - change > 0)
     changePct = (price / (price - change) - 1) * 100;

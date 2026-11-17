@@ -1084,7 +1084,98 @@ function exportEvidence(){if(!APP.ledger.length){toast('Buku bukti is empty.');r
 
 /* Navigation, clock and bootstrap. */
 function tickClock(){setText('clock',new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date())+' WIB');const hint=document.getElementById('autoRefreshLabel');if(hint){const left=APP.nextRefreshAt?Math.max(0,Math.ceil((APP.nextRefreshAt-Date.now())/1000)):60;hint.textContent=document.hidden?'AUTO · PAUSED':('AUTO · '+left+'s')}}
-const navLinks=[...document.querySelectorAll('.nav a')];const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){navLinks.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+entry.target.id))}})},{rootMargin:'-25% 0px -65% 0px'});['overview','markets','research','workbench','sources','macroPanel','watchlistPanel','moversPanel','filingsPanel'].forEach(id=>{const e=document.getElementById(id);if(e)observer.observe(e)});
+function initPageRouter(){
+ const pageMap={home:'overview',markets:'markets',news:'research',macro:'macroView',movers:'moversView',filings:'filingsView',tools:'workbench',research:'sources'};
+ const pageLinks=[...document.querySelectorAll('[data-page]')];
+ function showPage(key){
+  const target=pageMap[key]||'overview';
+  document.querySelectorAll('.page-view').forEach(node=>node.classList.toggle('active',node.id===target));
+  pageLinks.forEach(node=>node.classList.toggle('active',node.dataset.page===key));
+  document.querySelectorAll('.nav-more').forEach(node=>node.open=false);
+  history.replaceState(null,'','#'+target);
+  window.scrollTo(0,0);
+  if(key==='markets')renderQuoteViews();
+  if(key==='macro'){
+   if(APP.tsyState!=='loaded')loadTreasuryCurve();
+   if(APP.calendarState!=='loaded')loadMacroCalendar();
+  }
+  if(key==='news'&&!APP.newsItems?.length)loadPublicNews();
+  if(key==='movers')renderMovers();
+  if(key==='filings'&&!APP.filingsState)loadEdgarFilings();
+  return target;
+ }
+ pageLinks.forEach(link=>link.addEventListener('click',event=>{
+  event.preventDefault();
+  showPage(link.dataset.page);
+ }));
+ document.querySelectorAll('[data-tool-anchor]').forEach(link=>link.addEventListener('click',event=>{
+  event.preventDefault();
+  const target=document.getElementById(link.dataset.toolAnchor);
+  if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+ }));
+ window.addEventListener('hashchange',()=>{
+  const entry=Object.entries(pageMap).find(([,id])=>id===location.hash.slice(1));
+  if(entry)showPage(entry[0]);
+ });
+ const initial=Object.entries(pageMap).find(([,id])=>id===location.hash.slice(1));
+ showPage(initial?initial[0]:'home');
+}
+function applyTheme(mode){
+ const actual=mode==='system'?(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):mode;
+ document.documentElement.dataset.theme=actual;
+ APP.themeMode=mode;
+ saveJSON('apis_theme_mode',mode);
+ document.querySelectorAll('[data-theme-choice]').forEach(button=>button.classList.toggle('selected',button.dataset.themeChoice===mode));
+}
+function initThemeControls(){
+ const menu=document.querySelector('.theme-menu');
+ if(!menu)return;
+ applyTheme(loadJSON('apis_theme_mode','light'));
+ menu.querySelectorAll('[data-theme-choice]').forEach(button=>button.addEventListener('click',()=>{
+  applyTheme(button.dataset.themeChoice);
+  menu.open=false;
+  if(typeof loadChart==='function')loadChart();
+ }));
+ if(window.matchMedia){
+  const media=window.matchMedia('(prefers-color-scheme: dark)');
+  media.addEventListener?.('change',()=>{if(APP.themeMode==='system')applyTheme('system')});
+ }
+}
+function initNewsControls(){
+ APP.newsFilter='All';
+ APP.newsNotified=APP.newsNotified||new Set();
+ const filters=document.getElementById('newsFilters');
+ if(filters)filters.addEventListener('click',event=>{
+  const button=event.target.closest('[data-news-filter]');
+  if(!button)return;
+  APP.newsFilter=button.dataset.newsFilter;
+  filters.querySelectorAll('[data-news-filter]').forEach(node=>node.classList.toggle('active',node===button));
+  renderNewsFeed();
+ });
+ const search=document.getElementById('newsSearch');
+ if(search)search.addEventListener('input',renderNewsFeed);
+ const refresh=document.getElementById('refreshNewsBtn');
+ if(refresh)refresh.onclick=loadPublicNews;
+ const toggle=document.getElementById('newsAlertsToggle');
+ if(toggle)toggle.addEventListener('change',async()=>{
+  if(!toggle.checked){APP.newsAlertsOn=false;saveJSON('apis_browser_news_alerts',false);return}
+  if(!('Notification'in window)){toggle.checked=false;toast('Notifications are not supported in this browser.');return}
+  const permission=Notification.permission==='granted'?'granted':await Notification.requestPermission();
+  APP.newsAlertsOn=permission==='granted';
+  toggle.checked=APP.newsAlertsOn;
+  saveJSON('apis_browser_news_alerts',APP.newsAlertsOn);
+  if(!APP.newsAlertsOn)toast('Notification permission was not granted.');
+ });
+ APP.newsAlertsOn=loadJSON('apis_browser_news_alerts',false);
+ if(toggle)toggle.checked=!!APP.newsAlertsOn;
+}
+function initCalendarControls(){
+ const select=document.getElementById('calendarImpact');
+ if(select)select.addEventListener('change',renderMacroCalendar);
+ const button=document.getElementById('refreshCalendarBtn');
+ if(button)button.onclick=loadMacroCalendar;
+}
+['refreshBtn','refreshTop']
 ['refreshBtn','refreshTop'].forEach(id=>{const e=document.getElementById(id);if(e)e.onclick=()=>fetchQuoteBatch()});const reload=document.getElementById('reloadChart');if(reload)reload.onclick=loadChart;const chartSelect=document.getElementById('chartSymbol');if(chartSelect)chartSelect.onchange=loadChart;
 function safeInit(label,fn){
  try{fn();return true}catch(error){const message=label+': '+String(error?.message||error).slice(0,160);console.error('[APIS]',message);setText('feedState','ERROR · '+message);return false}
@@ -1098,26 +1189,54 @@ function setMarketSession(){
  el.textContent=open?'US SESSION · REGULAR':'AFTER HOURS · US';
 }
 function bootstrap(){
- /* Feed services initialize first; local tools must never block the terminal. */
- safeInit('Quote cache',restoreQuoteCache);safeInit('Auxiliary cache',restoreAuxCache);
+ /* Independent services: one failed embed or module must not block the others. */
+ safeInit('Quote cache',restoreQuoteCache);
+ safeInit('Auxiliary cache',restoreAuxCache);
+ safeInit('Page navigation',initPageRouter);
+ safeInit('Theme controls',initThemeControls);
+ safeInit('News controls',initNewsControls);
+ safeInit('Calendar controls',initCalendarControls);
  safeInit('Clock',()=>{tickClock();setInterval(tickClock,1000);setMarketSession();setInterval(setMarketSession,60000)});
- safeInit('Quote view',renderQuoteViews);safeInit('Source health',renderQuality);
- safeInit('Chart widgets',loadWidgets);
- safeInit('BTC WebSocket',connectBitcoinStream);safeInit('BTC REST',fetchBitcoinRest);
- safeInit('USD/IDR',loadFxReference);safeInit('Treasury yield',loadTreasuryCurve);
- safeInit('Market quotes',fetchQuoteBatch);safeInit('Public news RSS',loadPublicNews);safeInit('SEC EDGAR filings',loadEdgarFilings);
+ safeInit('Quote view',renderQuoteViews);
+ safeInit('Source health',renderQuality);
+ safeInit('Chart',loadWidgets);
+ safeInit('BTC WebSocket',connectBitcoinStream);
+ safeInit('BTC REST',fetchBitcoinRest);
+ safeInit('USD/IDR',loadFxReference);
+ safeInit('Treasury yield',loadTreasuryCurve);
+ safeInit('Major economic releases',loadMacroCalendar);
+ safeInit('Market quotes',fetchQuoteBatch);
+ safeInit('Publisher news',loadPublicNews);
+ safeInit('SEC EDGAR filings',loadEdgarFilings);
  APP.nextRefreshAt=Date.now()+60000;
  APP.timer=setInterval(()=>{if(!document.hidden&&navigator.onLine&&APP.yahooState!=='loading')fetchQuoteBatch()},60000);
  APP.fxTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadFxReference()},60*60*1000);
  APP.tsyTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadTreasuryCurve()},6*60*60*1000);
- APP.newsTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadPublicNews()},10*60*1000);
- APP.filingsTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadEdgarFilings()},20*60*1000);
+ APP.calendarTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadMacroCalendar()},60*60*1000);
+ APP.newsTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadPublicNews()},5*60*1000);
+ APP.filingsTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadEdgarFilings()},30*60*1000);
  APP.btcRestTimer=setInterval(()=>{if(!btcIsFresh()||APP.btc?.transport!=='WEBSOCKET')fetchBitcoinRest()},30000);
  APP.staleTimer=setInterval(()=>{if(APP.btc&&!btcIsFresh()){setText('btcStatus','STALE · last observation retained');updateFeedState();renderQuality()}},3000);
- document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(!btcIsFresh())connectBitcoinStream();if(navigator.onLine&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>30000))fetchQuoteBatch();if(APP.fxState==='unavailable'||APP.fxState==='cached')loadFxReference();if(APP.tsyState!=='loaded')loadTreasuryCurve();if(APP.newsState!=='loaded')loadPublicNews();if(APP.filingsState!=='loaded')loadEdgarFilings()}});
- window.addEventListener('online',()=>{fetchQuoteBatch();loadFxReference();loadTreasuryCurve();loadPublicNews();loadEdgarFilings();if(!btcIsFresh())connectBitcoinStream()});
- window.addEventListener('focus',()=>{if(navigator.onLine&&!document.hidden&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>45000))fetchQuoteBatch()});
- safeInit('Alert options',addAlertOptions);safeInit('Evidence ledger',renderLedger);safeInit('Alert rules',renderAlerts);
+ document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)return;
+  if(!btcIsFresh())connectBitcoinStream();
+  if(navigator.onLine&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>30000))fetchQuoteBatch();
+  if(APP.fxState==='unavailable'||APP.fxState==='cached')loadFxReference();
+  if(APP.tsyState!=='loaded')loadTreasuryCurve();
+  if(APP.calendarState!=='loaded')loadMacroCalendar();
+  if(APP.newsState!=='loaded')loadPublicNews();
+  if(APP.filingsState!=='loaded')loadEdgarFilings();
+ });
+ window.addEventListener('online',()=>{
+  fetchQuoteBatch();loadFxReference();loadTreasuryCurve();loadMacroCalendar();loadPublicNews();loadEdgarFilings();
+  if(!btcIsFresh())connectBitcoinStream();
+ });
+ window.addEventListener('focus',()=>{
+  if(navigator.onLine&&!document.hidden&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>45000))fetchQuoteBatch();
+ });
+ safeInit('Alert options',addAlertOptions);
+ safeInit('Evidence ledger',renderLedger);
+ safeInit('Alert rules',renderAlerts);
  if(QUOTES.size)setText('lastRefresh','Restored '+QUOTES.size+' saved observations · refresh pending');
 }
 bootstrap();</script>

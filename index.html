@@ -1328,6 +1328,7 @@ async function fetchYahooQuote(item){
 function parseTwseDate(value){
  const raw=String(value||'').replace(/[^0-9]/g,'');
  if(raw.length===7){const year=Number(raw.slice(0,3))+1911,month=Number(raw.slice(3,5)),day=Number(raw.slice(5,7));return {year,month,day}}
+ if(raw.length===8){const year=Number(raw.slice(0,4)),month=Number(raw.slice(4,6)),day=Number(raw.slice(6,8));return {year,month,day}}
  const match=String(value||'').match(/(20\d{2})[/-](\d{1,2})[/-](\d{1,2})/);
  return match?{year:Number(match[1]),month:Number(match[2]),day:Number(match[3])}:null;
 }
@@ -1553,7 +1554,7 @@ async function fetchQuoteSlice(){
    }
   });
   APP.sliceUpdated=(APP.sliceUpdated||0)+updated;APP.sliceFailed=(APP.sliceFailed||0)+failed;
-  APP.lastSliceRefreshAt=Date.now();
+  APP.lastSliceRefreshAt=Date.now();APP.nextRefreshAt=Date.now()+5000;
   if(Date.now()-(APP.lastCacheSavedAt||0)>15000)await persistQuoteCache();
   renderQuoteViews();renderQuality();
   const stamp=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).format(new Date());
@@ -1718,9 +1719,13 @@ function marketFeedTimestampLabel(quote,item){
   const descriptor=session.state==='CLOSED'&&quote.observationDate===today?'Close':'Last close';
   return feed+' · '+descriptor+' '+session.closeTime+' '+session.closeZone+' · '+day;
  }
- if(session?.state==='CLOSED'&&quote.observedAt){
-  const day=new Intl.DateTimeFormat('en-GB',{timeZone:session.zone,day:'2-digit',month:'short'}).format(new Date(quote.observedAt*1000));
-  return feed+' · Last close '+session.closeTime+' '+session.closeZone+' · '+day;
+ if(session&&quote.observedAt&&(quote.status==='LAST_AVAILABLE_CLOSE'||quote.status==='STALE_CACHE'||quote.status==='STALE_OBSERVATION')){
+  const observed=new Date(quote.observedAt*1000);
+  const day=new Intl.DateTimeFormat('en-GB',{timeZone:session.zone,day:'2-digit',month:'short'}).format(observed);
+  const observedKey=new Intl.DateTimeFormat('en-CA',{timeZone:session.zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(observed);
+  const today=new Intl.DateTimeFormat('en-CA',{timeZone:session.zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const descriptor=session.state==='CLOSED'&&observedKey===today?'Close':'Last close';
+  return feed+' · '+descriptor+' '+session.closeTime+' '+session.closeZone+' · '+day;
  }
  return feed;
 }

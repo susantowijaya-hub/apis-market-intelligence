@@ -437,3 +437,21 @@
 ### Browser smoke-test isolation
 - Browser smoke tests mock external calendar, Treasury, gold, and TWSE feeds and block unrelated live provider calls. Quote-poll assertions validate local poll initialization and in-place row updates without waiting for public market endpoints.
 - Live provider availability remains an application runtime concern and is not a prerequisite for the GitHub Pages build/deploy pipeline.
+
+
+## 2026-11-17 — v2.11.0 benchmark repair and maintainable source layout
+
+### Targeted benchmark repairs
+- Added LQ45 and NIFTY 50 to the daily-index candle classification so closed-market quotes use daily candles rather than 1-minute bars.
+- LQ45 now prefers the IDX official Index Summary endpoint for a same-day close/previous-close pair. It rejects missing, mismatched-date, or incomplete rows; Yahoo daily chart is the fallback.
+- NIFTY 50 uses Yahoo daily index candles and derives daily percentage from the selected session close and the preceding exchange-session close.
+- S&P 500, Nasdaq Composite, and Dow Jones bypass unverified Stooq aliases and use their supported Yahoo index symbols directly. Daily changes are calculated from paired daily candles.
+- Other market instruments, provider paths, calendar sources, and existing terminal features are unchanged.
+- Free public feeds are not represented as exchange-licensed real-time feeds. IDX Index Summary is an official end-of-day summary; Yahoo is a public, unofficial/delayed fallback.
+
+### Source reconstruction
+- Extracted styles and JavaScript from the monolithic HTML into ordered files under `assets/css` and `assets/js`.
+- Split the browser runtime into compatibility diagnostics, core state/helpers, market data, realtime/macro/news, workspace tools, and bootstrap modules.
+- Kept ordered classic scripts to preserve the existing global state/function contract without introducing a bundler or package dependency.
+- Updated static and browser deployment validation to read modular source files and serve correct JS/CSS MIME types.
+- Added regression tests for daily-index classification and LQ45 percentage derivation/date matching.

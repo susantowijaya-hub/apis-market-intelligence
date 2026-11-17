@@ -25,91 +25,88 @@ jobs:
           node <<'NODE'
           const fs = require('node:fs');
           const html = fs.readFileSync('index.html', 'utf8');
-          const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)]
-            .map(match => match[1]).filter(script => script.trim());
-          if (!scripts.length) throw new Error('No inline scripts found');
-          scripts.forEach((script, index) => {
-            try { new Function(script); }
-            catch (error) { throw new Error('Inline script ' + (index + 1) + ': ' + error.message); }
-          });
+          const scriptPaths = ['assets/js/compat.js','assets/js/core.js','assets/js/market-data.js','assets/js/realtime-data.js','assets/js/workspace.js','assets/js/bootstrap.js'];
+          const scripts = scriptPaths.map(file => fs.readFileSync(file, 'utf8'));
+          const source = html + '\n' + scripts.join('\n') + '\n' + fs.readFileSync('assets/css/app.css', 'utf8');
+          scripts.forEach((script, index) => { try { new Function(script); } catch (error) { throw new Error(scriptPaths[index] + ': ' + error.message); } });
           const checks = {
-            version: html.includes('build-version" content="2.10.2"'),
-            dailyIndexCloseOnly: html.includes("const hasDailyBars=isDailyIndex&&plan.interval==='1d'") && html.includes('useDailyClose=hasDailyBars&&barPrice!==null') && html.includes('const dailyBars=hasDailyBars?closes.map'),
-            dailyIndexCloseBaseline: html.includes('const baselineCutoff=useDailyClose?selectedDailyBarDay:sessionDay') && html.includes('selectDailyIndexPreviousClose(dailyBars,baselineCutoff,session.zone)'),
-            finalCloseTimeGuard: html.includes('Provider observation predates the official close window') && html.includes('session.finalCloseMinute-10'),
-            stooqSessionDateGuard: html.includes('Stooq observation date does not match the current exchange session'),
-            usClosingAuction: html.includes("openWindows=[[9*60+30,15*60+50]];auctionWindow=[15*60+50,16*60]"),
-            hongKongLunchBreak: html.includes('openWindows=[[9*60+30,12*60],[13*60,16*60]]'),
-            closedRefreshGuardRestore: html.includes("closedRefreshDone:loadJSON('apis_market_closed_refresh_done',{})"),
-            freeMode: html.includes('Stooq public CSV snapshots') && html.includes('Yahoo Finance public chart fallback'),
-            stooqAdapter: html.includes('async function fetchStooqQuote'),
-            googleFinanceNotUsedAsLiveFeed: !html.includes('fetchGoogleFinanceQuote') && !html.includes('googleFinanceSymbol') && !html.includes('fetchGoogleFinanceSnapshot'),
-            verifiedPublicQuoteFallbacks: html.includes('async function fetchMarketQuote') && html.includes('fetchStooqQuote(item)') && html.includes('fetchYahooQuote(item)') && html.includes('fetchTaiwanOfficialQuote(item)'),
-            yahooFallback: html.includes('async function fetchYahooQuote'),
-            publicWaterfall: html.includes('async function fetchMarketQuote'),
-            xauSpotAdapter: html.includes('async function fetchXauSpotQuote') && html.includes('https://xaus.com/api/v1/spot?compact=1'),
-            xauIntradayValidation: html.includes('coverage_seconds') && html.includes('historyCoverage>=23*3600'),
-            twseOfficialRwd: html.includes('/rwd/zh/afterTrading/MI_INDEX?date=') && html.includes('function parseTwseIndexReport'),
-            twseGregorianDate: html.includes('if(raw.length===8)'),
-            twsePreviousCloseValidation: html.includes('const signedText=value=>') && html.includes('previousClose=price/(1+changePct/100)'),
-            taiwanPercentSourceGuard: html.includes('async function fetchTaiwanOfficialQuote') && html.includes("if(item.symbol==='^TWII')") && html.includes('return await fetchYahooQuote(item)'),
-            yahooTaiwanPercentSuppression: html.includes("quote.symbol==='^TWII'&&!['TWSE'].some(token=>String(quote.source||'').toUpperCase().includes(token))"),
-            regionalGroups: html.includes('function renderGroupedStockRows') && html.includes("region:'Greater China'"),
-            homeExcludesStocks: html.includes("!['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity'].includes(item.group)"),
-            exchangeSessionSchedule: html.includes('function exchangeSession(') && html.includes("closeTime='16:00'") && html.includes("closeTime='16:10'") && html.includes('auctionWindow=[15*60+25,15*60+30]') && html.includes('function marketPollEligible('),
-            deterministicSessionLabel: html.includes('function marketSessionLabel(quote,item,now=new Date())'),
-            inPlaceQuoteUpdates: html.includes('function updateQuoteRowsInPlace()') && html.includes('updateQuoteRowsInPlace();renderTape();renderMovers();'),
-            liveTimestamp: html.includes('function marketFeedTimestampLabel(') && html.includes('ios-stock-updated') && html.includes('marketSessionStamp') && html.includes('setInterval(setMarketSession,4000)'),
-            fiveSecondQuotePoll: html.includes('fetchQuoteSlice()},5000'),
-            threeQuoteSlice: html.includes('const now=new Date(),queue=WATCHLIST.filter(item=>marketPollEligible(item,now))') && html.includes('sliceSize=6') && html.includes('APP.sliceBusy'),
-            fourSecondUiTick: html.includes('updateLiveRowLabels();setMarketSession();') && html.includes('},4000)'),
-            bitcoin: html.includes('function connectBitcoinStream'),
-            fx: html.includes('function loadFxReference'),
-            treasury: html.includes('async function loadTreasuryCurve'),
-            treasury30y: html.includes("thirty:'DGS30'") && html.includes("setTenor('thirty','tsy30','tsy30Date')"),
-            forexFactoryCalendar: html.includes('nfs.faireconomy.media/ff_calendar_thisweek.json') && html.includes('nfs.faireconomy.media/ff_calendar_nextweek.json'),
-            investingOccurrences: html.includes('endpoints.investing.com/pd-instruments/v1/calendars/economic/events/occurrences') && html.includes('function fetchInvestingCalendar'),
-            investingHtmlFallback: html.includes('function fetchInvestingCalendarHtml') && html.includes('tr.js-event-item'),
-            calendarMultiSourceMerge: html.includes('mergeCalendarSources(factory,investing)') && html.includes('mergeUsCalendarActuals(merged,agency)') && html.includes('function mergeUsCalendarActuals('),
-            calendarFiveMinuteCache: html.includes('const cacheTtl=5*60*1000'),
-            calendarRanges: html.includes('data-cal-range="3"') && html.includes('data-cal-range="7"'),
-            calendarImpact: html.includes('data-cal-impact="HIGH"') && html.includes('data-cal-impact="MEDIUM"') && html.includes('data-cal-impact="LOW"'),
-            calendarMerge: html.includes('mergeCalendarSources(factory,investing)') && html.includes('mergeUsCalendarActuals(merged,agency)'),
-            calendarCacheFiveMinutes: html.includes('const cacheTtl=5*60*1000'),
-            calendarCountries: ['AUD','CAD','CHF','CNY','EUR','GBP','IDR','JPY','NZD','USD'].every(code => html.includes('data-cal-country="' + code + '"')),
-            calendarCategories: ['Growth','Inflation','Employment','Central Bank','Bonds','Housing','Consumer Surveys','Business Surveys','Speeches','Misc'].every(name => html.includes('data-cal-category="' + name + '"')),
-            previousForecastActual: html.includes("['PREVIOUS',item.previous],['FORECAST',item.forecast],['ACTUAL',item.actual]") && html.includes('Trading Economics Indonesia') && html.includes('buildIndonesiaCalendarEvents'),
-            sameDayRetention: html.includes('item.dateKey>=today'),
-            fiveSecondQuotePolling: html.includes('fetchQuoteSlice()},5000') && html.includes('APP.sliceBusy'),
-            fourSecondDisplayTick: html.includes('updateLiveRowLabels();') && html.includes('},4000)'),
-            news: html.includes('const feeds=['),
-            homeList: html.includes('class="ios-stock-list" id="featuredQuotes"'),
-            homeSearch: html.includes('id="homeSearchToggle"') && html.includes('id="homeSearch"'),
-            homeBitcoin: html.includes('id="btcPrice"'),
-            homeUsdIdr: html.includes('id="fxValue"'),
-            marketSegments: html.includes('id="marketFilters"') && html.includes('data-market-filter="commodities"'),
-            commodities: ["XAUUSD=X","CL=F","BZ=F","HG=F"].every(symbol => html.includes("symbol:'" + symbol + "'")),
-            sparkline: html.includes('sparkline:closes.filter'),
-            noBrokenChartEmbed: !html.includes('function loadChart()') && !html.includes('function loadWidgets()') && !html.includes('function mountWidget(') && !html.includes('id="mainChart"'),
-            animatedControls: html.includes('.news-alert-control input[type=checkbox]:checked:before') && html.includes('@keyframes ios-page-in'),
-            sourceHealthRowsValid: html.includes("['Price mini-charts','Sparkline is shown only when a provider returns historical price observations. Snapshot-only rows do not get a fabricated chart.','PROVIDER HISTORY','good'],") && html.includes("['Binance WebSocket'"),
-            noWideTable: !html.includes('id="watchlistPanel"') && !html.includes('id="watchlistBody"'),
-            noTwelveData: !html.includes('fetchTwelveDataQuote') && !html.includes('twelveDataKey'),
-            noFmp: !html.includes('fetchFmpQuote') && !html.includes('fmpKey'),
-            noPaidSettings: !html.includes('initProviderSettings') && !html.includes('marketProviderKeys'),
-            sessionClosePersistence: html.includes("apis_market_closed_refresh_done") && html.includes('markClosedRefreshAttempt(item'),
-            yahooProviderChangePercent: html.includes('meta.regularMarketChangePercent') && html.includes('const changePct=previousClose!==null'),
-            moversIndividualEquitiesOnly: html.includes("const stockGroups=new Set(['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity'])") && html.includes("group==='Korea focus equity'") && html.includes("short:'TSMC'"),
-            smoothQuoteTransitions: html.includes('@keyframes apis-quote-refresh') && html.includes('.ios-stock-item.is-updating')
+            version: source.includes('build-version" content="2.11.0"'),
+            dailyIndexCloseOnly: source.includes("const hasDailyBars=isDailyIndex&&plan.interval==='1d'") && source.includes('useDailyClose=hasDailyBars&&barPrice!==null') && source.includes('const dailyBars=hasDailyBars?closes.map'),
+            dailyIndexCloseBaseline: source.includes('const baselineCutoff=useDailyClose?selectedDailyBarDay:sessionDay') && source.includes('selectDailyIndexPreviousClose(dailyBars,baselineCutoff,session.zone)'),
+            finalCloseTimeGuard: source.includes('Provider observation predates the official close window') && source.includes('session.finalCloseMinute-10'),
+            stooqSessionDateGuard: source.includes('Stooq observation date does not match the current exchange session'),
+            usClosingAuction: source.includes("openWindows=[[9*60+30,15*60+50]];auctionWindow=[15*60+50,16*60]"),
+            hongKongLunchBreak: source.includes('openWindows=[[9*60+30,12*60],[13*60,16*60]]'),
+            closedRefreshGuardRestore: source.includes("closedRefreshDone:loadJSON('apis_market_closed_refresh_done',{})"),
+            freeMode: source.includes('Stooq public CSV snapshots') && source.includes('Yahoo Finance public chart fallback'),
+            stooqAdapter: source.includes('async function fetchStooqQuote'),
+            googleFinanceNotUsedAsLiveFeed: !source.includes('fetchGoogleFinanceQuote') && !source.includes('googleFinanceSymbol') && !source.includes('fetchGoogleFinanceSnapshot'),
+            verifiedPublicQuoteFallbacks: source.includes('async function fetchMarketQuote') && source.includes('fetchStooqQuote(item)') && source.includes('fetchYahooQuote(item)') && source.includes('fetchTaiwanOfficialQuote(item)'),
+            yahooFallback: source.includes('async function fetchYahooQuote'),
+            publicWaterfall: source.includes('async function fetchMarketQuote'),
+            xauSpotAdapter: source.includes('async function fetchXauSpotQuote') && source.includes('https://xaus.com/api/v1/spot?compact=1'),
+            xauIntradayValidation: source.includes('coverage_seconds') && source.includes('historyCoverage>=23*3600'),
+            twseOfficialRwd: source.includes('/rwd/zh/afterTrading/MI_INDEX?date=') && source.includes('function parseTwseIndexReport'),
+            twseGregorianDate: source.includes('if(raw.length===8)'),
+            twsePreviousCloseValidation: source.includes('const signedText=value=>') && source.includes('previousClose=price/(1+changePct/100)'),
+            taiwanPercentSourceGuard: source.includes('async function fetchTaiwanOfficialQuote') && source.includes("if(item.symbol==='^TWII')") && source.includes('return await fetchYahooQuote(item)'),
+            yahooTaiwanPercentSuppression: source.includes("quote.symbol==='^TWII'&&!['TWSE'].some(token=>String(quote.source||'').toUpperCase().includes(token))"),
+            regionalGroups: source.includes('function renderGroupedStockRows') && source.includes("region:'Greater China'"),
+            homeExcludesStocks: source.includes("!['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity'].includes(item.group)"),
+            exchangeSessionSchedule: source.includes('function exchangeSession(') && source.includes("closeTime='16:00'") && source.includes("closeTime='16:10'") && source.includes('auctionWindow=[15*60+25,15*60+30]') && source.includes('function marketPollEligible('),
+            deterministicSessionLabel: source.includes('function marketSessionLabel(quote,item,now=new Date())'),
+            inPlaceQuoteUpdates: source.includes('function updateQuoteRowsInPlace()') && source.includes('updateQuoteRowsInPlace();renderTape();renderMovers();'),
+            liveTimestamp: source.includes('function marketFeedTimestampLabel(') && source.includes('ios-stock-updated') && source.includes('marketSessionStamp') && source.includes('setInterval(setMarketSession,4000)'),
+            fiveSecondQuotePoll: source.includes('fetchQuoteSlice()},5000'),
+            threeQuoteSlice: source.includes('const now=new Date(),queue=WATCHLIST.filter(item=>marketPollEligible(item,now))') && source.includes('sliceSize=6') && source.includes('APP.sliceBusy'),
+            fourSecondUiTick: source.includes('updateLiveRowLabels();setMarketSession();') && source.includes('},4000)'),
+            bitcoin: source.includes('function connectBitcoinStream'),
+            fx: source.includes('function loadFxReference'),
+            treasury: source.includes('async function loadTreasuryCurve'),
+            treasury30y: source.includes("thirty:'DGS30'") && source.includes("setTenor('thirty','tsy30','tsy30Date')"),
+            forexFactoryCalendar: source.includes('nfs.faireconomy.media/ff_calendar_thisweek.json') && source.includes('nfs.faireconomy.media/ff_calendar_nextweek.json'),
+            investingOccurrences: source.includes('endpoints.investing.com/pd-instruments/v1/calendars/economic/events/occurrences') && source.includes('function fetchInvestingCalendar'),
+            investingHtmlFallback: source.includes('function fetchInvestingCalendarHtml') && source.includes('tr.js-event-item'),
+            calendarMultiSourceMerge: source.includes('mergeCalendarSources(factory,investing)') && source.includes('mergeUsCalendarActuals(merged,agency)') && source.includes('function mergeUsCalendarActuals('),
+            calendarFiveMinuteCache: source.includes('const cacheTtl=5*60*1000'),
+            calendarRanges: source.includes('data-cal-range="3"') && source.includes('data-cal-range="7"'),
+            calendarImpact: source.includes('data-cal-impact="HIGH"') && source.includes('data-cal-impact="MEDIUM"') && source.includes('data-cal-impact="LOW"'),
+            calendarMerge: source.includes('mergeCalendarSources(factory,investing)') && source.includes('mergeUsCalendarActuals(merged,agency)'),
+            calendarCacheFiveMinutes: source.includes('const cacheTtl=5*60*1000'),
+            calendarCountries: ['AUD','CAD','CHF','CNY','EUR','GBP','IDR','JPY','NZD','USD'].every(code => source.includes('data-cal-country="' + code + '"')),
+            calendarCategories: ['Growth','Inflation','Employment','Central Bank','Bonds','Housing','Consumer Surveys','Business Surveys','Speeches','Misc'].every(name => source.includes('data-cal-category="' + name + '"')),
+            previousForecastActual: source.includes("['PREVIOUS',item.previous],['FORECAST',item.forecast],['ACTUAL',item.actual]") && source.includes('Trading Economics Indonesia') && source.includes('buildIndonesiaCalendarEvents'),
+            sameDayRetention: source.includes('item.dateKey>=today'),
+            fiveSecondQuotePolling: source.includes('fetchQuoteSlice()},5000') && source.includes('APP.sliceBusy'),
+            fourSecondDisplayTick: source.includes('updateLiveRowLabels();') && source.includes('},4000)'),
+            news: source.includes('const feeds=['),
+            homeList: source.includes('class="ios-stock-list" id="featuredQuotes"'),
+            homeSearch: source.includes('id="homeSearchToggle"') && source.includes('id="homeSearch"'),
+            homeBitcoin: source.includes('id="btcPrice"'),
+            homeUsdIdr: source.includes('id="fxValue"'),
+            marketSegments: source.includes('id="marketFilters"') && source.includes('data-market-filter="commodities"'),
+            commodities: ["XAUUSD=X","CL=F","BZ=F","HG=F"].every(symbol => source.includes("symbol:'" + symbol + "'")),
+            sparkline: source.includes('sparkline:closes.filter'),
+            noBrokenChartEmbed: !source.includes('function loadChart()') && !source.includes('function loadWidgets()') && !source.includes('function mountWidget(') && !source.includes('id="mainChart"'),
+            animatedControls: source.includes('.news-alert-control input[type=checkbox]:checked:before') && source.includes('@keyframes ios-page-in'),
+            sourceHealthRowsValid: source.includes("['Price mini-charts','Sparkline is shown only when a provider returns historical price observations. Snapshot-only rows do not get a fabricated chart.','PROVIDER HISTORY','good'],") && source.includes("['Binance WebSocket'"),
+            noWideTable: !source.includes('id="watchlistPanel"') && !source.includes('id="watchlistBody"'),
+            noTwelveData: !source.includes('fetchTwelveDataQuote') && !source.includes('twelveDataKey'),
+            noFmp: !source.includes('fetchFmpQuote') && !source.includes('fmpKey'),
+            noPaidSettings: !source.includes('initProviderSettings') && !source.includes('marketProviderKeys'),
+            sessionClosePersistence: source.includes("apis_market_closed_refresh_done") && source.includes('markClosedRefreshAttempt(item'),
+            yahooProviderChangePercent: source.includes('meta.regularMarketChangePercent') && source.includes('const changePct=previousClose!==null'),
+            moversIndividualEquitiesOnly: source.includes("const stockGroups=new Set(['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity'])") && source.includes("group==='Korea focus equity'") && source.includes("short:'TSMC'"),
+            smoothQuoteTransitions: source.includes('@keyframes apis-quote-refresh') && source.includes('.ios-stock-item.is-updating')
           };
           const vm = require('node:vm');
           const assert = require('node:assert/strict');
-          const baselineStart = html.indexOf('function exchangeDateKey(');
-          const baselineEnd = html.indexOf('\nasync function fetchYahooQuote', baselineStart);
-          const baselineSource = baselineStart >= 0 && baselineEnd > baselineStart ? html.slice(baselineStart, baselineEnd) : '';
-          const calendarStart = html.indexOf('function calendarNumericValue(');
-          const calendarEnd = html.indexOf('function renderMacroCalendar()', calendarStart);
-          const calendarSource = calendarStart >= 0 && calendarEnd > calendarStart ? html.slice(calendarStart, calendarEnd) : '';
+          const baselineStart = source.indexOf('function exchangeDateKey(');
+          const baselineEnd = source.indexOf('\nasync function fetchYahooQuote', baselineStart);
+          const baselineSource = baselineStart >= 0 && baselineEnd > baselineStart ? source.slice(baselineStart, baselineEnd) : '';
+          const calendarStart = source.indexOf('function calendarNumericValue(');
+          const calendarEnd = source.indexOf('function renderMacroCalendar()', calendarStart);
+          const calendarSource = calendarStart >= 0 && calendarEnd > calendarStart ? source.slice(calendarStart, calendarEnd) : '';
           if (!baselineSource || !calendarSource) throw new Error('Regression helper extraction failed');
           const unit = { exchangeWallClock: date => ({year:date.getUTCFullYear(),month:date.getUTCMonth()+1,day:date.getUTCDate()}) };
           vm.createContext(unit);
@@ -121,8 +118,8 @@ jobs:
           ];
           assert.equal(unit.selectDailyIndexPreviousClose(bars,'2026-11-17','Asia/Jakarta'),5320.98);
           // Gate 2: closed-session guard and previous-close requirements are wired.
-          assert.ok(html.includes("session?.state==='CLOSED'&&(!useDailyClose||selectedDailyBarDay!==sessionDay)"));
-          assert.ok(html.includes('Previous session close unavailable; refusing unverified daily percentage'));
+          assert.ok(source.includes("session?.state==='CLOSED'&&(!useDailyClose||selectedDailyBarDay!==sessionDay)"));
+          assert.ok(source.includes('Previous session close unavailable; refusing unverified daily percentage'));
           // Gate 3: actual-vs-forecast semantics (higher/lower/neutral).
           assert.equal(unit.calendarActualTone({title:'Employment Change 3M/3M',forecast:'102',actual:'156'}),'good');
           assert.equal(unit.calendarActualTone({title:'Employment Change',forecast:'156',actual:'102'}),'bad');
@@ -131,20 +128,32 @@ jobs:
           assert.equal(unit.calendarActualTone({title:'Average Earnings Index +Bonus',forecast:'3.8',actual:'3.6'}),'');
           assert.equal(unit.calendarActualTone({title:'BI Rate',forecast:'5.75',actual:'5.75'}),'');
           // Gate 4: Movers stay within the approved individual-stock markets and focus names.
-          const moverBlock = html.includes("const stockGroups=new Set(['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity'])") ? 'Indonesia equity,US equity,Hong Kong equity,Korea focus equity,Taiwan focus equity' : '';
+          const moverBlock = source.includes("const stockGroups=new Set(['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity'])") ? 'Indonesia equity,US equity,Hong Kong equity,Korea focus equity,Taiwan focus equity' : '';
           for (const group of ['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity']) assert.ok(moverBlock.includes(group));
-          assert.ok(html.includes("short:'SAMSUNG',group:'Korea focus equity'"));
-          assert.ok(html.includes("short:'SK HYNIX',group:'Korea focus equity'"));
-          assert.ok(html.includes("short:'TSMC',group:'Taiwan focus equity'"));
-          assert.ok(html.includes('observed!==expected'));
+          assert.ok(source.includes("short:'SAMSUNG',group:'Korea focus equity'"));
+          assert.ok(source.includes("short:'SK HYNIX',group:'Korea focus equity'"));
+          assert.ok(source.includes("short:'TSMC',group:'Taiwan focus equity'"));
+          assert.ok(source.includes('observed!==expected'));
           // Gate 5: mobile header and semantic colors use the same light/dark theme tokens.
-          assert.ok(html.includes('.top-right .clock,.top-right .feed-state,.top-right .refresh-hint,.top-right .after-hours,.top-right .market-session-stamp{display:none!important}'));
-          assert.ok(html.includes('.calendar-event-metric.actual.good strong{color:var(--green)}'));
-          assert.ok(html.includes('.calendar-event-metric.actual.bad strong{color:var(--red)}'));
-          assert.ok(html.includes('html[data-theme="dark"] .calendar-event-metric.actual.good'));
-          console.log('Five regression gates passed: baseline, close guard, calendar scoring, mover scope, theme/header.');
+          assert.ok(source.includes('.top-right .clock,.top-right .feed-state,.top-right .refresh-hint,.top-right .after-hours,.top-right .market-session-stamp{display:none!important}'));
+          assert.ok(source.includes('.calendar-event-metric.actual.good strong{color:var(--green)}'));
+          assert.ok(source.includes('.calendar-event-metric.actual.bad strong{color:var(--red)}'));
+          assert.ok(source.includes('html[data-theme="dark"] .calendar-event-metric.actual.good'));
+          const marketStart = source.indexOf('const DAILY_INDEX_SYMBOLS=');
+          const marketEnd = source.indexOf('async function fetchYahooQuote', marketStart);
+          const marketSource = marketStart >= 0 && marketEnd > marketStart ? source.slice(marketStart, marketEnd) : '';
+          if (!marketSource) throw new Error('Benchmark source helper extraction failed');
+          const marketUnit = {};
+          vm.createContext(marketUnit);
+          vm.runInContext(marketSource, marketUnit);
+          for (const symbol of ['^JKLQ45','^NSEI','^GSPC','^IXIC','^DJI']) assert.equal(marketUnit.isDailyIndexSymbol(symbol), true);
+          const lq45 = marketUnit.parseIdxIndexSummary({data:[{IndexCode:'LQ45',Date:'2026-11-17T00:00:00',Close:553.071,Previous:551.065,Change:2.006}]},'LQ45','2026-11-17');
+          assert.ok(lq45);
+          assert.ok(Math.abs(lq45.changePct-((553.071/551.065-1)*100))<1e-10);
+          assert.equal(marketUnit.parseIdxIndexSummary({data:[{IndexCode:'LQ45',Date:'2026-11-16',Close:553.071,Previous:551.065}]},'LQ45','2026-11-17'),null);
+          console.log('Six regression gates passed: baseline, close guard, calendar scoring, mover scope, theme/header.');
           const failed = Object.entries(checks).filter(([, value]) => !value);
-          console.log('Inline scripts compiled:', scripts.length);
+          console.log('Modular scripts compiled:', scripts.length);
           console.log(checks);
           if (failed.length) throw new Error('Failed checks: ' + failed.map(([key]) => key).join(', '));
           console.log('APIS static validation passed.');

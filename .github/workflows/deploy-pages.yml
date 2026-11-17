@@ -28,11 +28,12 @@ jobs:
           node <<'NODE'
           const fs = require('fs');
           const html = fs.readFileSync('index.html', 'utf8');
-          const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].filter(m => m[1].trim());
-          if (scripts.length !== 2) throw new Error('Expected ES5 diagnostic + APIS application scripts; found ' + scripts.length);
-          const diagnostic = scripts.find(m => m[1].includes('__APIS_REPORT_ERROR__'));
-          const application = scripts.find(m => m[1].includes('function bootstrap(){'));
-          if (!diagnostic || !application) throw new Error('Diagnostic or application script missing.');
+          const scriptPaths = ['assets/js/compat.js','assets/js/core.js','assets/js/market-data.js','assets/js/realtime-data.js','assets/js/workspace.js','assets/js/bootstrap.js'];
+          const scripts = scriptPaths.map(file => fs.readFileSync(file, 'utf8'));
+          const diagnostic = scripts[0];
+          const js = scripts.join('\n');
+          if (!diagnostic.includes('__APIS_REPORT_ERROR__') || !js.includes('function bootstrap(){')) throw new Error('Diagnostic or application source missing.');
+          scripts.forEach((script,index) => { try { new Function(script); } catch (error) { throw new Error(scriptPaths[index] + ': ' + error.message); } });
           const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
           const duplicates = ids.filter((id, i) => ids.indexOf(id) !== i);
           if (duplicates.length) throw new Error('Duplicate HTML IDs: ' + [...new Set(duplicates)].join(', '));
@@ -47,7 +48,6 @@ jobs:
           ];
           const missing = requiredIds.filter(id => !idSet.has(id));
           if (missing.length) throw new Error('Required terminal elements missing: ' + missing.join(', '));
-          const js = application[1];
           const refs = [...js.matchAll(/getElementById\(['"]([^'"]+)['"]\)/g)].map(m => m[1]);
           const unresolved = [...new Set(refs.filter(id => !idSet.has(id)))];
           if (unresolved.length) throw new Error('JavaScript references absent DOM IDs: ' + unresolved.join(', '));
@@ -72,12 +72,10 @@ jobs:
             throw new Error('Light/Dark/System theme controls are incomplete.');
           if (html.includes('embed-widget-market-overview.js') || html.includes('embed-widget-events.js') || html.includes('embed-widget-timeline.js'))
             throw new Error('Disabled TradingView overview/news/calendar embeds remain in the page.');
-          fs.writeFileSync('/tmp/apis-diagnostic.js', diagnostic[1]);
-          fs.writeFileSync('/tmp/apis-inline.js', js);
-          console.log('APIS QA passed: pages, controls, IDs, required functions, themes and error reporting; IDs=' + ids.length + '; app JS bytes=' + js.length);
+          scripts.forEach((script,index)=>fs.writeFileSync('/tmp/apis-module-'+index+'.js',script));
+          console.log('APIS QA passed: pages, controls, IDs, required functions, themes and error reporting; IDs=' + ids.length + '; modular JS bytes=' + js.length);
           NODE
-          node --check /tmp/apis-diagnostic.js
-          node --check /tmp/apis-inline.js
+          for file in /tmp/apis-module-*.js; do node --check "$file"; done
       - name: Install Chromium and WebKit test browsers
         run: |
           npm install --no-save playwright
@@ -96,7 +94,8 @@ jobs:
             if (!file.startsWith(process.cwd()) || !fs.existsSync(file)) {
               res.writeHead(404); res.end('Not found'); return;
             }
-            res.writeHead(200, { 'content-type': file.endsWith('.html') ? 'text/html; charset=utf-8' : 'application/octet-stream' });
+            const mime = file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.js') ? 'text/javascript; charset=utf-8' : file.endsWith('.css') ? 'text/css; charset=utf-8' : 'application/octet-stream';
+            res.writeHead(200, { 'content-type': mime });
             fs.createReadStream(file).pipe(res);
           });
           const isoDay = date => date.toISOString().slice(0,10);
@@ -137,6 +136,12 @@ jobs:
                       points:[{t:now-86400,p:3950},{t:now-43200,p:3975},{t:now,p:4000}],
                       data_state:{status:'fresh',source:'upstream',age_seconds:20}
                     });
+                  }
+                  if (url.hostname === 'www.idx.co.id' && url.pathname.endsWith('/primary/TradingSummary/GetIndexSummary')) {
+                    const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+                    const part=type=>parts.find(value=>value.type===type)?.value||'';
+                    const day=part('year')+'-'+part('month')+'-'+part('day');
+                    return json(route,{data:[{IndexCode:'LQ45',Date:day+'T00:00:00',Close:553.071,Previous:551.065,Change:2.006}]});
                   }
                   if (url.hostname === 'www.twse.com.tw' && url.pathname.endsWith('/afterTrading/MI_INDEX')) {
                     const gregorianDate=url.searchParams.get('date');
@@ -243,6 +248,13 @@ jobs:
               });
               if(providerChain.scrapedPageFeed||!providerChain.stooq||!providerChain.yahoo||!providerChain.twse)
                 throw new Error(engine.name+' live quote provider waterfall failed: '+JSON.stringify(providerChain));
+              const benchmarkChecks=await page.evaluate(async()=>{
+                const lq=await fetchIdxOfficialIndexQuote(WATCHLIST.find(item=>item.symbol==='^JKLQ45'));
+                return {lqPrice:lq.price,lqPct:lq.changePct,lqSource:lq.source,daily:['^JKLQ45','^NSEI','^GSPC','^IXIC','^DJI'].map(symbol=>isDailyIndexSymbol(symbol))};
+              });
+              if(benchmarkChecks.lqPrice!==553.071||Math.abs(benchmarkChecks.lqPct-((553.071/551.065-1)*100))>1e-10||
+                 !benchmarkChecks.lqSource.includes('official Index Summary')||benchmarkChecks.daily.some(value=>!value))
+                throw new Error(engine.name+' LQ45/NIFTY/US benchmark source validation failed: '+JSON.stringify(benchmarkChecks));
               const cachedTaiwanPct=await page.evaluate(()=>stockChangePct({
                   symbol:'^TWII',price:40092.11,previousClose:43666.0,changePct:-8.2,source:'Yahoo Finance · public fallback'
                 }));

@@ -432,3 +432,8 @@
 - Replaced the synthetic Google Finance page-parser fixture with an assertion against the live Stooq/Yahoo/TWSE quote waterfall.
 - Extended the smoke-test wait window for the initial quote batch because response time depends on third-party public endpoints.
 - Version bumped to v2.10.2. Static validation and full browser smoke tests must pass before the site deploys.
+
+ 
+### Browser smoke-test isolation
+- Browser smoke tests mock external calendar, Treasury, gold, and TWSE feeds and block unrelated live provider calls. Quote-poll assertions validate local poll initialization and in-place row updates without waiting for public market endpoints.
+- Live provider availability remains an application runtime concern and is not a prerequisite for the GitHub Pages build/deploy pipeline.

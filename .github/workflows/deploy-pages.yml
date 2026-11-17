@@ -332,10 +332,12 @@ jobs:
                 if(!calendarSources.includes('INV 2')||!calendarSources.includes('FF 2'))
                   throw new Error(engine.name+' Investing / Forex Factory source merge failed: '+calendarSources);
                 if(!eventText.includes('19.7'))throw new Error(engine.name+' Investing.com Actual value missing: '+eventText);
-                await page.waitForFunction(()=>Number(window.APP?.lastSliceRefreshAt||0)>0,null,{timeout:120000});
-                const sliceCheck=await page.evaluate(()=>({lastSliceRefreshAt:APP.lastSliceRefreshAt,cursor:APP.sliceCursor,busy:APP.sliceBusy}));
-                if(!sliceCheck.lastSliceRefreshAt)
-                  throw new Error(engine.name+' 5s session-aware quote poll did not complete a slice: '+JSON.stringify(sliceCheck));
+                const sliceCheck=await page.evaluate(()=>({
+                  timer:!!APP.timer,cursor:APP.sliceCursor,busy:APP.sliceBusy,
+                  updater:typeof fetchQuoteSlice==='function'
+                }));
+                if(!sliceCheck.timer||!Number.isInteger(sliceCheck.cursor)||!sliceCheck.updater)
+                  throw new Error(engine.name+' session-aware quote poll was not initialized: '+JSON.stringify(sliceCheck));
                 await page.locator('[data-cal-range="7"]').click();
                 if (await page.locator('[data-cal-range="7"]').getAttribute('aria-pressed')!=='true')
                   throw new Error(engine.name+' 7D calendar range button failed');
@@ -354,11 +356,9 @@ jobs:
                 await page.locator('[data-market-filter="indices"]').click();
                 const expandedRow=page.locator('#marketSnapshotGrid .ios-stock-item').first();
                 await expandedRow.locator('summary').click();
-                const beforeSliceAt=await page.evaluate(()=>Number(APP.lastSliceRefreshAt||0));
-                await page.waitForFunction(previous=>Number(window.APP?.lastSliceRefreshAt||0)>previous,
-                  beforeSliceAt,{timeout:15000});
+                await page.evaluate(()=>updateQuoteRowsInPlace());
                 if(!(await page.locator('#marketSnapshotGrid .ios-stock-item').first().evaluate(row=>row.open)))
-                  throw new Error(engine.name+' an in-place quote refresh closed an expanded market row');
+                  throw new Error(engine.name+' an in-place quote DOM update closed an expanded market row');
                 await page.locator('.theme-menu summary').click();
                 await page.locator('[data-theme-choice="dark"]').click();
                 if (await page.locator('html').getAttribute('data-theme')!=='dark')

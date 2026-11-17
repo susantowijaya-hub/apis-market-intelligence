@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "provider": "Google Finance public quote pages",
-  "generatedAt": null,
-  "generatedAtEpoch": null,
-  "quoteCount": 0,
-  "quotes": {},
-  "errors": {}
-}

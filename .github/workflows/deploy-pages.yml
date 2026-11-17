@@ -235,16 +235,14 @@ jobs:
                 if (idxSession.session!=='OPEN' || idxSession.label!=='SESSION OPEN · STALE' ||
                     !idxSession.stamp.includes('Last close 16:00 WIB') || !idxSession.stamp.includes('16 Nov'))
                   throw new Error(engine.name+' IDX session / close timestamp failed: '+JSON.stringify(idxSession));
-                const googleFinanceFixture=await page.evaluate(()=>{
-                const item=WATCHLIST.find(row=>row.symbol==='^TWII');
-                const now=Date.parse('2026-11-17T05:33:20Z');
-                const html='<div data-last-price="40092.11" data-last-price-change="-947.97" data-last-percentage-change="-2.31"></div> Nov 17, 1:33:15 PM GMT+8 '+('fixture '.repeat(80));
-                const quote=parseGoogleFinanceQuotePage(html,item,now);
-                return {price:quote.price,previousClose:quote.previousClose,pct:quote.changePct,source:quote.source,observedAt:quote.observedAt};
+                const providerChain=await page.evaluate(()=>{
+                const body=fetchMarketQuote.toString();
+                return {scrapedPageFeed:body.includes('Google Finance')||body.includes('fetchGoogleFinanceQuote'),
+                  stooq:body.includes('fetchStooqQuote'),yahoo:body.includes('fetchYahooQuote'),
+                  twse:body.includes('fetchTaiwanOfficialQuote')};
               });
-              if(googleFinanceFixture.price!==40092.11 || Math.abs(googleFinanceFixture.previousClose-41040.08)>0.10 ||
-                 Math.abs(googleFinanceFixture.pct-(-2.31))>0.001 || !googleFinanceFixture.source.includes('Google Finance'))
-                throw new Error(engine.name+' Google Finance quote parser fixture failed: '+JSON.stringify(googleFinanceFixture));
+              if(providerChain.scrapedPageFeed||!providerChain.stooq||!providerChain.yahoo||!providerChain.twse)
+                throw new Error(engine.name+' live quote provider waterfall failed: '+JSON.stringify(providerChain));
               const cachedTaiwanPct=await page.evaluate(()=>stockChangePct({
                   symbol:'^TWII',price:40092.11,previousClose:43666.0,changePct:-8.2,source:'Yahoo Finance · public fallback'
                 }));
@@ -334,7 +332,7 @@ jobs:
                 if(!calendarSources.includes('INV 2')||!calendarSources.includes('FF 2'))
                   throw new Error(engine.name+' Investing / Forex Factory source merge failed: '+calendarSources);
                 if(!eventText.includes('19.7'))throw new Error(engine.name+' Investing.com Actual value missing: '+eventText);
-                await page.waitForFunction(()=>Number(window.APP?.lastSliceRefreshAt||0)>0,null,{timeout:30000});
+                await page.waitForFunction(()=>Number(window.APP?.lastSliceRefreshAt||0)>0,null,{timeout:90000});
                 const sliceCheck=await page.evaluate(()=>({lastSliceRefreshAt:APP.lastSliceRefreshAt,cursor:APP.sliceCursor,busy:APP.sliceBusy}));
                 if(!sliceCheck.lastSliceRefreshAt)
                   throw new Error(engine.name+' 5s session-aware quote poll did not complete a slice: '+JSON.stringify(sliceCheck));

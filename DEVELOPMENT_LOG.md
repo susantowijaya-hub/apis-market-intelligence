@@ -414,3 +414,21 @@
 - The browser adapter attempts to read that snapshot first for mapped indices. When no quote exists, the runtime falls back to its existing verified source path (TWSE for Taiwan after close; Stooq/Yahoo where applicable). Do not label those fallback observations as Google Finance.
 - Therefore v2.10.1 contains Google Finance symbol mappings and a dormant snapshot consumer, but Google Finance has **not** been verified as the active primary provider. Do not advertise the Google Finance feed as live until a collector produces timestamped, schema-valid quotes and a deployed browser test confirms the rendered source and backup comparison.
 - Deployment smoke-test correction: the app's actual quote poll status is `Feed … · session-aware queue` / internal `APP.lastSliceRefreshAt`, not the obsolete phrase `rotating watchlist`. The deploy workflow now asserts the actual session-aware polling timestamp and that an in-place refresh preserves an expanded quote row.
+
+## 2026-11-17 — v2.10.2 Verified public quote fallback and deployment repair
+
+### Provider decision
+- Disabled Google Finance public-page scraping as a live quote provider. The public HTML parser and scheduled snapshot could not be verified as a stable refreshable feed; the repository snapshot was empty and was not a functioning source.
+- Removed Google Finance symbol mappings and the scraped-page provider from the live market quote path. No Google Finance price is labelled or displayed as a live feed.
+- Current public quote waterfall:
+  - Gold spot: dedicated XAU/USD public spot adapter, with freshness and history checks.
+  - Taiwan Weighted: Yahoo public chart during the trading session; official TWSE dated daily report after close; Yahoo remains a labelled fallback if the official report cannot be retrieved.
+  - Other mapped closed/pre-open markets: Stooq public CSV snapshot first, then Yahoo public chart fallback.
+  - Other market quotes: Yahoo public chart fallback.
+- Retain provider observation timestamps, stale-data guards, source labels, and the no-fabricated-price rule. Yahoo and Stooq remain public unofficial/delayed feeds, not exchange-direct data.
+
+### Deployment repair
+- The previous deployment failed before the GitHub Pages upload step because the browser smoke test timed out waiting for the initial market quote batch / session-aware refresh state.
+- Replaced the synthetic Google Finance page-parser fixture with an assertion against the live Stooq/Yahoo/TWSE quote waterfall.
+- Extended the smoke-test wait window for the initial quote batch because response time depends on third-party public endpoints.
+- Version bumped to v2.10.2. Static validation and full browser smoke tests must pass before the site deploys.

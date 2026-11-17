@@ -272,6 +272,30 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
  .market-pulse-status{font-size:7px}
 }
 
+
+/* APIS v2.3.0 — final density and typography refinements */
+.provider-source-links{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.provider-source-links a{font-size:9px;border:1px solid var(--line);padding:6px 8px;border-radius:6px;background:var(--surface)}
+.provider-key-field input{font:inherit;font-size:12px}
+.market-snapshot-card{display:block}
+.market-pulse-list,.snapshot-grid{font-variant-numeric:tabular-nums}
+.market-pulse-instrument strong,.snapshot-item-name{letter-spacing:-.01em}
+.calendar-summary{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.calendar-summary span{font-size:10px;line-height:1.35}
+@media(max-width:720px){
+ .market-snapshot-card{padding:12px}
+ .market-snapshot-card>.card-title{align-items:flex-start;flex-wrap:wrap}
+ .market-snapshot-card>.card-title .source-pill{margin-left:0}
+ .market-pulse-row{min-height:56px}
+ .movers-grid .card{min-width:0}
+ .movers-grid .card-pad{padding:13px}
+ .mover-row{grid-template-columns:minmax(0,1fr) auto auto;gap:7px}
+ .mover-symbol{font-size:10px}
+ .mover-name{font-size:9px}
+ .mover-value{font-size:10px}
+ .mover-change{min-width:54px;font-size:10px}
+}
+
 </style>
 </head>
 <body>
@@ -300,7 +324,7 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 </section>
 
 <section class="section page-view" id="markets" data-page-view="markets">
-  <div class="section-head"><div><div class="eyebrow">01 / Pemantauan pasar</div><h2>Pasar global</h2><p>Hanya harga dari penyedia data. Kutipan yang tidak tersedia atau terblokir tetap ditandai unavailable.</p></div><div class="section-tools"><span class="source-pill" id="quoteCount">0 / 19 observations</span><span class="source-pill" id="lastRefresh">Not refreshed</span></div></div>
+  <div class="section-head"><div><div class="eyebrow">01 / Pemantauan pasar</div><h2>Pasar global</h2><p>Hanya harga dari penyedia data. Kutipan yang tidak tersedia atau terblokir tetap ditandai unavailable.</p></div><div class="section-tools"><span class="source-pill" id="quoteCount">0 / 22 observations</span><span class="source-pill" id="lastRefresh">Not refreshed</span></div></div>
   <div class="grid two-col" id="macroPanel">
     <div class="card chart-card"><div class="card-title"><div><h3>Grafik pasar</h3><p id="chartSubtitle">Grafik interaktif dari TradingView</p></div><div class="chart-controls"><select class="symbol-select" id="chartSymbol" aria-label="Select chart symbol"><option value="IDX:COMPOSITE">IHSG · IDX Composite</option><option value="SP:SPX">S&P 500</option><option value="NASDAQ:IXIC">Nasdaq Composite</option><option value="DJ:DJI">Dow Jones</option><option value="SSE:000001">Shanghai Composite</option><option value="TWSE:IX0001">Taiwan Weighted</option><option value="KRX:KOSPI">KOSPI</option><option value="NSE:NIFTY">NIFTY 50</option><option value="CME_MINI:NQ1!">Nasdaq-100 Futures</option><option value="TVC:NI225">Nikkei 225</option><option value="TVC:VIX">CBOE VIX</option><option value="AMEX:EIDO">EIDO</option><option value="FX_IDC:USDIDR">USD/IDR</option><option value="NYMEX:BZ1!">Brent Crude</option><option value="COMEX:GC1!">Gold</option><option value="BINANCE:BTCUSDT">Bitcoin</option></select><button class="button secondary" id="reloadChart">Reload chart</button></div></div><div class="widget-box" id="mainChart"><div class="widget-fallback"><div><strong>Loading TradingView chart</strong>Requires an internet connection and access to TradingView widgets.</div></div></div></div>
     <div class="card card-pad market-snapshot-card">
@@ -332,7 +356,13 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
           <button class="button secondary" id="clearProviderKeys" type="button">Hapus API keys</button>
           <span class="source-pill" id="providerConfigStatus">Public fallback only</span>
         </div>
-        <p class="provider-settings-note">Feed tanpa API key tidak menjamin real-time. Jika provider tidak memiliki izin atau cakupan instrumen tertentu, APIS otomatis mencoba sumber berikutnya dan mencatat sumber yang berhasil untuk setiap harga.</p>
+        <p class="provider-settings-note">Feed tanpa API key tidak menjamin real-time. Jika provider tidak memiliki izin atau cakupan instrumen tertentu, APIS otomatis mencoba sumber berikutnya dan mencatat sumber yang berhasil untuk setiap harga. Google Finance menyediakan fungsi GOOGLEFINANCE untuk Google Sheets, bukan endpoint quote JavaScript umum; kontrak futures tertentu juga tidak didukung. Reuters/LSEG dan Bloomberg menyediakan API/feed profesional berbasis lisensi dan entitlement.</p>
+        <div class="provider-source-links">
+          <a href="https://support.google.com/docs/answer/3093281" target="_blank" rel="noopener">Google Finance / Sheets</a>
+          <a href="https://www.investing.com/" target="_blank" rel="noopener">Investing.com</a>
+          <a href="https://developers.lseg.com/en/product/news" target="_blank" rel="noopener">Reuters via LSEG</a>
+          <a href="https://professional.bloomberg.com/products/data/data-connectivity/server-api/" target="_blank" rel="noopener">Bloomberg SAPI</a>
+        </div>
       </div>
     </details>
   </div>
@@ -340,7 +370,7 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 <div class="grid three-col" style="margin-top:14px">
     <div class="card card-pad"><div class="card-title"><div><h3>Bitcoin · streaming real-time</h3><p>Binance public market-data WebSocket</p></div><span class="source-pill" id="btcStatus">Connecting</span></div><div class="quote-value" id="btcPrice">—</div><div class="quote-bottom"><span id="btcChange">No stream observation yet</span><span class="status-label" id="btcAsOf">—</span></div><div class="footnote">Ticker transaksi publik BTC/USDT. Streaming live memerlukan koneksi internet dan akses ke endpoint data pasar Binance. <a href="https://github.com/binance/binance-spot-api-docs/blob/master/faqs/market_data_only.md" target="_blank" rel="noopener">Endpoint documentation ↗</a></div></div>
     <div class="card card-pad"><div class="card-title"><div><h3>Referensi USD / IDR</h3><p>Referensi harian dari sumber bank sentral</p></div><span class="source-pill" id="fxStatus">Loading</span></div><div class="quote-value" id="fxValue">—</div><div class="quote-bottom"><span id="fxPair">USD / IDR</span><span class="status-label" id="fxDate">—</span></div><div class="footnote">Kurs Frankfurter adalah kurs referensi dari bank sentral dan sumber resmi, bukan kuotasi intraday atau kurs transaksi yang dapat dieksekusi. <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Source documentation ↗</a></div></div>
-    <div class="card card-pad"><div class="card-title"><div><h3>Kualitas data</h3><p>Cakupan instrumen pada watchlist APIS browser</p></div><span class="source-pill" id="coverageStatus">Awaiting data</span></div><div class="coverage"><strong id="coveragePct">0%</strong><div class="coverage-bar"><div class="coverage-fill" id="coverageFill"></div></div></div><div class="quote-bottom"><span id="coverageDetails">0 usable · 19 requested</span><span class="status-label" id="coverageAsOf">—</span></div><div class="footnote">Persentase menghitung respons penyedia yang berhasil pada refresh ini saja. Cache lama ditampilkan terpisah dan tidak masuk cakupan baru.</div></div>
+    <div class="card card-pad"><div class="card-title"><div><h3>Kualitas data</h3><p>Cakupan instrumen pada watchlist APIS browser</p></div><span class="source-pill" id="coverageStatus">Awaiting data</span></div><div class="coverage"><strong id="coveragePct">0%</strong><div class="coverage-bar"><div class="coverage-fill" id="coverageFill"></div></div></div><div class="quote-bottom"><span id="coverageDetails">0 usable · 22 requested</span><span class="status-label" id="coverageAsOf">—</span></div><div class="footnote">Persentase menghitung respons penyedia yang berhasil pada refresh ini saja. Cache lama ditampilkan terpisah dan tidak masuk cakupan baru.</div></div>
   </div>
 </section>
 
@@ -510,7 +540,7 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
   <div class="note" style="margin-top:14px"><strong>Cara menjalankan:</strong> simpan file ini di komputer lalu buka dengan Chrome, Edge, Safari, atau Firefox yang terhubung ke internet. Sebagian jaringan memblokir penyedia data pasar publik atau widget eksternal; dashboard akan menandainya unavailable dan tidak mengganti data dengan simulasi. Untuk akses provider yang lebih konsisten, file dapat dijalankan melalui web server statis lokal (opsional)—tanpa backend API.</div>
 </section>
 </main>
-<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.2.0</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
+<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.3.0</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -589,7 +619,7 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 </script>
 <script>
 'use strict';
-/* APIS The Market Terminal 2.1.2 · Modular mobile terminal
+/* APIS The Market Terminal 2.3.0 · Multi-provider mobile terminal
    - No synthetic market data or fabricated news.
    - Yahoo Finance chart endpoint is unofficial and accessed through the public CORS.dev proxy.
    - TradingView widgets are visual embeds; their data is not read back into calculations.
@@ -935,7 +965,7 @@ function renderQuoteViews(){
    const pc=document.createElement('td');pc.textContent=q&&q.previousClose?pct((q.price/q.previousClose-1)*100):'—';if(q)pc.className='change '+changeClass(q.price-q.previousClose);cells.push(pc);
    const st=document.createElement('td');st.textContent=q?quoteStatusLabel(q.status):'UNAVAILABLE';st.className='status-label '+(q?quoteStatusClass(q.status):'bad');cells.push(st);
    const t=document.createElement('td');t.textContent=q?fmtTime(q.observedAt):'—';cells.push(t);
-   const src=document.createElement('td');if(q){const a=document.createElement('a');a.href=q.sourceUrl;a.target='_blank';a.rel='noopener';a.textContent='Market provider';src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
+   const src=document.createElement('td');if(q){const a=document.createElement('a');a.href=q.sourceUrl||'#';a.target='_blank';a.rel='noopener';a.textContent=q.source||'Provider';src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
    cells.forEach(cell=>tr.append(cell));body.append(tr);
   });
   setText('quoteCount',usable+' / '+WATCHLIST.length+' observations');
@@ -1383,11 +1413,14 @@ async function loadPublicNews(){
   {source:'CNBC Markets',url:'https://www.cnbc.com/id/100003114/device/rss/rss.html',direct:true},
   {source:'BBC Business',url:'https://feeds.bbci.co.uk/news/business/rss.xml'},
   {source:'The Guardian Business',url:'https://www.theguardian.com/business/rss'},
+  {source:'Reuters Markets · Google News RSS',url:'https://news.google.com/rss/search?q=site%3Areuters.com%2Fmarkets&hl=en-US&gl=US&ceid=US:en'},
+  {source:'Bloomberg Markets · Google News RSS',url:'https://news.google.com/rss/search?q=site%3Abloomberg.com%2Fnews%2Farticles%2Fmarket&hl=en-US&gl=US&ceid=US:en'},
+  {source:'Investing.com · Google News RSS',url:'https://news.google.com/rss/search?q=site%3Ainvesting.com%2Fnews%2Fstock-market-news&hl=en-US&gl=US&ceid=US:en'},
   {source:'Federal Reserve',url:'https://www.federalreserve.gov/feeds/press_monetary.xml'},
   {source:'BIS',url:'https://www.bis.org/rss/press.xml'}
  ];
  const readFeed=async feed=>{
-  const routes=feed.direct?[feed.url,'https://proxy.cors.dev/'+feed.url]:['https://proxy.cors.dev/'+feed.url];
+  const routes=feed.direct?[feed.url,'https://proxy.cors.dev/'+feed.url]:['https://proxy.cors.dev/'+feed.url,'https://corsproxy.io/?url='+encodeURIComponent(feed.url),'https://api.allorigins.win/raw?url='+encodeURIComponent(feed.url)];
   let error='unavailable';
   for(const route of routes){
    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9500);

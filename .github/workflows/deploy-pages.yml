@@ -341,6 +341,16 @@ jobs:
                 await page.locator('[data-cal-range="3"]').click();
                 if (await page.locator('[data-cal-range="3"]').getAttribute('aria-pressed')!=='true')
                   throw new Error(engine.name+' 3D calendar range button failed');
+                await page.locator('[data-page="markets"]').click();
+                await page.locator('[data-market-filter="indices"]').click();
+                const expandedRow=page.locator('#marketSnapshotGrid .ios-stock-item').first();
+                await expandedRow.locator('summary').click();
+                const beforeSlice=await page.locator('#lastRefresh').innerText();
+                await page.waitForFunction(previous=>(document.getElementById('lastRefresh')?.textContent||'')!==previous &&
+                  (document.getElementById('lastRefresh')?.textContent||'').includes('rotating watchlist'),
+                  beforeSlice,{timeout:10000});
+                if(!(await page.locator('#marketSnapshotGrid .ios-stock-item').first().evaluate(row=>row.open)))
+                  throw new Error(engine.name+' an in-place quote refresh closed an expanded market row');
                 await page.locator('.theme-menu summary').click();
                 await page.locator('[data-theme-choice="dark"]').click();
                 if (await page.locator('html').getAttribute('data-theme')!=='dark')

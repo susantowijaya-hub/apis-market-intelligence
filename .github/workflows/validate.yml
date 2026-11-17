@@ -33,7 +33,7 @@ jobs:
             catch (error) { throw new Error('Inline script ' + (index + 1) + ': ' + error.message); }
           });
           const checks = {
-            version: /build-version" content="2\.4\.3"/.test(html),
+            version: /build-version" content="2\\.5\\.0"/.test(html),
             freeMode: html.includes('Free-data mode · no paid API key'),
             stooqAdapter: html.includes('async function fetchStooqQuote'),
             yahooFallback: html.includes('async function fetchYahooQuote'),
@@ -43,9 +43,16 @@ jobs:
             treasury: html.includes('function loadTreasuryCurve'),
             macro: html.includes('async function loadMacroCalendar'),
             news: html.includes('const feeds=['),
-            responsiveWatchlist: html.includes('#watchlistPanel tbody tr{'),
-            touchMarketGroups: html.includes('#marketSnapshotGrid>.snapshot-group'),
-            touchPointerLayout: html.includes('(hover:none) and (pointer:coarse)'),
+            homeStocks: html.includes('class="ios-stock-list" id="featuredQuotes"'),
+            homeSearch: html.includes('id="homeSearchToggle"') && html.includes('id="homeSearch"'),
+            homeBitcoin: html.includes('id="btcPrice"'),
+            homeUsdIdr: html.includes('id="fxValue"'),
+            marketSegments: html.includes('id="marketFilters"') && html.includes('data-market-filter="commodities"'),
+            commodities: ["XAUUSD=X","CL=F","BZ=F","HG=F"].every(symbol => html.includes("symbol:'" + symbol + "'")),
+            sparkline: html.includes('sparkline:closes.filter'),
+            noBrokenChartEmbed: !html.includes('function loadChart()') && !html.includes('id="mainChart"'),
+            animatedControls: html.includes('.news-alert-control input[type=checkbox]:checked:before') && html.includes('@keyframes ios-page-in'),
+            noWideTable: !html.includes('id="watchlistPanel"'),
             noTwelveData: !html.includes('fetchTwelveDataQuote') && !html.includes('twelveDataKey'),
             noFmp: !html.includes('fetchFmpQuote') && !html.includes('fmpKey'),
             noPaidSettings: !html.includes('initProviderSettings') && !html.includes('marketProviderKeys')

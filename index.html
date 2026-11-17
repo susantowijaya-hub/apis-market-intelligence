@@ -715,22 +715,73 @@ async function loadFxReference(){
  renderQuality();
 }
 async function loadTreasuryCurve(){
- const year=new Date().getFullYear();
- const target='https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value='+year;
- const routes=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
- let error='No public Treasury XML response';
- for(const url of routes){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8500);try{
-  const r=await fetch(url,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/xml,text/xml'}});
-  if(!r.ok)throw new Error('HTTP '+r.status);const xmlText=await r.text();
-  const xml=new DOMParser().parseFromString(xmlText,'application/xml');if(xml.querySelector('parsererror'))throw new Error('Invalid Treasury XML');
-  const entries=[...xml.getElementsByTagName('entry')];if(!entries.length)throw new Error('No yield-curve entries');
-  const latest=entries[0],find=names=>{for(const el of [...latest.getElementsByTagName('*')])if(names.includes(el.localName))return el.textContent?.trim()||'';return ''};
-  const date=find(['NEW_DATE','NEWDATE','DATE']),v2=find(['BC_2YEAR']),v10=find(['BC_10YEAR']),v30=find(['BC_30YEAR']);
-  if(!v10)throw new Error('Treasury 10Y field unavailable');
-  [['tsy2',v2],['tsy10',v10],['tsy30',v30]].forEach(([id,v])=>setText(id,v&&Number.isFinite(Number(v))?Number(v).toFixed(2)+'%':'—'));
-  setText('tsyDate','Treasury observation · '+(date||'date not supplied'));setText('tsyStatus','OFFICIAL · DAILY');APP.tsyState='loaded';APP.tsyError='';renderQuality();return;
- }catch(e){error=String(e?.message||e).slice(0,100)}finally{clearTimeout(timer)}}
- APP.tsyState='unavailable';APP.tsyError=error;setText('tsyStatus','UNAVAILABLE');setText('tsyDate',error);renderQuality();
+ const year=Number(new Intl.DateTimeFormat('en-US',{timeZone:TZ,year:'numeric'}).format(new Date()));
+ const month=Number(new Intl.DateTimeFormat('en-US',{timeZone:TZ,month:'2-digit'}).format(new Date()));
+ const months=[{y:year,m:month},{y:month===1?year-1:year,m:month===1?12:month-1}];
+ let observation=null,lastError='Treasury public table unavailable';
+ for(const ym of months){
+  const mm=String(ym.m).padStart(2,'0');
+  const target='https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?field_tdr_date_value='+ym.y+'&field_tdr_date_value_month='+ym.y+mm+'&type=daily_treasury_yield_curve';
+  const urls=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
+  const controllers=urls.map(()=>new AbortController());
+  const requests=urls.map((url,i)=>fetch(url,{cache:'no-store',credentials:'omit',signal:controllers[i].signal}).then(async response=>{
+   if(!response.ok)throw new Error('HTTP '+response.status);
+   const text=await response.text();if(text.length<3000)throw new Error('Treasury response incomplete');return text;
+  }));
+  try{
+   const markup=await Promise.any(requests);controllers.forEach(c=>c.abort());
+   const doc=new DOMParser().parseFromString(markup,'text/html');let candidates=[];
+   for(const table of [...doc.querySelectorAll('table')]){
+    const rows=[...table.querySelectorAll('tr')];if(rows.length<2)continue;
+    let headerIndex=-1,headers=[];
+    for(let i=0;i<Math.min(rows.length,6);i++){
+     const cells=[...rows[i].querySelectorAll('th,td')].map(x=>x.textContent.trim());
+     const normalized=cells.map(x=>x.toLowerCase().replace(/[^a-z0-9]/g,''));
+     if(normalized.includes('2yr')&&normalized.includes('5yr')&&normalized.includes('10yr')&&normalized.includes('30yr')){headerIndex=i;headers=normalized;break}
+    }
+    if(headerIndex<0)continue;
+    const i2=headers.indexOf('2yr'),i5=headers.indexOf('5yr'),i10=headers.indexOf('10yr'),i30=headers.indexOf('30yr');
+    for(const row of rows.slice(headerIndex+1)){
+     const cells=[...row.querySelectorAll('td,th')].map(x=>x.textContent.trim());
+     const dm=(cells[0]||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(!dm)continue;
+     const date=new Date(Date.UTC(+dm[3],+dm[1]-1,+dm[2]));
+     const val=i=>i>=0?Number(String(cells[i]||'').replace(/[^0-9.\-]/g,'')):NaN;
+     const values={two:val(i2),five:val(i5),ten:val(i10),thirty:val(i30)};
+     if(Object.values(values).every(Number.isFinite))candidates.push({date,values});
+    }
+   }
+   if(!candidates.length)throw new Error('Treasury table did not contain 2Y/5Y/10Y/30Y values');
+   candidates.sort((a,b)=>b.date-a.date);observation=candidates[0];break;
+  }catch(error){
+   const reason=error?.errors?.map(x=>String(x?.message||x)).slice(0,2).join(' | ')||error?.message||String(error);
+   lastError=String(reason).slice(0,140);
+  }finally{controllers.forEach(c=>c.abort())}
+  if(observation)break;
+ }
+ if(observation){
+  const v=observation.values,spread=v.ten-v.two;
+  setText('tsy2',v.two.toFixed(2)+'%');setText('tsy5',v.five.toFixed(2)+'%');setText('tsy10',v.ten.toFixed(2)+'%');setText('tsy30',v.thirty.toFixed(2)+'%');
+  setText('tsySpread',(spread>0?'+':'')+spread.toFixed(2)+' pp');
+  setText('tsyDate','Official Treasury observation · '+new Intl.DateTimeFormat('en-GB',{timeZone:TZ,dateStyle:'medium'}).format(observation.date)+' · daily close');
+  setText('tsyStatus','OFFICIAL · DAILY');
+  const errorNode=document.getElementById('tsyError');if(errorNode)errorNode.hidden=true;
+  APP.tsyState='loaded';APP.tsyError='';
+  saveJSON('apis_browser_treasury',{...v,date:observation.date.toISOString(),retrievedAt:Date.now(),source:'U.S. Treasury TextView'});
+ }else{
+  APP.tsyError=lastError;const cache=loadJSON('apis_browser_treasury',null);
+  if(cache&&cache.date&&Number.isFinite(Number(cache.ten))){
+   const spread=Number(cache.ten)-Number(cache.two);
+   setText('tsy2',Number(cache.two).toFixed(2)+'%');setText('tsy5',Number(cache.five).toFixed(2)+'%');setText('tsy10',Number(cache.ten).toFixed(2)+'%');setText('tsy30',Number(cache.thirty).toFixed(2)+'%');
+   setText('tsySpread',(spread>0?'+':'')+spread.toFixed(2)+' pp');
+   setText('tsyDate','STALE · last official observation '+new Intl.DateTimeFormat('en-GB',{timeZone:TZ,dateStyle:'medium'}).format(new Date(cache.date))+' · refresh failed');
+   setText('tsyStatus','STALE DATA');APP.tsyState='cached';
+  }else{
+   ['tsy2','tsy5','tsy10','tsy30','tsySpread'].forEach(id=>setText(id,'—'));
+   setText('tsyDate','No official Treasury observation was received.');setText('tsyStatus','UNAVAILABLE');APP.tsyState='unavailable';
+  }
+  const errorNode=document.getElementById('tsyError');if(errorNode){errorNode.hidden=false;errorNode.textContent='Connection detail: '+lastError+' · The dashboard will retry automatically.'}
+ }
+ renderQuality();
 }
 /* TradingView widgets. Widget content remains provider-controlled and does not feed calculations. */
 function mountWidget(id,src,config){

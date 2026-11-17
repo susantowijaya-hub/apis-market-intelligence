@@ -33,7 +33,10 @@ jobs:
             catch (error) { throw new Error('Inline script ' + (index + 1) + ': ' + error.message); }
           });
           const checks = {
-            version: html.includes('build-version" content="2.9.0"'),
+            version: html.includes('build-version" content="2.9.1"'),
+            dailyIndexCloseBaseline: html.includes("const isDailyIndex=['^JKSE','^GSPC','^IXIC','^DJI','000001.SS','^TWII','^KS11','^N225','^HSI'].includes(item.symbol)") && html.includes('dailyCloses.length>=2'),
+            hongKongLunchBreak: html.includes('openWindows=[[9*60+30,12*60],[13*60,16*60]]'),
+            closedRefreshGuardRestore: html.includes("closedRefreshDone:loadJSON('apis_market_closed_refresh_done',{})"),
             freeMode: html.includes('Stooq public CSV snapshots') && html.includes('Yahoo Finance public chart fallback'),
             stooqAdapter: html.includes('async function fetchStooqQuote'),
             yahooFallback: html.includes('async function fetchYahooQuote'),

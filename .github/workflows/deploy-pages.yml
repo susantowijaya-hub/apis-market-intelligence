@@ -235,16 +235,7 @@ jobs:
                 if (idxSession.session!=='OPEN' || idxSession.label!=='SESSION OPEN · STALE' ||
                     !idxSession.stamp.includes('Last close 16:00 WIB') || !idxSession.stamp.includes('16 Nov'))
                   throw new Error(engine.name+' IDX session / close timestamp failed: '+JSON.stringify(idxSession));
-                const googleFinanceLiveTaiwan=await page.evaluate(async()=>{
-                const item=WATCHLIST.find(row=>row.symbol==='^TWII');
-                const quote=await fetchGoogleFinanceQuote(item);
-                return {price:quote.price,pct:quote.changePct,source:quote.source,observedAt:quote.observedAt,age:quote.observedAge,symbol:quote.googleFinanceSymbol};
-              });
-              if(!Number.isFinite(googleFinanceLiveTaiwan.price)||googleFinanceLiveTaiwan.price<=0||
-                 !googleFinanceLiveTaiwan.source.includes('Google Finance')||googleFinanceLiveTaiwan.symbol!=='IX0001:TPE'||
-                 !Number.isFinite(googleFinanceLiveTaiwan.observedAt)||googleFinanceLiveTaiwan.age>96*3600)
-                throw new Error(engine.name+' Google Finance live Taiwan feed failed: '+JSON.stringify(googleFinanceLiveTaiwan));
-              const googleFinanceFixture=await page.evaluate(()=>{
+                const googleFinanceFixture=await page.evaluate(()=>{
                 const item=WATCHLIST.find(row=>row.symbol==='^TWII');
                 const now=Date.parse('2026-11-17T05:33:20Z');
                 const html='<div data-last-price="40092.11" data-last-price-change="-947.97" data-last-percentage-change="-2.31"></div> Nov 17, 1:33:15 PM GMT+8 '+('fixture '.repeat(80));

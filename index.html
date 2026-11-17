@@ -250,7 +250,7 @@ html[data-theme="dark"] .footer{border-color:var(--line);background:var(--surfac
 </section><section class="section page-view" id="filingsView" data-page-view="filings">
  <div class="page-heading"><div><div class="eyebrow">APIS · REGULATORY INTELLIGENCE</div><h1>Filings & Corporate Actions</h1><p>Public SEC EDGAR submissions for selected U.S. issuers, with direct filing links and publication dates.</p></div><span class="source-pill" id="filingsStatus">PUBLIC SOURCES</span></div>
  <div class="card filings-panel" id="filingsPanel" style="margin-top:14px">
- <div class="card-title"><div><div class="eyebrow">REGULATORY DISCLOSURES</div><h3>Filings & corporate actions</h3><p>Public filing sources · no fabricated insider trades or issuer disclosures.</p></div><span class="source-pill" id="filingsStatus">PUBLIC SOURCES</span></div>
+ <div class="card-title"><div><div class="eyebrow">REGULATORY DISCLOSURES</div><h3>Filings & corporate actions</h3><p>Public filing sources · no fabricated insider trades or issuer disclosures.</p></div><span class="source-pill" id="filingsPageStatus">PUBLIC SOURCES</span></div>
  <div class="filings-feed" id="filingsFeedList"><div class="empty-state">Loading SEC EDGAR company filings…</div></div><div class="filing-links">
   <a href="https://www.sec.gov/edgar/search/" target="_blank" rel="noopener"><strong>SEC EDGAR</strong><span>U.S. company filings · 10-K, 10-Q, 8-K</span></a>
   <a href="https://www.idx.co.id/id/perusahaan-tercatat/keterbukaan-informasi/" target="_blank" rel="noopener"><strong>IDX disclosures</strong><span>Indonesia listed-company disclosures</span></a>
@@ -421,7 +421,7 @@ function saveJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){to
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function num(v){return typeof v==='number'&&Number.isFinite(v)?v:null}
 function fmt(v,maximumFractionDigits=2){if(num(v)===null)return'—';return new Intl.NumberFormat('en-US',{maximumFractionDigits,minimumFractionDigits:maximumFractionDigits}).format(v)}
-function fmtPrice(q){if(!q||num(q.price)===null)return'—';const c=q.currency||'';const digits=/JPY|KRW|IDR|TWD|CNY/.test(c)?0:(q.price<10?4:2);return `${fmt(q.price,digits)}${c?' '+c:''}`}
+function fmtPrice(q){if(!q||num(q.price)===null)return'—';if(q.group==='Index'||q.group==='Risk')return fmt(q.price,2);const c=q.currency||'';const digits=/JPY|KRW|IDR|TWD|CNY/.test(c)?0:(q.price<10?4:2);return `${fmt(q.price,digits)}${c?' '+c:''}`}
 function fmtTime(ts){if(!ts)return'—';return new Intl.DateTimeFormat('en-GB',{timeZone:TZ,dateStyle:'medium',timeStyle:'short'}).format(new Date(ts*1000))+' WIB'}
 function fmtDate(d){return d?new Intl.DateTimeFormat('en-GB',{timeZone:TZ,dateStyle:'medium'}).format(new Date(d+'T12:00:00Z')):'—'}
 function changeClass(v){return v>0?'up':v<0?'down':'flat'}
@@ -548,19 +548,66 @@ function renderMovers(){
  draw('losersList',rows.filter(q=>q.changePct<0).slice(-5).reverse(),'down');
  setText('moversStamp',rows.length+' instruments · '+(APP.lastRefresh?'latest snapshot':'provider pending'));
 }
-function renderQuoteViews(){
-  const featured=['^JKSE','^GSPC','^IXIC','^DJI','^VIX','IDR=X','BZ=F','GC=F'];const grid=document.getElementById('featuredQuotes');grid.replaceChildren();featured.forEach(sym=>{const item=WATCHLIST.find(x=>x.symbol===sym);grid.append(createQuoteCard(item,QUOTES.get(sym))) });
-  const body=document.getElementById('watchlistBody');body.replaceChildren();let usable=0;
-  WATCHLIST.forEach(item=>{const q=QUOTES.get(item.symbol);if(q)usable++;const tr=document.createElement('tr');const cells=[];const n=document.createElement('td');const strong=document.createElement('div');strong.className='asset-name';strong.textContent=item.name;const sub=document.createElement('div');sub.className='asset-sub';sub.textContent=`${item.short} · ${item.group}`;n.append(strong,sub);cells.push(n);
-    const p=document.createElement('td');p.textContent=q?fmtPrice(q):'—';cells.push(p);
-    const d=document.createElement('td');d.textContent=q&&num(q.previousClose)!==null?fmt(q.price-q.previousClose,2):'—';if(q)d.className='change '+changeClass(q.price-q.previousClose);cells.push(d);
-    const pc=document.createElement('td');pc.textContent=q&&q.previousClose?pct((q.price/q.previousClose-1)*100):'—';if(q)pc.className='change '+changeClass(q.price-q.previousClose);cells.push(pc);
-    const st=document.createElement('td');st.textContent=q?quoteStatusLabel(q.status):'UNAVAILABLE';st.className='status-label '+(q?quoteStatusClass(q.status):'bad');cells.push(st);
-    const t=document.createElement('td');t.textContent=q?fmtTime(q.observedAt):'—';cells.push(t);
-    const src=document.createElement('td');if(q){const a=document.createElement('a');a.href=q.sourceUrl;a.target='_blank';a.rel='noopener';a.textContent='Yahoo Finance ↗';src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
-    cells.forEach(c=>tr.append(c));body.append(tr);
+function renderMarketOverview(){
+ const host=document.getElementById('marketSnapshotGrid');if(!host)return;
+ host.replaceChildren();
+ const groups=[
+  {title:'United States',symbols:['^GSPC','^IXIC','^DJI']},
+  {title:'Asia & Indonesia',symbols:['000001.SS','^TWII','^KS11','^JKSE','EIDO']},
+  {title:'Cross assets',symbols:['IDR=X','BZ=F','GC=F','^VIX','BTCUSDT']}
+ ];
+ let count=0;
+ groups.forEach(group=>{
+  const section=document.createElement('div');section.className='snapshot-group';
+  const heading=document.createElement('h4');heading.textContent=group.title;section.append(heading);
+  const grid=document.createElement('div');grid.className='snapshot-grid';
+  group.symbols.forEach(symbol=>{
+   const item=WATCHLIST.find(x=>x.symbol===symbol),raw=symbol==='BTCUSDT'?APP.btc:QUOTES.get(symbol);
+   if(!item&&!raw)return;
+   const q=raw?{...raw,short:item?.short||'BTC',name:item?.name||'Bitcoin',group:item?.group||'Crypto'}:null;
+   const card=document.createElement('div');card.className='snapshot-item';
+   const head=document.createElement('div');head.className='snapshot-item-head';
+   const name=document.createElement('span');name.className='snapshot-item-name';name.textContent=q?q.name:(item?.name||symbol);
+   const ticker=document.createElement('span');ticker.className='snapshot-item-symbol';ticker.textContent=q?(q.short||symbol):symbol;head.append(name,ticker);
+   const price=document.createElement('div');price.className='snapshot-item-price';price.textContent=q?fmtPrice(q):'—';
+   const details=document.createElement('div');details.className='snapshot-item-head';
+   const change=document.createElement('span'),pctValue=q&&num(q.previousClose)!==null&&q.previousClose!==0?((q.price/q.previousClose)-1)*100:null;
+   change.className='snapshot-item-change '+(pctValue===null?'flat':changeClass(pctValue));
+   change.textContent=pctValue===null?(q&&q.changePct!==undefined&&q.changePct!==null?pct(q.changePct):'Change n/a'):pct(pctValue);
+   const status=document.createElement('span');status.className='snapshot-item-status';
+   status.textContent=q?(q.transport==='WEBSOCKET'?'LIVE TICK':quoteStatusLabel(q.status||q.transport||'OBSERVED')):'UNAVAILABLE';
+   details.append(change,status);card.append(head,price,details);
+   if(q&&q.observedAt){const time=document.createElement('div');time.className='quote-asof';time.textContent='As of '+fmtTime(q.observedAt/1000);card.append(time)}
+   grid.append(card);count++;
   });
-  setText('quoteCount',`${usable} / ${WATCHLIST.length} observations`);renderTape();renderMovers();evaluateAlerts();updateFeedState();
+  section.append(grid);host.append(section);
+ });
+ setText('snapshotStamp',count+' instruments · validated observations');
+ if(!count){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='No verified provider observations yet. The snapshot will populate automatically when feeds respond.';host.append(empty)}
+}
+function renderQuoteViews(){
+ renderMarketOverview();
+ const featured=['^JKSE','^GSPC','^IXIC','^DJI','^VIX','IDR=X','BZ=F','GC=F'];
+ const grid=document.getElementById('featuredQuotes');
+ if(grid){grid.replaceChildren();featured.forEach(sym=>{const item=WATCHLIST.find(x=>x.symbol===sym);if(item)grid.append(createQuoteCard(item,QUOTES.get(sym)))});}
+ const body=document.getElementById('watchlistBody');if(body){
+  body.replaceChildren();let usable=0;
+  WATCHLIST.forEach(item=>{
+   const q=QUOTES.get(item.symbol);if(q)usable++;
+   const tr=document.createElement('tr'),cells=[];
+   const n=document.createElement('td'),strong=document.createElement('div'),sub=document.createElement('div');
+   strong.className='asset-name';strong.textContent=item.name;sub.className='asset-sub';sub.textContent=item.short+' · '+item.group;n.append(strong,sub);cells.push(n);
+   const p=document.createElement('td');p.textContent=q?fmtPrice(q):'—';cells.push(p);
+   const d=document.createElement('td');d.textContent=q&&num(q.previousClose)!==null?fmt(q.price-q.previousClose,2):'—';if(q)d.className='change '+changeClass(q.price-q.previousClose);cells.push(d);
+   const pc=document.createElement('td');pc.textContent=q&&q.previousClose?pct((q.price/q.previousClose-1)*100):'—';if(q)pc.className='change '+changeClass(q.price-q.previousClose);cells.push(pc);
+   const st=document.createElement('td');st.textContent=q?quoteStatusLabel(q.status):'UNAVAILABLE';st.className='status-label '+(q?quoteStatusClass(q.status):'bad');cells.push(st);
+   const t=document.createElement('td');t.textContent=q?fmtTime(q.observedAt):'—';cells.push(t);
+   const src=document.createElement('td');if(q){const a=document.createElement('a');a.href=q.sourceUrl;a.target='_blank';a.rel='noopener';a.textContent='Yahoo Finance ↗';src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
+   cells.forEach(cell=>tr.append(cell));body.append(tr);
+  });
+  setText('quoteCount',usable+' / '+WATCHLIST.length+' observations');
+ }
+ renderTape();renderMovers();evaluateAlerts();updateFeedState();
 }
 function renderTape(){
  const tape=document.getElementById('tickerTape');if(!tape)return;tape.replaceChildren();let any=false;
@@ -769,10 +816,7 @@ async function loadEdgarFilings(){
  renderQuality();
 }
 function loadChart(){const symbol=document.getElementById('chartSymbol').value;const item=WATCHLIST.find(x=>x.tv===symbol);setText('chartSubtitle',item?`${item.name} · TradingView chart`:'TradingView interactive chart');mountWidget('mainChart','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{autosize:true,symbol,interval:'5',timezone:TZ,theme:'light',style:'1',locale:'en',allow_symbol_change:true,calendar:false,hide_side_toolbar:false,hide_top_toolbar:false,save_image:false,withdateranges:true,details:true,hotlist:false,studies:[],support_host:'https://www.tradingview.com'});}
-function loadWidgets(){loadChart();mountWidget('marketOverviewWidget','https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js',{colorTheme:'light',dateRange:'12M',showChart:true,locale:'en',largeChartUrl:'',isTransparent:false,showSymbolLogo:true,showFloatingTooltip:false,width:'100%',height:'100%',plotLineColorGrowing:'rgba(0,113,227,1)',plotLineColorFalling:'rgba(210,70,70,1)',gridLineColor:'rgba(240,240,242,1)',scaleFontColor:'#6e6e73',belowLineFillColorGrowing:'rgba(0,113,227,0.08)',belowLineFillColorFalling:'rgba(210,70,70,0.06)',belowLineFillColorGrowingBottom:'rgba(0,113,227,0)',belowLineFillColorFallingBottom:'rgba(210,70,70,0)',symbolActiveColor:'rgba(0,113,227,0.08)',tabs:[{title:'US',symbols:[{s:'SP:SPX',d:'S&P 500'},{s:'NASDAQ:IXIC',d:'Nasdaq Composite'},{s:'DJ:DJI',d:'Dow Jones'}]},{title:'Asia',symbols:[{s:'SSE:000001',d:'Shanghai Composite'},{s:'TWSE:IX0001',d:'Taiwan Weighted'},{s:'KRX:KOSPI',d:'KOSPI'}]},{title:'Indonesia',symbols:[{s:'IDX:COMPOSITE',d:'IDX Composite'},{s:'IDX:BBCA',d:'BBCA'},{s:'IDX:BMRI',d:'BMRI'},{s:'IDX:BBRI',d:'BBRI'}]},{title:'Macro',symbols:[{s:'TVC:VIX',d:'VIX'},{s:'FX_IDC:USDIDR',d:'USD/IDR'},{s:'NYMEX:BZ1!',d:'Brent Futures'},{s:'COMEX:GC1!',d:'Gold Futures'}]}]});
-  mountWidget('newsWidget','https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',{feedMode:'market',isTransparent:false,displayMode:'regular',width:'100%',height:'100%',colorTheme:'light',locale:'en'});
-  mountWidget('calendarWidget','https://s3.tradingview.com/external-embedding/embed-widget-events.js',{colorTheme:'light',isTransparent:false,locale:'en',importanceFilter:'-1,0,1',countryFilter:'us,eu,cn,jp,kr,tw,id,gb',width:'100%',height:'100%'});
-}
+function loadWidgets(){loadChart();}
 
 /* M01 prompt audit: local heuristic only. */
 const INJECTION_PATTERNS=[/ignore (all )?(previous|prior|above) instructions/i,/reveal (the )?(system|hidden) prompt/i,/bypass (security|safety|policy)/i,/exfiltrat(e|ion)/i,/ignore your developer/i];

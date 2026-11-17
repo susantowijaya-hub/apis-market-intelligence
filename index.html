@@ -1591,31 +1591,53 @@ function parseGoogleFinanceQuotePage(html,item,now=Date.now()){
   googleFinanceSymbol:item.googleFinanceSymbol,providerQuoteVerified:true,sparkline:[],providerFallbacks:[]
  };
 }
+const GOOGLE_FINANCE_SNAPSHOT_CACHE={savedAt:0,data:null};
+async function fetchGoogleFinanceSnapshot(){
+ if(GOOGLE_FINANCE_SNAPSHOT_CACHE.data&&Date.now()-GOOGLE_FINANCE_SNAPSHOT_CACHE.savedAt<10000)return GOOGLE_FINANCE_SNAPSHOT_CACHE.data;
+ const response=await fetch('./google-finance-quotes.json?ts='+Date.now(),{cache:'no-store',credentials:'same-origin',headers:{Accept:'application/json'}});
+ if(!response.ok)throw new Error('Google Finance snapshot HTTP '+response.status);
+ const data=await response.json();
+ if(!data||!data.quotes||typeof data.quotes!=='object')throw new Error('Google Finance snapshot schema invalid');
+ GOOGLE_FINANCE_SNAPSHOT_CACHE.data=data;GOOGLE_FINANCE_SNAPSHOT_CACHE.savedAt=Date.now();
+ return data;
+}
 async function fetchGoogleFinanceQuote(item){
  if(!item.googleFinanceSymbol)throw new Error('Google Finance symbol is not mapped');
  const cached=GOOGLE_FINANCE_CACHE.get(item.symbol);
- if(cached&&Date.now()-cached.retrievedAt<15000)return {...cached};
- const target='https://www.google.com/finance/quote/'+encodeURIComponent(item.googleFinanceSymbol)+'?hl=en&gl=US';
- const routes=[
-  'https://corsproxy.io/?url='+encodeURIComponent(target),
-  'https://api.allorigins.win/raw?url='+encodeURIComponent(target),
-  'https://proxy.cors.dev/'+target
- ];
- const errors=[];
- for(const route of routes){
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);
-  try{
-   const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'text/html,application/xhtml+xml'}});
-   if(!response.ok)throw new Error('HTTP '+response.status);
-   const html=await response.text();
-   const quote=parseGoogleFinanceQuotePage(html,item);
-   quote.proxy=new URL(route).host;
-   GOOGLE_FINANCE_CACHE.set(item.symbol,quote);
-   return {...quote};
-  }catch(error){errors.push(new URL(route).host+': '+String(error?.message||error).slice(0,90))}
-  finally{clearTimeout(timer)}
+ if(cached&&Date.now()-cached.retrievedAt<10000)return {...cached};
+ try{
+  const snapshot=await fetchGoogleFinanceSnapshot(),row=snapshot.quotes[item.googleFinanceSymbol];
+  if(!row)throw new Error(snapshot.errors?.[item.googleFinanceSymbol]||'Google Finance snapshot has no quote for '+item.googleFinanceSymbol);
+  const quote={
+   symbol:item.symbol,name:item.name,short:item.short,group:item.group,region:item.region||'',
+   price:Number(row.price),previousClose:Number(row.previousClose),changePct:Number(row.changePct),
+   currency:item.currency||'',exchange:'Google Finance',marketState:'GOOGLE FINANCE PUBLIC QUOTE',
+   observedAt:Number(row.observedAt),observedAge:Math.max(0,Date.now()/1000-Number(row.observedAt)),
+   retrievedAt:Date.now(),status:'DELAYED_PROVIDER',source:'Google Finance · scheduled public-page snapshot',
+   sourceUrl:'https://www.google.com/finance/quote/'+encodeURIComponent(item.googleFinanceSymbol),
+   observationDate:row.observationDate||'',googleFinanceSymbol:item.googleFinanceSymbol,
+   providerQuoteVerified:true,sparkline:[],providerFallbacks:[],snapshotGeneratedAt:snapshot.generatedAt
+  };
+  if(!Number.isFinite(quote.price)||quote.price<=0||!Number.isFinite(quote.previousClose)||quote.previousClose<=0||
+     !Number.isFinite(quote.changePct)||!Number.isFinite(quote.observedAt)||quote.observedAge>96*3600)
+   throw new Error('Google Finance snapshot quote failed numeric / timestamp validation');
+  GOOGLE_FINANCE_CACHE.set(item.symbol,quote);return {...quote};
+ }catch(snapshotError){
+  const target='https://www.google.com/finance/quote/'+encodeURIComponent(item.googleFinanceSymbol)+'?hl=en&gl=US';
+  const routes=['https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target),'https://proxy.cors.dev/'+target];
+  const errors=['same-origin snapshot: '+String(snapshotError?.message||snapshotError).slice(0,90)];
+  for(const route of routes){
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);
+   try{
+    const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'text/html,application/xhtml+xml'}});
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    const quote=parseGoogleFinanceQuotePage(await response.text(),item);
+    quote.proxy=new URL(route).host;GOOGLE_FINANCE_CACHE.set(item.symbol,quote);return {...quote};
+   }catch(error){errors.push(new URL(route).host+': '+String(error?.message||error).slice(0,70))}
+   finally{clearTimeout(timer)}
+  }
+  throw new Error(errors.join(' · '));
  }
- throw new Error(errors.join(' · ')||'Google Finance public page unavailable');
 }
 async function fetchIndexProviderComparison(item,googleQuote){
  const session=exchangeSession(item);

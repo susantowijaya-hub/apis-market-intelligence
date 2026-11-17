@@ -773,13 +773,28 @@ async function fetchStooqQuote(item){
  }
  throw new Error(errors.slice(0,3).join(' | ')||'Stooq public CSV unavailable');
 }
+async function fetchMarketQuote(item){
+ const errors=[];
+ if(item.stooqSymbol||STOOQ_SYMBOLS[item.symbol]){
+  try{return await fetchStooqQuote(item)}
+  catch(error){errors.push('Stooq public CSV: '+String(error?.message||error).slice(0,130))}
+ }
+ try{
+  const quote=await fetchYahooQuote(item);
+  quote.providerFallbacks=errors.slice();
+  return quote;
+ }catch(error){
+  errors.push('Yahoo public fallback: '+String(error?.message||error).slice(0,150));
+ }
+ throw new Error(errors.join(' · ')||'No public provider returned a valid observation');
+}
 async function fetchQuoteBatch(){
   if(APP.yahooState==='loading')return;
   APP.yahooState='loading';APP.failures.clear();APP.successCount=0;APP.currentRunId=++APP.runCounter;const runId=APP.currentRunId;updateFeedState();
   const buttons=['refreshBtn','refreshTop'];buttons.forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true});
   setText('lastRefresh','Fetching '+WATCHLIST.length+' instruments…');
   let cursor=0,successes=0,failures=0;const queue=WATCHLIST.slice();
-  const workers=Array.from({length:8},async()=>{while(cursor<queue.length){const item=queue[cursor++];try{const q=await fetchMarketQuote(item);q.activeRunId=runId;QUOTES.set(item.symbol,q);APP.failures.delete(item.symbol);successes++}
+  const workers=Array.from({length:3},async()=>{while(cursor<queue.length){const item=queue[cursor++];try{const q=await fetchMarketQuote(item);q.activeRunId=runId;QUOTES.set(item.symbol,q);APP.failures.delete(item.symbol);successes++}
     catch(e){failures++;APP.failures.set(item.symbol,String(e?.message||'Provider request failed'));const old=QUOTES.get(item.symbol);if(old){const age=Date.now()/1000-old.observedAt;old.status=age>48*3600?'STALE_OBSERVATION':'STALE_CACHE';old.activeRunId=0;old.lastError=String(e?.message||'Refresh failed').slice(0,180);old.cacheRestored=true;QUOTES.set(item.symbol,old)}}
     APP.successCount=successes;setText('lastRefresh',`Fetching ${successes+failures}/${WATCHLIST.length} · ${successes} updated · ${failures} failed`);
   }});

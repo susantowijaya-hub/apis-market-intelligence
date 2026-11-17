@@ -41,6 +41,7 @@ jobs:
             xauSpotAdapter: html.includes('async function fetchXauSpotQuote') && html.includes('https://xaus.com/api/v1/spot?compact=1'),
             xauIntradayValidation: html.includes('coverage_seconds') && html.includes('historyCoverage>=20*3600'),
             twseOfficialIndex: html.includes('async function fetchTaiwanOfficialQuote') && html.includes('openapi.twse.com.tw/v1/indicesReport/MI_5MINS_HIST'),
+            twseDatedDailyFirst: html.includes('exchangeReport/MI_INDEX?response=json&date=') && html.includes('function parseTwseIndexReport'),
             twsePreviousCloseMath: html.includes('(latest.price/previous.price-1)*100'),
             regionalGroups: html.includes('function renderGroupedStockRows') && html.includes("region:'Greater China'"),
             homeExcludesStocks: html.includes("!['Indonesia equity','US equity'].includes(item.group)"),

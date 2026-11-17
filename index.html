@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f5">
-<meta name="build-version" content="2.1.2">
+<meta name="build-version" content="2.1.3">
 <meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — The Market Terminal v2.1.2</title>
+<title>APIS — The Market Terminal v2.1.3</title>
 <style>
 :root{
   color-scheme:light;
@@ -368,7 +368,7 @@ html[data-theme="dark"] .treasury-links a{color:#a9e8c9}
   <div class="note" style="margin-top:14px"><strong>Cara menjalankan:</strong> simpan file ini di komputer lalu buka dengan Chrome, Edge, Safari, atau Firefox yang terhubung ke internet. Sebagian jaringan memblokir penyedia data pasar publik atau widget eksternal; dashboard akan menandainya unavailable dan tidak mengganti data dengan simulasi. Untuk akses provider yang lebih konsisten, file dapat dijalankan melalui web server statis lokal (opsional)—tanpa backend API.</div>
 </section>
 </main>
-<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.1.2</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
+<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.1.3</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -418,6 +418,30 @@ html[data-theme="dark"] .treasury-links a{color:#a9e8c9}
   }
   if(!window.AbortController){
     window.AbortController=function(){this.signal=undefined;this.abort=function(){};};
+  }
+  if(!Array.prototype.at){
+    Array.prototype.at=function(index){index=Math.trunc(Number(index)||0);if(index<0)index+=this.length;return this[index];};
+  }
+  if(window.Node&&!Node.prototype.replaceChildren){
+    Node.prototype.replaceChildren=function(){
+      while(this.firstChild)this.removeChild(this.firstChild);
+      for(var i=0;i<arguments.length;i++){
+        var child=arguments[i];
+        if(typeof child==='string')child=document.createTextNode(child);
+        if(child)this.appendChild(child);
+      }
+    };
+  }
+  if(window.Element&&!Element.prototype.closest){
+    Element.prototype.closest=function(selector){
+      var node=this;
+      while(node&&node.nodeType===1){
+        var matches=node.matches||node.msMatchesSelector||node.webkitMatchesSelector;
+        if(matches&&matches.call(node,selector))return node;
+        node=node.parentElement;
+      }
+      return null;
+    };
   }
 })();
 </script>

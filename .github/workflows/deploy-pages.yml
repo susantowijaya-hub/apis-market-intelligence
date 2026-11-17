@@ -40,7 +40,7 @@ jobs:
           const requiredIds = [
             'refreshBtn','refreshTop','marketSnapshotGrid','snapshotStamp',
             'newsSearch','newsFilters','newsFeedList','newsFeedStatus','refreshNewsBtn',
-            'macroView','tsy2','tsy5','tsy10','tsy30','tsySpread','calendarImpact','calendarEvents','refreshCalendarBtn',
+            'macroView','tsy2','tsy5','tsy10','tsy30','tsy30Date','tsySpread','calendarFilterDrawer','calendarFilterSummary','calendarEvents','calendarUpdatedAt','calendarCount','refreshCalendarBtn',
             'moversView','gainersList','losersList','filingsView','filingsFeedList',
             'workbench','toolPrompt','toolDcf','toolBond','toolRisk','toolEvidence','toolData','toolAlerts',
             'sources','sourceHealth'
@@ -99,6 +99,12 @@ jobs:
             res.writeHead(200, { 'content-type': file.endsWith('.html') ? 'text/html; charset=utf-8' : 'application/octet-stream' });
             fs.createReadStream(file).pipe(res);
           });
+          const isoDay = date => date.toISOString().slice(0,10);
+          const today = isoDay(new Date());
+          const todayPastUtc = today + 'T01:00:00.000Z';
+          const todayNextUtc = today + 'T02:30:00.000Z';
+          const headers = {'access-control-allow-origin':'*','content-type':'application/json; charset=utf-8'};
+          const json = (route, body) => route.fulfill({status:200,headers,body:JSON.stringify(body)});
           (async () => {
             await new Promise(resolve => server.listen(4173, '127.0.0.1', resolve));
             const viewports = [
@@ -114,9 +120,67 @@ jobs:
                 });
                 const errors = [];
                 page.on('pageerror', error => errors.push(error.stack || error.message));
-                await page.route('https://**/*', route => route.abort());
+                await page.route('https://**/*', async route => {
+                  const url = new URL(route.request().url());
+                  if (url.hostname === 'xaus.com' && url.pathname === '/api/v1/spot') {
+                    const now = new Date().toISOString();
+                    return json(route,{
+                      xau:{price:4000,currency:'USD',unit:'troy_oz'},
+                      spot_usd_oz:4000,price_as_of:now,updated_at:now,
+                      data_state:{status:'fresh',as_of:now,source:'upstream',age_seconds:20}
+                    });
+                  }
+                  if (url.hostname === 'xaus.com' && url.pathname === '/api/v1/intraday') {
+                    const now = Math.floor(Date.now()/1000);
+                    return json(route,{
+                      symbol:'XAUUSD',coverage_seconds:86400,
+                      points:[{t:now-86400,p:3950},{t:now-43200,p:3975},{t:now,p:4000}],
+                      data_state:{status:'fresh',source:'upstream',age_seconds:20}
+                    });
+                  }
+                  if (url.hostname === 'openapi.twse.com.tw' && url.pathname.endsWith('/MI_5MINS_HIST')) {
+                    return json(route,[
+                      {Date:'1151116',ClosingIndex:'41040.08'},
+                      {Date:'1151117',ClosingIndex:'40092.11'}
+                    ]);
+                  }
+                  if (url.hostname === 'fred.stlouisfed.org' && url.pathname.endsWith('/fredgraph.csv')) {
+                    return route.fulfill({
+                      status:200,
+                      headers:{'access-control-allow-origin':'*','content-type':'text/csv; charset=utf-8'},
+                      body:[
+                        'observation_date,DGS2,DGS5,DGS10,DGS30',
+                        '2026-11-12,4.10,4.30,4.40,5.43',
+                        '2026-11-13,4.20,4.40,4.50,5.47',
+                        '2026-11-16,4.25,4.50,4.60,.'
+                      ].join('\n')
+                    });
+                  }
+                  if (url.hostname === 'nfs.faireconomy.media' && url.pathname.endsWith('/ff_calendar_thisweek.json')) {
+                    return json(route,[
+                      {title:'Retail Sales (Advance)',country:'USD',date:todayPastUtc,impact:'High',previous:'0.8%',forecast:'0.1%'},
+                      {title:'Philly Fed Manufacturing Index',country:'USD',date:todayNextUtc,impact:'Medium',previous:'20.9',forecast:'19.2'}
+                    ]);
+                  }
+                  if (url.hostname === 'xoomar.com' && url.pathname === '/api/markets/calendar') {
+                    const importance=url.searchParams.get('importance');
+                    if (importance==='high') return json(route,{data:[{
+                      source:'census',eventName:'Retail Sales (Advance)',importance:'high',
+                      scheduledAt:todayPastUtc,periodLabel:'October 2026',
+                      previous:'0.8%',forecast:null,actual:'0.2%',unit:'% m/m',
+                      canonicalUrl:'https://xoomar.com/economic-calendar-api'
+                    }]});
+                    return json(route,{data:[{
+                      source:'fed',eventName:'Philly Fed Manufacturing Index',importance:'med',
+                      scheduledAt:todayNextUtc,periodLabel:'November 2026',
+                      previous:'20.9',forecast:null,actual:null,unit:'index',
+                      canonicalUrl:'https://xoomar.com/economic-calendar-api'
+                    }]});
+                  }
+                  return route.abort();
+                });
                 await page.goto('http://127.0.0.1:4173/', {waitUntil:'domcontentloaded'});
-                await page.waitForTimeout(900);
+                await page.waitForTimeout(500);
                 const home = await page.evaluate(() => ({
                   booted:window.__APIS_BOOTED__===true,
                   rows:document.querySelectorAll('#featuredQuotes .ios-stock-item').length,
@@ -126,12 +190,31 @@ jobs:
                   fx:!!document.getElementById('fxValue'),
                   pageWidth:document.documentElement.clientWidth,
                   documentWidth:document.documentElement.scrollWidth,
-                  date:document.getElementById('homeDate')?.textContent || ''
+                  date:document.getElementById('homeDate')?.textContent || '',
+                  homeText:document.getElementById('featuredQuotes')?.innerText || ''
                 }));
-                if (!home.booted || home.rows !== 27 || !home.refresh || home.routes < 8 || !home.btc || !home.fx)
+                if (!home.booted || home.rows !== 20 || !home.refresh || home.routes < 8 || !home.btc || !home.fx)
                   throw new Error(engine.name+' '+viewport.name+' Home boot failed: '+JSON.stringify({home,errors}));
+                if (['BBCA','BMRI','BBRI','GOTO','AAPL','NVDA','MSFT'].some(code=>home.homeText.includes(code)))
+                  throw new Error(engine.name+' individual equities still appear on Home: '+home.homeText);
                 if (!home.date || home.documentWidth > home.pageWidth + 1)
                   throw new Error(engine.name+' '+viewport.name+' Home date/width check failed: '+JSON.stringify(home));
+                const xauTwse = await page.evaluate(async () => {
+                  const xau=await fetchXauSpotQuote({symbol:'XAUUSD=X',name:'Gold Spot · XAU/USD',short:'XAU/USD',group:'Commodity'});
+                  const taiwan=await fetchTaiwanOfficialQuote({symbol:'^TWII',name:'Taiwan Weighted',short:'Taiwan',group:'Index',region:'Greater China'});
+                  QUOTES.set('XAUUSD=X',xau);
+                  QUOTES.set('^TWII',taiwan);
+                  APP.marketFilter='commodities';
+                  renderMarketOverview();
+                  return {
+                    xauPrice:xau.price,xauChange:xau.changePct,xauSource:xau.source,xauAge:xau.observedAge,
+                    twPrice:taiwan.price,twPrev:taiwan.previousClose,twChange:taiwan.changePct,twSource:taiwan.source,twDate:taiwan.observationDate
+                  };
+                });
+                if (xauTwse.xauPrice!==4000 || Math.abs(xauTwse.xauChange-1.27)>0.01 || !xauTwse.xauSource.includes('XAUS'))
+                  throw new Error(engine.name+' XAU spot adapter failed: '+JSON.stringify(xauTwse));
+                if (xauTwse.twPrice!==40092.11 || xauTwse.twPrev!==41040.08 || Math.abs(xauTwse.twChange-(-2.31))>0.01)
+                  throw new Error(engine.name+' official Taiwan percent failed: '+JSON.stringify(xauTwse));
                 await page.locator('#homeSearchToggle').click();
                 await page.locator('#homeSearch').fill('Brent');
                 if (await page.locator('#featuredQuotes .ios-stock-item').count() !== 1)
@@ -141,12 +224,22 @@ jobs:
                 await page.locator('[data-page="markets"]').click();
                 if (!(await page.locator('#markets').evaluate(el=>el.classList.contains('active'))))
                   throw new Error(engine.name+' Markets navigation failed');
+                await page.locator('[data-market-filter="indices"]').click();
+                const regions=await page.locator('#marketSnapshotGrid .ios-market-region-heading h3').allTextContents();
+                if (!['Indonesia','United States','Greater China','North Asia','South Asia'].every(name=>regions.includes(name)))
+                  throw new Error(engine.name+' regional index grouping failed: '+regions.join(', '));
                 await page.locator('[data-market-filter="commodities"]').click();
                 const commodities = await page.locator('#marketSnapshotGrid .ios-stock-item').count();
                 const commodityLabels = await page.locator('#marketSnapshotGrid').innerText();
                 if (commodities !== 5 || !commodityLabels.includes('XAU/USD') || !commodityLabels.includes('WTI Crude') ||
-                    !commodityLabels.includes('Brent') || !commodityLabels.includes('Copper'))
+                    !commodityLabels.includes('Brent') || !commodityLabels.includes('Copper') || !commodityLabels.includes('4.000,00 USD/oz'))
                   throw new Error(engine.name+' commodity segment failed: '+commodities+' rows · '+commodityLabels);
+                const xauRow=page.locator('#marketSnapshotGrid .ios-stock-item').filter({hasText:'XAU/USD'}).first();
+                if (!(await xauRow.innerText()).includes('1.27%') || !(await xauRow.innerText()).includes('LIVE · SPOT'))
+                  throw new Error(engine.name+' XAU UI price/status failed: '+await xauRow.innerText());
+                const taiwanText=await page.evaluate(()=>{const q=QUOTES.get('^TWII');return q?{price:q.price,pct:((q.price/q.previousClose-1)*100).toFixed(2),status:marketSessionLabel(q,{symbol:'^TWII'})}:null});
+                if (!taiwanText || taiwanText.price!==40092.11 || taiwanText.pct!=='-2.31' || taiwanText.status!=='MARKET CLOSE')
+                  throw new Error(engine.name+' Taiwan display/session label failed: '+JSON.stringify(taiwanText));
                 if (await page.locator('#mainChart').count() !== 0 || await page.locator('#chartSymbol').count() !== 0)
                   throw new Error(engine.name+' non-working external chart should be removed');
                 const marketOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
@@ -156,7 +249,7 @@ jobs:
                   throw new Error(engine.name+' market row expansion failed');
                 await page.locator('[data-market-filter="fx-crypto"]').click();
                 const fxCrypto = await page.locator('#marketSnapshotGrid').innerText();
-                if (!fxCrypto.includes('Bitcoin') || !fxCrypto.includes('USD / IDR'))
+                if (!fxCrypto.includes('Bitcoin') || !fxCrypto.includes('USD/IDR'))
                   throw new Error(engine.name+' FX/Crypto segment failed: '+fxCrypto);
                 await page.locator('[data-page="news"]').click();
                 if (!(await page.locator('#research').evaluate(el=>el.classList.contains('active'))))
@@ -164,6 +257,31 @@ jobs:
                 await page.locator('[data-page="macro"]').click();
                 if (!(await page.locator('#macroView').evaluate(el=>el.classList.contains('active'))))
                   throw new Error(engine.name+' Macro navigation failed');
+                await page.waitForFunction(()=>document.querySelectorAll('#calendarEvents .calendar-event-card').length>=3,{timeout:15000});
+                await page.evaluate(()=>loadTreasuryCurve());
+                await page.waitForFunction(()=>document.getElementById('tsy30')?.textContent==='5.47%',{timeout:10000});
+                if (!((await page.locator('#tsy30Date').innerText()).includes('13 Nov 2026')))
+                  throw new Error(engine.name+' FRED DGS30 observation date missing: '+await page.locator('#tsy30Date').innerText());
+                const eventText=await page.locator('#calendarEvents').innerText();
+                if (!eventText.includes('Retail Sales (Advance)') || !eventText.includes('0.8%') ||
+                    !eventText.includes('0.1%') || !eventText.includes('0.2%'))
+                  throw new Error(engine.name+' previous/forecast/actual merge failed: '+eventText);
+                if (!eventText.includes('Philly Fed Manufacturing Index'))
+                  throw new Error(engine.name+' medium-impact event missing: '+eventText);
+                await page.locator('[data-cal-range="7"]').click();
+                if (await page.locator('[data-cal-range="7"]').getAttribute('aria-pressed')!=='true')
+                  throw new Error(engine.name+' 7D calendar range button failed');
+                await page.locator('#calendarFilterDrawer summary').click();
+                await page.locator('[data-cal-none="country"]').click();
+                await page.locator('[data-cal-country="IDR"]').check();
+                await page.locator('[data-cal-none="category"]').click();
+                await page.locator('[data-cal-category="Central Bank"]').check();
+                const idrEvents=await page.locator('#calendarEvents').innerText();
+                if (!idrEvents.includes('Bank Indonesia') || idrEvents.includes('Retail Sales (Advance)'))
+                  throw new Error(engine.name+' IDR / Central Bank filters failed: '+idrEvents);
+                await page.locator('[data-cal-range="3"]').click();
+                if (await page.locator('[data-cal-range="3"]').getAttribute('aria-pressed')!=='true')
+                  throw new Error(engine.name+' 3D calendar range button failed');
                 await page.locator('.theme-menu summary').click();
                 await page.locator('[data-theme-choice="dark"]').click();
                 if (await page.locator('html').getAttribute('data-theme')!=='dark')
@@ -173,7 +291,7 @@ jobs:
                 await page.locator('[data-page="home"]').click();
                 await page.locator('#refreshTop').click();
                 if (errors.length) throw new Error(engine.name+' runtime errors: '+errors.join(' | '));
-                console.log(engine.name+' '+viewport.name+' PASS · 27 Home rows · search · BTC/USDIDR · 5 commodity instruments · no chart embed · row expansion · no horizontal overflow · News/Macro · animated theme · refresh');
+                console.log(engine.name+' '+viewport.name+' PASS · Home 20 market-only rows · XAU spot feed/change · TWSE -2.31% · five regional index groups · 5 commodities · FRED 30Y · ForexFactory/XOOMAR release values · IDR/impact/type filters · 3D/7D · no horizontal overflow · theme animation · refresh');
                 await page.close();
               }
               await browser.close();

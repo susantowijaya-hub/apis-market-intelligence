@@ -1719,14 +1719,14 @@ function marketQuoteDayKey(quote,session){
  if(num(quote.observedAt)!==null)return new Intl.DateTimeFormat('en-CA',{timeZone:session.zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(quote.observedAt*1000));
  return '';
 }
-function marketSessionLabel(quote,item){
+function marketSessionLabel(quote,item,now=new Date()){
  if(!quote)return 'FEED UNAVAILABLE';
  if(item?.symbol==='XAUUSD=X'){
   if(!goldSpotSessionOpen())return quote.status==='STALE_OBSERVATION'?'MARKET CLOSE · STALE':'MARKET CLOSE';
   return quote.status==='STALE_OBSERVATION'?'SESSION OPEN · STALE':'LIVE · SPOT';
  }
  if(quote.transport==='WEBSOCKET')return 'LIVE';
- const session=exchangeSession(item);
+ const session=exchangeSession(item,now);
  if(session){
   if(session.state==='OPEN'){
    const observedDay=marketQuoteDayKey(quote,session);

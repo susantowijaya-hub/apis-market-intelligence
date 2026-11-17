@@ -138,10 +138,10 @@ jobs:
                       data_state:{status:'fresh',source:'upstream',age_seconds:20}
                     });
                   }
-                  if (url.hostname === 'www.twse.com.tw' && url.pathname.endsWith('/exchangeReport/MI_INDEX')) {
-                    const rocDate='115'+today.slice(5,7)+today.slice(8,10);
+                  if (url.hostname === 'www.twse.com.tw' && url.pathname.endsWith('/afterTrading/MI_INDEX')) {
+                    const gregorianDate=url.searchParams.get('date');
                     return json(route,{
-                      stat:'OK',date:rocDate,
+                      stat:'OK',date:gregorianDate,
                       tables:[{
                         fields:['指數','收盤指數','漲跌(+/-)','漲跌點數','漲跌百分比(%)'],
                         data:[
@@ -173,6 +173,18 @@ jobs:
                       {title:'Retail Sales (Advance)',country:'USD',date:todayPastUtc,impact:'High',previous:'0.8%',forecast:'0.1%'},
                       {title:'Philly Fed Manufacturing Index',country:'USD',date:todayNextUtc,impact:'Medium',previous:'20.9',forecast:'19.2'}
                     ]);
+                  }
+                  if (url.hostname === 'endpoints.investing.com' && url.pathname.endsWith('/calendars/economic/events/occurrences')) {
+                    return json(route,{
+                      events:[
+                        {event_id:100,event_translated:'Retail Sales (Advance)',currency:'USD',importance:'High'},
+                        {event_id:101,event_translated:'Philly Fed Manufacturing Index',currency:'USD',importance:'Medium'}
+                      ],
+                      occurrences:[
+                        {event_id:100,occurrence_id:1001,occurrence_time:todayPastUtc,previous:'0.8%',forecast:'0.1%',actual:'0.2%',period:'October 2026'},
+                        {event_id:101,occurrence_id:1002,occurrence_time:todayNextUtc,previous:'20.9',forecast:'19.2',actual:'19.7',period:'November 2026'}
+                      ]
+                    });
                   }
                   if (url.hostname === 'xoomar.com' && url.pathname === '/api/markets/calendar') {
                     const importance=url.searchParams.get('importance');
@@ -211,6 +223,22 @@ jobs:
                   throw new Error(engine.name+' individual equities still appear on Home: '+home.homeText);
                 if (!home.date || home.documentWidth > home.pageWidth + 1)
                   throw new Error(engine.name+' '+viewport.name+' Home date/width check failed: '+JSON.stringify(home));
+                if(await page.locator('#featuredQuotes .ios-stock-session-line').count()!==20)
+                  throw new Error(engine.name+' live session / feed timestamp lines missing');
+                const idxSession = await page.evaluate(() => {
+                  const item=WATCHLIST.find(row=>row.symbol==='^JKSE');
+                  const at=new Date('2026-11-17T08:14:00.000Z');
+                  const cached={symbol:'^JKSE',price:5337.99,previousClose:5344.40,marketState:'CLOSED',status:'LAST_AVAILABLE_CLOSE',
+                    observedAt:Date.parse('2026-11-16T09:00:00Z')/1000,retrievedAt:Date.parse('2026-11-17T08:14:05Z')};
+                  return {session:exchangeSession(item,at).state,label:marketSessionLabel(cached,item),stamp:marketFeedTimestampLabel(cached,item)};
+                });
+                if (idxSession.session!=='OPEN' || idxSession.label!=='SESSION OPEN · STALE' ||
+                    !idxSession.stamp.includes('Last close 16:00 WIB') || !idxSession.stamp.includes('16 Nov'))
+                  throw new Error(engine.name+' IDX session / close timestamp failed: '+JSON.stringify(idxSession));
+                const cachedTaiwanPct=await page.evaluate(()=>stockChangePct({
+                  symbol:'^TWII',price:40092.11,previousClose:43666.0,changePct:-8.2,source:'Yahoo Finance · public fallback'
+                }));
+                if(cachedTaiwanPct!==null)throw new Error(engine.name+' unverified Taiwan cache percentage was not suppressed');
                 const xauTwse = await page.evaluate(async () => {
                   const xau=await fetchXauSpotQuote({symbol:'XAUUSD=X',name:'Gold Spot · XAU/USD',short:'XAU/USD',group:'Commodity'});
                   const taiwan=await fetchTaiwanOfficialQuote({symbol:'^TWII',name:'Taiwan Weighted',short:'Taiwan',group:'Index',region:'Greater China'});
@@ -281,6 +309,12 @@ jobs:
                   throw new Error(engine.name+' previous/forecast/actual merge failed: '+eventText);
                 if (!eventText.includes('Philly Fed Manufacturing Index'))
                   throw new Error(engine.name+' medium-impact event missing: '+eventText);
+                const calendarSources=await page.evaluate(()=>APP.calendarSourceCounts);
+                if(!calendarSources||calendarSources.investing<2||calendarSources.forexFactory<2)
+                  throw new Error(engine.name+' Investing / Forex Factory source merge failed: '+JSON.stringify(calendarSources));
+                if(!eventText.includes('19.7'))throw new Error(engine.name+' Investing.com Actual value missing: '+eventText);
+                await page.waitForFunction(()=>Number(APP.lastSliceRefreshAt)>0,{timeout:12000});
+                if(!APP.sliceCursor||APP.sliceBusy)throw new Error(engine.name+' 5s rotating quote poll did not complete a slice');
                 await page.locator('[data-cal-range="7"]').click();
                 if (await page.locator('[data-cal-range="7"]').getAttribute('aria-pressed')!=='true')
                   throw new Error(engine.name+' 7D calendar range button failed');
@@ -304,7 +338,7 @@ jobs:
                 await page.locator('[data-page="home"]').click();
                 await page.locator('#refreshTop').click();
                 if (errors.length) throw new Error(engine.name+' runtime errors: '+errors.join(' | '));
-                console.log(engine.name+' '+viewport.name+' PASS · Home 20 market-only rows · XAU spot feed/change · TWSE -2.31% · five regional index groups · 5 commodities · FRED 30Y · ForexFactory/XOOMAR release values · IDR/impact/type filters · 3D/7D · no horizontal overflow · theme animation · refresh');
+                console.log(engine.name+' '+viewport.name+' PASS · Home 20 market-only rows · IDX session/last-close timestamps · XAU spot · TWSE daily -2.31% · no stale Yahoo Taiwan percent · regional groups · 5 commodities · FRED 30Y · Investing.com + Forex Factory + XOOMAR · release values · IDR/impact/type filters · 3D/7D · 5s quote slices / 4s display · no horizontal overflow');
                 await page.close();
               }
               await browser.close();

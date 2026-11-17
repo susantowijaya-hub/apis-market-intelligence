@@ -224,8 +224,8 @@
 - WebKit iPhone 390px: PASS.
 - WebKit 826px touch/desktop-width: PASS.
 - Browser checks include: Home has 20 market-only rows and no individual company equities; XAU adapter returns expected fixture price and computed change; Taiwan daily TWSE adapter returns official -2.31%; all five regional index groups render; five commodities render; no broken chart embed; DGS30 remains visible despite a blank latest observation on other dates; previous/forecast/actual merge; Medium/High and IDR/category filters; 3D/7D buttons; no horizontal overflow; News/Macro navigation; animated theme; refresh; no JavaScript page errors.
-- GitHub Pages deployment: SUCCESS. Run: https://github.com/susantowijaya-hub/apis-market-intelligence/actions/runs/44041119759
-- Latest validated workflow commit: 51fd7c1ebfa02d48051a0a6f84ed8273d4cc9202.
+- GitHub Pages deployment: SUCCESS. Final run: https://github.com/susantowijaya-hub/apis-market-intelligence/actions/runs/44041526563
+- Final Pages build commit: e36f587c672287063b3f27a64663b13063da7a70. Static validation and Chromium/WebKit browser suite passed on this deployed release.
 - Release version: APIS v2.6.0.
 
 ### Data integrity and operating limitations

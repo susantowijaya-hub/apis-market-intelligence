@@ -1326,9 +1326,9 @@ function parseTwseIndexReport(payload){
   const fields=table?.fields||table?.columns||[];
   const rows=table?.data||table?.data1||[];
   if(!Array.isArray(fields)||!Array.isArray(rows))continue;
-  const fieldIndex=pattern=>fields.findIndex(field=>pattern.test(String(field||'')));
-  const nameIndex=fieldIndex(/^(指數|Index)$/i);
-  const priceIndex=fieldIndex(/收盤指數|Closing Index|ClosingIndex/i);
+  const fieldIndex=pattern=>fields.findIndex(field=>pattern.test(String(field||'').replace(/<[^>]*>/g,'')));
+  const nameIndex=fieldIndex(/^(指數|指數名稱|Index)$/i);
+  const priceIndex=fieldIndex(/^(收盤指數|Closing Index|ClosingIndex)$/i);
   const changeIndex=fieldIndex(/漲跌百分比|Change Percent|Change%/i);
   const signIndex=fieldIndex(/漲跌\(\+\/-\)|漲跌$|Change Sign/i);
   const pointIndex=fieldIndex(/漲跌點數|Change Points/i);
@@ -1336,23 +1336,32 @@ function parseTwseIndexReport(payload){
   if(nameIndex<0||priceIndex<0)continue;
   for(const row of rows){
    if(!Array.isArray(row))continue;
-   const title=String(row[nameIndex]||'');
+   const title=String(row[nameIndex]||'').replace(/<[^>]*>/g,'').trim();
    if(!/發行量加權股價指數|TAIEX|Taiwan Weighted|Capitalization Weighted Stock Index/i.test(title))continue;
    const date=parseTwseDate(dateIndex>=0?row[dateIndex]:payload.date||payload.dateString);
-   const price=Number(String(row[priceIndex]||'').replace(/,/g,''));
+   const price=Number(String(row[priceIndex]||'').replace(/[,\s]/g,''));
    if(!date||!Number.isFinite(price)||price<=0)continue;
-   let changePct=changeIndex>=0?Number(String(row[changeIndex]||'').replace(/[,％%]/g,'')):NaN;
-   const sign=signIndex>=0?String(row[signIndex]||'').trim():'';
-   if(Number.isFinite(changePct)&&!String(row[changeIndex]).includes('-')&&/^-/.test(sign))changePct=-Math.abs(changePct);
-   if(Number.isFinite(changePct)&&!String(row[changeIndex]).includes('+')&&/^\+/.test(sign))changePct=Math.abs(changePct);
-   let previousClose=null;
-   if(pointIndex>=0){
-    const delta=Math.abs(Number(String(row[pointIndex]||'').replace(/,/g,'')));
-    if(Number.isFinite(delta))previousClose=/^-/.test(sign)?price+delta:/^\+/.test(sign)?price-delta:null;
+   const signText=String(signIndex>=0?row[signIndex]||'':'').replace(/<[^>]*>/g,'').trim();
+   const changeText=String(changeIndex>=0?row[changeIndex]||'':'').replace(/<[^>]*>/g,'').replace(/[,％%]/g,'').trim();
+   let changePct=changeText===''?NaN:Number(changeText);
+   if(Number.isFinite(changePct)){
+    if(signText.includes('-'))changePct=-Math.abs(changePct);
+    else if(signText.includes('+'))changePct=Math.abs(changePct);
    }
-   if(!Number.isFinite(changePct))changePct=Number.isFinite(previousClose)?(price/previousClose-1)*100:null;
-   if(!Number.isFinite(previousClose)&&Number.isFinite(changePct)&&changePct!==-100)previousClose=price/(1+changePct/100);
+   const pointText=String(pointIndex>=0?row[pointIndex]||'':'').replace(/<[^>]*>/g,'').replace(/[,，]/g,'').trim();
+   const pointMove=pointText===''?NaN:Number(pointText);
+   let previousClose=null;
+   if(Number.isFinite(pointMove)){
+    if(signText.includes('-'))previousClose=price+Math.abs(pointMove);
+    else if(signText.includes('+'))previousClose=price-Math.abs(pointMove);
+   }
+   if(!Number.isFinite(changePct)&&Number.isFinite(previousClose)&&previousClose>0)changePct=(price/previousClose-1)*100;
+   if(!Number.isFinite(previousClose)&&Number.isFinite(changePct)&&changePct>-100)previousClose=price/(1+changePct/100);
    if(!Number.isFinite(changePct)||!Number.isFinite(previousClose)||previousClose<=0)continue;
+   if(Number.isFinite(pointMove)){
+    const implied=(price/previousClose-1)*100;
+    if(Math.abs(implied-changePct)>0.08)continue;
+   }
    const dayKey=[date.year,String(date.month).padStart(2,'0'),String(date.day).padStart(2,'0')].join('-');
    return {price,previousClose,changePct,date,dayKey};
   }
@@ -1360,20 +1369,22 @@ function parseTwseIndexReport(payload){
  return null;
 }
 function twseObservationQuote(item,observation,sourceName,sourceUrl){
- const observedAt=Date.UTC(observation.date.year,observation.date.month-1,observation.date.day,7,0,0)/1000;
+ // Official TAIEX cash-session close is 13:30 Taipei time (05:30 UTC).
+ const observedAt=Date.UTC(observation.date.year,observation.date.month-1,observation.date.day,5,30,0)/1000;
+ const now=Date.now();
  return {
   symbol:item.symbol,name:item.name,short:item.short,group:item.group,region:item.region,
   price:observation.price,previousClose:observation.previousClose,changePct:observation.changePct,
   currency:'',exchange:'Taiwan Stock Exchange',marketState:'CLOSED',
   observedAt,status:'LAST_AVAILABLE_CLOSE',observationDate:observation.dayKey,
-  source:sourceName,sourceUrl,retrievedAt:Date.now(),sparkline:[],providerFallbacks:[]
+  source:sourceName,sourceUrl,retrievedAt:now,providerQuoteVerified:true,sparkline:[],providerFallbacks:[]
  };
 }
 async function fetchTaiwanOfficialQuote(item){
  const taipei=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
  const part=type=>taipei.find(value=>value.type===type)?.value||'';
  const tradeDate=part('year')+part('month')+part('day');
- const dailyTarget='https://www.twse.com.tw/exchangeReport/MI_INDEX?response=json&date='+tradeDate+'&type=IND';
+ const dailyTarget='https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?date='+tradeDate+'&type=ALLBUT0999&response=json';
  const dailyRoutes=[
   dailyTarget,
   'https://corsproxy.io/?url='+encodeURIComponent(dailyTarget),
@@ -1382,23 +1393,26 @@ async function fetchTaiwanOfficialQuote(item){
  ];
  let lastError='TWSE dated daily index report unavailable';
  for(const route of dailyRoutes){
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8500);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),7500);
   try{
    const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
    if(!response.ok)throw new Error('HTTP '+response.status);
    const payload=await response.json();
+   if(String(payload?.stat||'').toUpperCase()!=='OK')throw new Error(payload?.stat||'TWSE daily report not ready');
+   const payloadDate=String(payload.date||'');
+   if(payloadDate!==tradeDate)throw new Error('TWSE daily report returned a different trade date');
    const observation=parseTwseIndexReport(payload);
-   if(!observation)throw new Error(payload?.stat||'No dated TAIEX row in official report');
-   if(observation.dayKey!==tradeDate.slice(0,4)+'-'+tradeDate.slice(4,6)+'-'+tradeDate.slice(6,8))throw new Error('TWSE report date did not match the requested Taiwan session');
-   return twseObservationQuote(item,observation,'Taiwan Stock Exchange · official dated daily close','https://www.twse.com.tw/en/exchangeReport/MI_INDEX');
+   if(!observation)throw new Error('No valid TAIEX close / signed change row in official report');
+   if(observation.dayKey!==tradeDate.slice(0,4)+'-'+tradeDate.slice(4,6)+'-'+tradeDate.slice(6,8))throw new Error('TWSE report row date mismatch');
+   return twseObservationQuote(item,observation,'Taiwan Stock Exchange · official dated daily close','https://www.twse.com.tw/en/afterTrading/MI_INDEX');
   }catch(error){lastError=error?.name==='AbortError'?'TWSE daily report timed out':String(error?.message||error).slice(0,120)}
   finally{clearTimeout(timer)}
  }
- // Last-available-session fallback: the official OpenAPI monthly history can lag a newly published close.
+ // The static OpenAPI history is a last-available-session fallback only.
  const target='https://openapi.twse.com.tw/v1/indicesReport/MI_5MINS_HIST';
  const historyRoutes=[target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
  for(const route of historyRoutes){
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),7500);
   try{
    const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
    if(!response.ok)throw new Error('HTTP '+response.status);
@@ -1539,6 +1553,11 @@ function renderMovers(){
 }
 function stockChangePct(quote){
  if(!quote)return null;
+ if(quote.symbol==='^TWII'){
+  if(!quote.source||!String(quote.source).includes('Taiwan Stock Exchange')||quote.providerQuoteVerified===false)return null;
+  if(num(quote.changePct)===null)return null;
+  return Number(quote.changePct);
+ }
  if(num(quote.previousClose)!==null&&quote.previousClose!==0)return (quote.price/quote.previousClose-1)*100;
  return num(quote.changePct);
 }
@@ -1571,25 +1590,87 @@ function buildStockSparkline(values,changePct){
  svg.append(line);
  return svg;
 }
+function exchangeWallClock(date,timeZone){
+ const parts=new Intl.DateTimeFormat('en-US',{timeZone,weekday:'short',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date);
+ const get=type=>parts.find(part=>part.type===type)?.value||'0';
+ return {weekday:get('weekday'),year:Number(get('year')),month:Number(get('month')),day:Number(get('day')),hour:Number(get('hour')),minute:Number(get('minute')),second:Number(get('second'))};
+}
+function exchangeMinutes(date,timeZone){
+ const p=exchangeWallClock(date,timeZone);return p.hour*60+p.minute+(p.second/60);
+}
+function exchangeSession(item,now=new Date()){
+ const symbol=item?.symbol||'',group=item?.group||'';
+ let zone='',openWindows=[],closeTime='',closeZone='';
+ if(symbol==='^JKSE'||symbol==='^JKLQ45'){
+  zone='Asia/Jakarta';closeTime='16:00';closeZone='WIB';
+  const p=exchangeWallClock(now,zone),minute=p.hour*60+p.minute;
+  if(p.weekday==='Sat'||p.weekday==='Sun')return {state:'CLOSED',label:'MARKET CLOSE',zone,closeTime,closeZone,tradeDate:p};
+  const friday=p.weekday==='Fri';
+  openWindows=friday?[[9*60,11*60+30],[14*60,15*60+50]]:[[9*60,12*60],[13*60+30,15*60+50]];
+  if(openWindows.some(([a,b])=>minute>=a&&minute<b))return {state:'OPEN',label:'SESSION OPEN',zone,closeTime,closeZone,tradeDate:p};
+  if(minute>=15*60+50&&minute<16*60+2)return {state:'PRECLOSE',label:'PRE-CLOSE',zone,closeTime,closeZone,tradeDate:p};
+  if((!friday&&minute>=12*60&&minute<13*60+30)||(friday&&minute>=11*60+30&&minute<14*60))return {state:'BREAK',label:'LUNCH BREAK',zone,closeTime,closeZone,tradeDate:p};
+  if(minute<9*60)return {state:'PREOPEN',label:'PRE-MARKET',zone,closeTime,closeZone,tradeDate:p};
+  return {state:'CLOSED',label:'MARKET CLOSE',zone,closeTime,closeZone,tradeDate:p};
+ }
+ if(symbol==='^TWII'){zone='Asia/Taipei';closeTime='13:30';closeZone='TST';openWindows=[[9*60,13*60+30]]}
+ else if(symbol==='000001.SS'){zone='Asia/Shanghai';closeTime='15:00';closeZone='CST';openWindows=[[9*60+30,11*60+30],[13*60,15*60]]}
+ else if(symbol==='^HSI'){zone='Asia/Hong_Kong';closeTime='16:00';closeZone='HKT';openWindows=[[9*60+30,12*60],[13*60,16*60]]}
+ else if(symbol==='^N225'){zone='Asia/Tokyo';closeTime='15:30';closeZone='JST';openWindows=[[9*60,11*60+30],[12*60+30,15*60+30]]}
+ else if(symbol==='^KS11'){zone='Asia/Seoul';closeTime='15:30';closeZone='KST';openWindows=[[9*60,15*60+30]]}
+ else if(symbol==='^NSEI'){zone='Asia/Kolkata';closeTime='15:30';closeZone='IST';openWindows=[[9*60+15,15*60+30]]}
+ else if(['^GSPC','^IXIC','^DJI','^VIX','AAPL','NVDA','MSFT'].includes(symbol)){zone='America/New_York';closeTime='16:00';closeZone='ET';openWindows=[[9*60+30,16*60]]}
+ else return null;
+ const p=exchangeWallClock(now,zone),minute=p.hour*60+p.minute;
+ if(p.weekday==='Sat'||p.weekday==='Sun')return {state:'CLOSED',label:'MARKET CLOSE',zone,closeTime,closeZone,tradeDate:p};
+ if(openWindows.some(([a,b])=>minute>=a&&minute<b))return {state:'OPEN',label:'SESSION OPEN',zone,closeTime,closeZone,tradeDate:p};
+ const first=openWindows[0][0],last=openWindows[openWindows.length-1][1];
+ if(minute<first)return {state:'PREOPEN',label:'PRE-MARKET',zone,closeTime,closeZone,tradeDate:p};
+ if(openWindows.length===2&&minute>=openWindows[0][1]&&minute<openWindows[1][0])return {state:'BREAK',label:'LUNCH BREAK',zone,closeTime,closeZone,tradeDate:p};
+ return {state:'CLOSED',label:'MARKET CLOSE',zone,closeTime,closeZone,tradeDate:p};
+}
 function marketSessionLabel(quote,item){
  if(!quote)return 'FEED UNAVAILABLE';
  if(item?.symbol==='XAUUSD=X'){
   if(!goldSpotSessionOpen())return quote.status==='STALE_OBSERVATION'?'MARKET CLOSE · STALE':'MARKET CLOSE';
-  return quote.status==='STALE_OBSERVATION'?'STALE · SPOT':'LIVE · SPOT';
+  return quote.status==='STALE_OBSERVATION'?'SESSION OPEN · STALE':'LIVE · SPOT';
  }
  if(quote.transport==='WEBSOCKET')return 'LIVE';
+ const session=exchangeSession(item);
+ if(session){
+  if(session.state==='OPEN'){
+   if(quote.status==='STALE_CACHE'||quote.status==='STALE_OBSERVATION'||quote.status==='LAST_AVAILABLE_CLOSE')return 'SESSION OPEN · STALE';
+   return quote.status==='DELAYED_PROVIDER'?'SESSION OPEN · DELAYED':'SESSION OPEN';
+  }
+  if(session.state==='PRECLOSE')return 'PRE-CLOSE';
+  if(session.state==='BREAK')return 'LUNCH BREAK';
+  if(session.state==='PREOPEN')return 'PRE-MARKET';
+  if(session.state==='CLOSED')return quote.status==='STALE_OBSERVATION'||quote.status==='STALE_CACHE'?'MARKET CLOSE · STALE':'MARKET CLOSE';
+ }
  const marketState=String(quote.marketState||'').toUpperCase();
  if(marketState==='PRE')return 'PRE-MARKET';
  if(marketState==='POST')return 'AFTER-HOURS';
- if(marketState==='REGULAR'){
-  if(quote.status==='STALE_OBSERVATION'||quote.status==='LAST_AVAILABLE_CLOSE')return 'SESSION OPEN · STALE';
-  return quote.status==='DELAYED_PROVIDER'?'SESSION OPEN · DELAYED':'LIVE';
- }
- if(marketState==='CLOSED')return quote.status==='STALE_OBSERVATION'?'MARKET CLOSE · STALE':'MARKET CLOSE';
+ if(marketState==='REGULAR')return quote.status==='DELAYED_PROVIDER'?'SESSION OPEN · DELAYED':'LIVE';
+ if(marketState==='CLOSED')return quote.status==='STALE_OBSERVATION'||quote.status==='STALE_CACHE'?'MARKET CLOSE · STALE':'MARKET CLOSE';
  if(marketState==='PUBLIC CSV SNAPSHOT')return 'MARKET CLOSE · PUBLIC SNAPSHOT';
- if(quote.status==='STALE_OBSERVATION')return 'STALE OBSERVATION';
+ if(quote.status==='STALE_OBSERVATION'||quote.status==='STALE_CACHE')return 'STALE OBSERVATION';
  if(quote.status==='LAST_AVAILABLE_CLOSE')return 'MARKET CLOSE';
  return quote.status==='DELAYED_PROVIDER'?'SESSION OPEN · DELAYED':'MARKET STATUS · PROVIDER';
+}
+function marketFeedTimestampLabel(quote,item){
+ if(!quote)return 'No feed time';
+ const stamp=Number(quote.retrievedAt||quote.receivedAt||0);
+ const feed=stamp>0?new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).format(new Date(stamp))+' WIB':'Feed time n/a';
+ const session=exchangeSession(item);
+ if(session?.state==='CLOSED'&&quote.observationDate){
+  const day=new Intl.DateTimeFormat('en-GB',{timeZone:session.zone,day:'2-digit',month:'short'}).format(new Date(quote.observationDate+'T12:00:00Z'));
+  return feed+' · Close '+session.closeTime+' '+session.closeZone+' · '+day;
+ }
+ if(session?.state==='CLOSED'&&quote.status==='LAST_AVAILABLE_CLOSE'&&quote.observedAt){
+  const day=new Intl.DateTimeFormat('en-GB',{timeZone:session.zone,day:'2-digit',month:'short'}).format(new Date(quote.observedAt*1000));
+  return feed+' · Close '+session.closeTime+' '+session.closeZone+' · '+day;
+ }
+ return feed;
 }
 function goldSpotSessionOpen(){
  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
@@ -1615,8 +1696,11 @@ function createStockRow(item,quote,opts={}){
  const price=document.createElement('strong');price.className='ios-stock-price';price.textContent=stockPriceText(quote,item);
  const badge=document.createElement('span');badge.className='ios-stock-change '+(pctValue===null?'unavailable':pctValue>0?'up':pctValue<0?'down':'flat');
  badge.textContent=pctValue===null?'—':pct(pctValue);
+ const sessionLine=document.createElement('div');sessionLine.className='ios-stock-session-line';
  const session=document.createElement('small');session.className='ios-stock-session';session.textContent=marketSessionLabel(quote,item);
- right.append(price,badge,session);
+ const feedStamp=document.createElement('time');feedStamp.className='ios-stock-updated';feedStamp.textContent=marketFeedTimestampLabel(quote,item);
+ sessionLine.append(session,feedStamp);right.append(price,badge,sessionLine);
+ detail.dataset.symbol=item.symbol;
  const chevron=document.createElement('span');chevron.className='ios-stock-chevron';chevron.textContent='›';
  summary.append(identity,sparkWrap,right,chevron);
  const extra=document.createElement('div');extra.className='ios-stock-detail';
@@ -1650,6 +1734,15 @@ function renderHomeStocks(){
  setText('homeSnapshotStamp',APP.yahooState==='loading'?'PUBLIC FEEDS · UPDATING':(APP.successCount||0)+' / '+WATCHLIST.length+' UPDATED');
  setText('homeDate',new Intl.DateTimeFormat('en-GB',{timeZone:TZ,day:'numeric',month:'long'}).format(new Date()));
  setText('quoteCount',QUOTES.size+' / '+WATCHLIST.length+' · '+items.length+' shown on Home');
+}
+function updateLiveRowLabels(){
+ document.querySelectorAll('.ios-stock-item[data-symbol]').forEach(row=>{
+  const symbol=row.dataset.symbol,item=WATCHLIST.find(entry=>entry.symbol===symbol);
+  const quote=QUOTES.get(symbol);if(!item)return;
+  const session=row.querySelector('.ios-stock-session'),stamp=row.querySelector('.ios-stock-updated');
+  if(session)session.textContent=marketSessionLabel(quote,item);
+  if(stamp)stamp.textContent=marketFeedTimestampLabel(quote,item);
+ });
 }
 function renderGroupedStockRows(host,items,emptyMessage='No validated observations for this segment yet.'){
  host.replaceChildren();
@@ -1982,29 +2075,47 @@ function calendarSourceLink(source){
  if(s.includes('bank indonesia'))return 'https://www.bi.go.id/id/publikasi/Kalender/Default.aspx';
  return 'https://www.forexfactory.com/calendar';
 }
+function normalizeCalendarImpact(value){
+ const text=String(value||'').toUpperCase();
+ if(/\bHIGH\b/.test(text)||text.includes('RED'))return 'HIGH';
+ if(/\bMEDIUM\b/.test(text)||/\bMODERATE\b/.test(text)||text.includes('ORANGE'))return 'MEDIUM';
+ return '';
+}
+function normalizeCalendarCurrency(value){
+ const code=String(value||'').trim().toUpperCase();
+ const aliases={US:'USD',USA:'USD',UNITEDSTATES:'USD',EU:'EUR',EUROZONE:'EUR',UK:'GBP',UNITEDKINGDOM:'GBP',GB:'GBP',AU:'AUD',AUSTRALIA:'AUD',CA:'CAD',CANADA:'CAD',CH:'CHF',SWITZERLAND:'CHF',CN:'CNY',CHINA:'CNY',JP:'JPY',JAPAN:'JPY',NZ:'NZD',NEWZEALAND:'NZD',ID:'IDR',INDONESIA:'IDR'};
+ return aliases[code]||code;
+}
+function calendarValue(value){
+ if(value===null||value===undefined)return '';
+ if(typeof value==='object')return String(value.value??value.formatted??value.raw??'');
+ const text=String(value).replace(/<[^>]*>/g,'').replace(/&nbsp;|&#160;/g,' ').trim();
+ return ['--','-','N/A','null','undefined'].includes(text.toLowerCase())?'':text;
+}
 function normalizeFxCalendarEvent(raw){
- const date=new Date(raw.date||raw.scheduledAt||raw.scheduled_at||'');
+ const date=new Date(raw.date||raw.scheduledAt||raw.scheduled_at||raw.occurrence_time||'');
  if(Number.isNaN(date.getTime()))return null;
- const country=String(raw.country||raw.currency||raw.currencyCode||'USD').toUpperCase();
- const impact=String(raw.impact||raw.importance||'').toUpperCase();
- if(!['HIGH','MEDIUM'].includes(impact))return null;
- const title=String(raw.title||raw.eventName||raw.name||'').trim();if(!title)return null;
- const source=raw.sourceLabel||'Forex Factory · public calendar';
+ const country=normalizeCalendarCurrency(raw.country||raw.currency||raw.currencyCode||raw.currency_code||'USD');
+ const impact=normalizeCalendarImpact(raw.impact||raw.importance||raw.impact_name||'');
+ if(!impact)return null;
+ const title=String(raw.title||raw.eventName||raw.event_name||raw.event_translated||raw.name||'').trim();
+ if(!title)return null;
+ const source=raw.sourceLabel||raw.source||'Forex Factory · public calendar';
  return {
-  id:raw.id||country+'|'+title+'|'+date.toISOString(),title,country,
-  countryName:CALENDAR_COUNTRY_NAMES[country]||country,date,dateKey:calendarWibDayKey(date),
+  id:raw.id||raw.event_id+'|'+(raw.occurrence_id||date.toISOString())||country+'|'+title+'|'+date.toISOString(),
+  eventId:raw.event_id||'',title,country,countryName:CALENDAR_COUNTRY_NAMES[country]||country,date,dateKey:calendarWibDayKey(date),
   impact,category:classifyCalendarCategory(title),
-  previous:raw.previous??'',forecast:raw.forecast??'',actual:raw.actual??'',
-  unit:raw.unit||'',periodLabel:raw.periodLabel||'',
+  previous:calendarValue(raw.previous),forecast:calendarValue(raw.forecast),actual:calendarValue(raw.actual),
+  unit:raw.unit||'',periodLabel:raw.periodLabel||raw.period_label||'',
   timeLabel:new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hour12:false}).format(date)+' WIB',
-  source,sourceLink:raw.sourceLink||calendarSourceLink(source),sourceNote:raw.sourceNote||'Schedule / consensus'
+  source,sourceLink:raw.sourceLink||raw.source_url||calendarSourceLink(source),sourceNote:raw.sourceNote||'Public schedule / consensus'
  };
 }
 async function fetchCalendarJSON(url,label){
  const routes=[url,'https://corsproxy.io/?url='+encodeURIComponent(url),'https://api.allorigins.win/raw?url='+encodeURIComponent(url)];
  let lastError=label+' unavailable';
  for(const route of routes){
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9500);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),7000);
   try{
    const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json,text/plain,*/*'}});
    if(!response.ok)throw new Error('HTTP '+response.status);
@@ -2016,32 +2127,137 @@ async function fetchCalendarJSON(url,label){
  }
  throw new Error(label+': '+lastError);
 }
-function mergeUsCalendarActuals(factoryEvents,agencyEvents){
- const merged=factoryEvents.slice();
- const normalize=text=>String(text||'').toLowerCase().replace(/\([^)]*\)/g,' ').replace(/[^a-z0-9]+/g,' ').trim();
- agencyEvents.forEach(agency=>{
-  const a=normalize(agency.title);
-  const candidates=merged.map((item,index)=>{
-   if(item.country!=='USD'||item.dateKey!==agency.dateKey)return {index,score:0};
-   const b=normalize(item.title),aw=a.split(' ').filter(Boolean),bw=b.split(' ').filter(Boolean);
-   let score=aw.length&&bw.length?aw.filter(word=>bw.includes(word)).length/Math.max(aw.length,bw.length):0;
-   if(a.includes('jobless claims')&&b.includes('unemployment claims'))score=Math.max(score,.9);
-   if(a.includes('unemployment claims')&&b.includes('jobless claims'))score=Math.max(score,.9);
-   if(a.includes('retail sales')&&b.includes('retail sales'))score=Math.max(score,.8);
-   return {index,score};
-  }).sort((x,y)=>y.score-x.score);
-  const match=candidates[0]&&candidates[0].score>=.45?merged[candidates[0].index]:null;
-  if(match){
-   match.previous=agency.previous!==''&&agency.previous!==null?agency.previous:match.previous;
-   match.actual=agency.actual!==''&&agency.actual!==null?agency.actual:match.actual;
-   match.unit=agency.unit||match.unit;
-   match.source='Forex Factory + XOOMAR / U.S. agencies';
-   match.sourceLink='https://xoomar.com/economic-calendar-api';
-   match.sourceNote='Forecast: Forex Factory · Previous / Actual: XOOMAR';
-   if(agency.periodLabel)match.periodLabel=agency.periodLabel;
-  }else merged.push({...agency});
+function investingApiDate(value){
+ const p=value;
+ const day=String(p.day).padStart(2,'0'),month=String(p.month).padStart(2,'0');
+ return p.year+'-'+month+'-'+day;
+}
+async function fetchInvestingCalendar(){
+ const now=new Date(),wib=new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
+ const get=t=>wib.find(p=>p.type===t)?.value||'';
+ const year=Number(get('year')),month=Number(get('month')),day=Number(get('day'));
+ const start=zonedDateToUtc(year,month,day,0,0,TZ);
+ const endDay=new Date(Date.UTC(year,month-1,day+7));
+ const end=zonedDateToUtc(endDay.getUTCFullYear(),endDay.getUTCMonth()+1,endDay.getUTCDate(),23,59,TZ);
+ const params=new URLSearchParams({
+  domain_id:'1',limit:'300',start_date:start.toISOString().replace('.000Z','Z'),
+  end_date:end.toISOString().replace('.000Z','Z'),importance:'high,medium'
+ });
+ const target='https://endpoints.investing.com/pd-instruments/v1/calendars/economic/events/occurrences?'+params.toString();
+ const payload=await fetchCalendarJSON(target,'Investing.com calendar');
+ const events=Array.isArray(payload?.events)?payload.events:[];
+ const occurrences=Array.isArray(payload?.occurrences)?payload.occurrences:[];
+ if(!events.length&&!occurrences.length)throw new Error('Investing.com response had no events / occurrences');
+ const eventMap=new Map(events.map(event=>[String(event.event_id??event.id??''),event]));
+ const output=[];
+ occurrences.forEach(occ=>{
+  const event=eventMap.get(String(occ.event_id??''))||{};
+  const date=new Date(occ.occurrence_time||occ.date||'');
+  if(Number.isNaN(date.getTime()))return;
+  const title=event.event_translated||event.event_name||event.name||occ.event_name||'';
+  const item=normalizeFxCalendarEvent({
+   event_id:event.event_id||occ.event_id,occurrence_id:occ.occurrence_id,
+   eventName:title,country:event.currency||event.country||occ.currency,
+   impact:event.importance||event.impact||occ.importance,
+   date:date.toISOString(),previous:occ.previous,forecast:occ.forecast,actual:occ.actual,
+   periodLabel:occ.period||occ.period_label||'',
+   sourceLabel:'Investing.com · economic calendar',
+   sourceLink:'https://www.investing.com/economic-calendar',
+   sourceNote:'Investing.com · Previous / Forecast / Actual'
+  });
+  if(item)output.push(item);
+ });
+ if(!output.length)throw new Error('Investing.com calendar contained no usable High / Medium events');
+ return output;
+}
+function calendarEventNameKey(title){
+ return String(title||'').toLowerCase().replace(/\([^)]*\)/g,' ').replace(/[^a-z0-9]+/g,' ').trim()
+  .replace(/\b(index|m\/m|y\/y|q\/q|seasonally adjusted|preliminary|advance|final|flash|revised)\b/g,' ')
+  .replace(/\s+/g,' ').trim();
+}
+function calendarEventSimilarity(a,b){
+ const aa=calendarEventNameKey(a).split(' ').filter(Boolean),bb=calendarEventNameKey(b).split(' ').filter(Boolean);
+ if(!aa.length||!bb.length)return 0;
+ const aliases=[
+  [['nonfarm','payrolls'],['employment','situation']],
+  [['unemployment','claims'],['initial','jobless','claims']],
+  [['consumer','price'],['cpi']],
+  [['producer','price'],['ppi']],
+  [['gross','domestic','product'],['gdp']],
+  [['retail','sales'],['retail','sales']]
+ ];
+ const joinedA=aa.join(' '),joinedB=bb.join(' ');
+ if(aliases.some(group=>group.every(words=>words.some(word=>joinedA.includes(word))&&words.some(word=>joinedB.includes(word)))))return .92;
+ const right=new Set(bb),common=aa.filter(word=>right.has(word)).length;
+ return common/Math.max(aa.length,bb.length);
+}
+function mergeCalendarSources(primary,secondary){
+ const merged=primary.map(item=>({...item}));
+ secondary.forEach(candidate=>{
+  const matches=merged.map((item,index)=>{
+   if(item.country!==candidate.country||item.dateKey!==candidate.dateKey)return {index,score:0};
+   const timeDiff=Math.abs(item.date.getTime()-candidate.date.getTime())/60000;
+   if(timeDiff>180)return {index,score:0};
+   return {index,score:calendarEventSimilarity(item.title,candidate.title)+(timeDiff<=15?.15:timeDiff<=60?.08:0)};
+  }).sort((a,b)=>b.score-a.score);
+  const hit=matches[0]&&matches[0].score>=.52?merged[matches[0].index]:null;
+  if(!hit){merged.push({...candidate});return}
+  const was=hit.source||'';
+  if(candidate.previous)hit.previous=candidate.previous;
+  if(candidate.forecast)hit.forecast=candidate.forecast;
+  if(candidate.actual)hit.actual=candidate.actual;
+  if(candidate.periodLabel)hit.periodLabel=candidate.periodLabel;
+  if(candidate.unit)hit.unit=candidate.unit;
+  hit.source=was+' + '+candidate.source;
+  hit.sourceLink=candidate.sourceLink||hit.sourceLink;
+  hit.sourceNote='Merged schedule and values from '+hit.source;
  });
  return merged;
+}
+function parseInvestingCalendarHtml(markup){
+ const doc=new DOMParser().parseFromString(markup,'text/html');
+ const rows=[...doc.querySelectorAll('tr.js-event-item,tr[data-event-datetime]')];
+ const read=cell=>cell?.textContent?.replace(/\s+/g,' ').trim()||'';
+ return rows.map(row=>{
+  const titleCell=row.querySelector('td.event,td[class*="event"]');
+  const title=read(titleCell?.querySelector('a')||titleCell);
+  const currency=read(row.querySelector('td.flagCur,td[class*="flagCur"]')).replace(/[^A-Z]/g,'').slice(0,3);
+  const sentiment=row.querySelector('td.sentiment,td[class*="sentiment"]');
+  const indicator=(sentiment?.getAttribute('title')||sentiment?.className||'').toLowerCase();
+  const impact=indicator.includes('high')?'HIGH':indicator.includes('moderate')||indicator.includes('medium')?'MEDIUM':'';
+  const rawDate=row.getAttribute('data-event-datetime')||row.getAttribute('data-event-date')||'';
+  const dateMatch=rawDate.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  const date=dateMatch?zonedDateToUtc(+dateMatch[1],+dateMatch[2],+dateMatch[3],+dateMatch[4],+dateMatch[5],'UTC'):new Date(rawDate);
+  if(!title||!impact||Number.isNaN(date.getTime()))return null;
+  const val=selector=>calendarValue(read(row.querySelector(selector)));
+  return normalizeFxCalendarEvent({
+   title,country:currency,date:date.toISOString(),impact,
+   previous:val('td.previous,td[class*="previous"]'),
+   forecast:val('td.forecast,td[class*="forecast"]'),
+   actual:val('td.actual,td[class*="actual"]'),
+   sourceLabel:'Investing.com · economic calendar',
+   sourceLink:'https://www.investing.com/economic-calendar',
+   sourceNote:'Investing.com public calendar table'
+  });
+ }).filter(Boolean);
+}
+async function fetchInvestingCalendarHtml(){
+ const target='https://www.investing.com/economic-calendar/';
+ const routes=['https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target),'https://proxy.cors.dev/'+target];
+ let lastError='Investing.com public HTML unavailable';
+ for(const route of routes){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
+  try{
+   const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'text/html,application/xhtml+xml'}});
+   if(!response.ok)throw new Error('HTTP '+response.status);
+   const markup=await response.text();
+   const events=parseInvestingCalendarHtml(markup);
+   if(events.length)return events;
+   throw new Error('No server-rendered calendar rows');
+  }catch(error){lastError=error?.name==='AbortError'?'timeout':String(error?.message||error).slice(0,100)}
+  finally{clearTimeout(timer)}
+ }
+ throw new Error(lastError);
 }
 function buildIndonesiaCalendarEvents(){
  const official='https://www.bi.go.id/id/publikasi/Kalender/Default.aspx';
@@ -2559,11 +2775,9 @@ function safeInit(label,fn){
 }
 function setMarketSession(){
  const el=document.getElementById('marketSession');if(!el)return;
- const now=new Date(),weekday=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short'}).format(now);
- const hour=Number(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',hourCycle:'h23'}).format(now));
- const minute=Number(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',minute:'2-digit'}).format(now));
- const mins=hour*60+minute,open=!['Sat','Sun'].includes(weekday)&&mins>=570&&mins<960;
- el.textContent=open?'US SESSION · REGULAR':'AFTER HOURS · US';
+ const now=new Date(),idx=exchangeSession({symbol:'^JKSE',group:'Index'},now),us=exchangeSession({symbol:'^GSPC',group:'Index'},now);
+ const fmt=session=>session?session.label:'MARKET STATUS';
+ el.textContent='IDX '+fmt(idx)+' · US '+fmt(us);
 }
 function bootstrap(){
  window.__APIS_BOOTED__=true;

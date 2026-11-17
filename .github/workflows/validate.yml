@@ -53,7 +53,7 @@ jobs:
             taiwanPercentSourceGuard: html.includes('async function fetchTaiwanOfficialQuote') && html.includes("if(item.symbol==='^TWII')") && html.includes('return fetchYahooQuote(item)'),
             regionalGroups: html.includes('function renderGroupedStockRows') && html.includes("region:'Greater China'"),
             homeExcludesStocks: html.includes("!['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity'].includes(item.group)"),
-            exchangeSessionSchedule: html.includes('function exchangeSession(') && html.includes("closeTime='16:02'") && html.includes("closeTime='16:10'") && html.includes('auctionWindow=[15*60+25,15*60+30]') && html.includes('function marketPollEligible('),
+            exchangeSessionSchedule: html.includes('function exchangeSession(') && html.includes("closeTime='16:00'") && html.includes("closeTime='16:10'") && html.includes('auctionWindow=[15*60+25,15*60+30]') && html.includes('function marketPollEligible('),
             deterministicSessionLabel: html.includes('function marketSessionLabel(quote,item,now=new Date())'),
             inPlaceQuoteUpdates: html.includes('function updateQuoteRowsInPlace()') && html.includes('updateQuoteRowsInPlace();renderTape();renderMovers();'),
             liveTimestamp: html.includes('function marketFeedTimestampLabel(') && html.includes('ios-stock-updated') && html.includes('marketSessionStamp') && html.includes('setInterval(setMarketSession,4000)'),

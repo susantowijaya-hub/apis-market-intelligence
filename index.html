@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f5">
-<meta name="build-version" content="2.5.0">
+<meta name="build-version" content="2.6.0">
 <meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — The Market Terminal v2.5.0</title>
+<title>APIS — The Market Terminal v2.6.0</title>
 <style>
 :root{
   color-scheme:light;
@@ -461,7 +461,7 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 }
 
 
-/* APIS v2.5.0 — iOS Stocks-inspired watchlist and market screens */
+/* APIS v2.6.0 — iOS Stocks-inspired watchlist and market screens */
 :root{--ios-green:#32d26b;--ios-red:#ff453a;--ios-black:#000;--ios-panel:#171719;--ios-line:rgba(255,255,255,.14)}
 html[data-theme="dark"]{--bg:#000;--surface:#151517;--surface-2:#1c1c1e;--ink:#f5f5f7;--secondary:#98989f;--muted:#76767c;--line:rgba(255,255,255,.12);--shadow:none;--green:#32d26b;--red:#ff453a;--green-soft:rgba(50,210,107,.12);--red-soft:rgba(255,69,58,.12)}
 html[data-theme="light"]{--bg:#f5f5f7;--surface:#fff;--surface-2:#f2f2f7;--ink:#1c1c1e;--secondary:#6e6e73;--line:rgba(60,60,67,.14);--shadow:0 4px 18px rgba(0,0,0,.045)}
@@ -969,7 +969,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
 </script>
 <script>
 'use strict';
-/* APIS The Market Terminal 2.5.0 · Mobile-first free public-data terminal
+/* APIS The Market Terminal 2.6.0 · Mobile-first free public-data terminal
    - No synthetic market data or fabricated news.
    - Yahoo Finance is an unofficial public fallback accessed through third-party CORS relays.
    - No external chart embed is required; sparklines are drawn only from real provider history.
@@ -978,20 +978,20 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
 */
 const TZ='Asia/Jakarta';
 const WATCHLIST=[
-  {symbol:'^JKSE',name:'IDX Composite',short:'IHSG',group:'Index',tv:'IDX:COMPOSITE'},
-  {symbol:'^JKLQ45',name:'IDX LQ45',short:'LQ45',group:'Index',tv:'IDX:LQ45'},
-  {symbol:'^GSPC',name:'S&P 500',short:'S&P 500',group:'Index',tv:'SP:SPX',tdSymbol:'SPX',stooqSymbol:'^spx'},
-  {symbol:'^IXIC',name:'Nasdaq Composite',short:'Nasdaq',group:'Index',tv:'NASDAQ:IXIC',tdSymbol:'IXIC',stooqSymbol:'^ndq'},
-  {symbol:'^DJI',name:'Dow Jones Industrial Average',short:'Dow Jones',group:'Index',tv:'DJ:DJI',tdSymbol:'DJI',stooqSymbol:'^dji'},
-  {symbol:'000001.SS',name:'Shanghai Composite',short:'Shanghai',group:'Index',tv:'SSE:000001'},
-  {symbol:'^TWII',name:'Taiwan Weighted',short:'Taiwan',group:'Index',tv:'TWSE:IX0001'},
-  {symbol:'^KS11',name:'KOSPI Composite',short:'KOSPI',group:'Index',tv:'KRX:KOSPI',tdSymbol:'KS11',stooqSymbol:'^kospi'},
-  {symbol:'^NSEI',name:'NIFTY 50',short:'NIFTY 50',group:'Index',tv:'NSE:NIFTY',tdSymbol:'NIFTY'},
-  {symbol:'NQ=F',name:'Nasdaq-100 E-mini Futures',short:'NQ Futures',group:'Index',tv:'CME_MINI:NQ1!'},
-  {symbol:'^N225',name:'Nikkei 225',short:'Nikkei 225',group:'Index',tv:'TVC:NI225',stooqSymbol:'^nkx'},
-  {symbol:'^HSI',name:'Hang Seng Index',short:'HSI',group:'Index',tv:'HKEX:HSI'},
-  {symbol:'^VIX',name:'CBOE Volatility Index',short:'VIX',group:'Risk',tv:'TVC:VIX',tdSymbol:'VIX',stooqSymbol:'^vix'},
-  {symbol:'EIDO',name:'iShares MSCI Indonesia ETF',short:'EIDO',group:'ETF',tv:'AMEX:EIDO',stooqSymbol:'eido.us'},
+  {symbol:'^JKSE',name:'IDX Composite',short:'IHSG',group:'Index',region:'Indonesia',tv:'IDX:COMPOSITE'},
+  {symbol:'^JKLQ45',name:'IDX LQ45',short:'LQ45',group:'Index',region:'Indonesia',tv:'IDX:LQ45'},
+  {symbol:'^GSPC',name:'S&P 500',short:'S&P 500',group:'Index',region:'United States',tv:'SP:SPX',tdSymbol:'SPX',stooqSymbol:'^spx'},
+  {symbol:'^IXIC',name:'Nasdaq Composite',short:'Nasdaq',group:'Index',region:'United States',tv:'NASDAQ:IXIC',tdSymbol:'IXIC',stooqSymbol:'^ndq'},
+  {symbol:'^DJI',name:'Dow Jones Industrial Average',short:'Dow Jones',group:'Index',region:'United States',tv:'DJ:DJI',tdSymbol:'DJI',stooqSymbol:'^dji'},
+  {symbol:'000001.SS',name:'Shanghai Composite',short:'Shanghai',group:'Index',region:'Greater China',tv:'SSE:000001'},
+  {symbol:'^TWII',name:'Taiwan Weighted',short:'Taiwan',group:'Index',region:'Greater China',tv:'TWSE:IX0001'},
+  {symbol:'^KS11',name:'KOSPI Composite',short:'KOSPI',group:'Index',region:'North Asia',tv:'KRX:KOSPI',tdSymbol:'KS11',stooqSymbol:'^kospi'},
+  {symbol:'^NSEI',name:'NIFTY 50',short:'NIFTY 50',group:'Index',region:'South Asia',tv:'NSE:NIFTY',tdSymbol:'NIFTY'},
+  {symbol:'NQ=F',name:'Nasdaq-100 E-mini Futures',short:'NQ Futures',group:'Index',region:'United States',tv:'CME_MINI:NQ1!'},
+  {symbol:'^N225',name:'Nikkei 225',short:'Nikkei 225',group:'Index',region:'North Asia',tv:'TVC:NI225',stooqSymbol:'^nkx'},
+  {symbol:'^HSI',name:'Hang Seng Index',short:'HSI',group:'Index',region:'Greater China',tv:'HKEX:HSI'},
+  {symbol:'^VIX',name:'CBOE Volatility Index',short:'VIX',group:'Risk',region:'United States',tv:'TVC:VIX',tdSymbol:'VIX',stooqSymbol:'^vix'},
+  {symbol:'EIDO',name:'iShares MSCI Indonesia ETF',short:'EIDO',group:'ETF',region:'Indonesia',tv:'AMEX:EIDO',stooqSymbol:'eido.us'},
   {symbol:'IDR=X',name:'USD / IDR',short:'USD/IDR',group:'FX',tv:'FX_IDC:USDIDR',stooqSymbol:'usdidr'},
   {symbol:'BZ=F',name:'Brent Crude Futures',short:'Brent',group:'Commodity',tv:'NYMEX:BZ1!',stooqSymbol:'brent.f',currency:'USD'},
   {symbol:'GC=F',name:'Gold Futures',short:'Gold Futures',group:'Commodity',tv:'COMEX:GC1!',stooqSymbol:'gc.f',currency:'USD'},
@@ -1157,7 +1157,7 @@ async function fetchYahooQuote(item){
     const open=['REGULAR','PRE','POST','PREPRE','POSTPOST'].includes(state);
     const status=age>48*3600?'STALE_OBSERVATION':(!open||age>20*60?'LAST_AVAILABLE_CLOSE':'DELAYED_PROVIDER');
     return {
-     symbol:item.symbol,name:item.name,short:item.short,group:item.group,price,previousClose,
+     symbol:item.symbol,name:item.name,short:item.short,group:item.group,region:item.region,price,previousClose,
      currency:meta.currency||item.currency||'',exchange:meta.exchangeName||meta.fullExchangeName||'',
      marketState:state,observedAt,observedAge:age,status,intervalUsed:plan.interval,
      source:'Yahoo Finance · public fallback (unofficial)',sourceUrl:'https://finance.yahoo.com/quote/'+encoded+'/',
@@ -1171,8 +1171,85 @@ async function fetchYahooQuote(item){
  }
  throw new Error(errors.slice(0,9).join(' | ')||'Yahoo public chart endpoint unavailable');
 }
+function parseTwseDate(value){
+ const raw=String(value||'').replace(/[^0-9]/g,'');
+ if(raw.length===7){const year=Number(raw.slice(0,3))+1911,month=Number(raw.slice(3,5)),day=Number(raw.slice(5,7));return {year,month,day}}
+ const match=String(value||'').match(/(20\\d{2})[/-](\\d{1,2})[/-](\\d{1,2})/);
+ return match?{year:Number(match[1]),month:Number(match[2]),day:Number(match[3])}:null;
+}
+async function fetchTaiwanOfficialQuote(item){
+ const target='https://openapi.twse.com.tw/v1/indicesReport/MI_5MINS_HIST';
+ const routes=[target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
+ let lastError='TWSE official history unavailable';
+ for(const route of routes){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
+  try{
+   const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
+   if(!response.ok)throw new Error('HTTP '+response.status);
+   const payload=await response.json();if(!Array.isArray(payload)||payload.length<2)throw new Error('TWSE response has fewer than two sessions');
+   const records=payload.map(row=>{
+    const date=parseTwseDate(row.Date||row.date||row.TradingDate);
+    const price=Number(String(row.ClosingIndex||row.Closing_Index||row.close||'').replace(/,/g,''));
+    if(!date||!Number.isFinite(price)||price<=0)return null;
+    return {...date,price,dayKey:[date.year,String(date.month).padStart(2,'0'),String(date.day).padStart(2,'0')].join('-')};
+   }).filter(Boolean).sort((a,b)=>a.dayKey.localeCompare(b.dayKey));
+   if(records.length<2)throw new Error('TWSE official records could not be normalized');
+   const latest=records[records.length-1],previous=records[records.length-2];
+   const observedAt=Date.UTC(latest.year,latest.month-1,latest.day,7,0,0)/1000;
+   return {
+    symbol:item.symbol,name:item.name,short:item.short,group:item.group,region:item.region,
+    price:latest.price,previousClose:previous.price,changePct:(latest.price/previous.price-1)*100,
+    currency:'',exchange:'Taiwan Stock Exchange',marketState:'CLOSED',
+    observedAt,status:'LAST_AVAILABLE_CLOSE',observationDate:latest.dayKey,
+    source:'Taiwan Stock Exchange · official TAIEX history',sourceUrl:'https://www.twse.com.tw/en/indicesReport/MI_5MINS_HIST',
+    retrievedAt:Date.now(),sparkline:records.slice(-36).map(row=>row.price),
+    providerFallbacks:[]
+   };
+  }catch(error){lastError=error?.name==='AbortError'?'TWSE request timed out':String(error?.message||error).slice(0,120)}
+  finally{clearTimeout(timer)}
+ }
+ throw new Error(lastError);
+}
+async function fetchXauSpotQuote(item){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
+ let spot;
+ try{
+  const response=await fetch('https://xaus.com/api/v1/spot?compact=1',{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
+  if(!response.ok)throw new Error('XAUS spot HTTP '+response.status);
+  spot=await response.json();
+ }finally{clearTimeout(timer)}
+ const price=Number(spot?.spot_usd_oz??spot?.xau?.price);
+ if(!Number.isFinite(price)||price<=0)throw new Error('XAUS did not return a valid USD/troy-ounce spot price');
+ const state=spot.data_state||{},asOf=spot.price_as_of||state.as_of||spot.updated_at;
+ const observedAt=Date.parse(asOf)/1000;
+ if(!Number.isFinite(observedAt))throw new Error('XAUS observation timestamp is missing');
+ const ageFromPayload=Number(state.age_seconds);
+ const age=Number.isFinite(ageFromPayload)?Math.max(ageFromPayload,Date.now()/1000-observedAt):Math.max(0,Date.now()/1000-observedAt);
+ if(state.status==='unavailable'||age>15*60)throw new Error('XAUS observation is stale/unavailable ('+Math.round(age/60)+' min old)');
+ let sparkline=[],changePct=null,historyCoverage=0;
+ try{
+  const historyResponse=await fetch('https://xaus.com/api/v1/intraday?symbol=xau&hours=24',{cache:'no-store',credentials:'omit',headers:{Accept:'application/json'}});
+  if(historyResponse.ok){
+   const series=await historyResponse.json(),points=(series.points||[]).map(point=>({t:Number(point.t),p:Number(point.p)})).filter(point=>Number.isFinite(point.t)&&Number.isFinite(point.p)&&point.p>0).sort((a,b)=>a.t-b.t);
+   historyCoverage=Number(series.coverage_seconds)||0;
+   if(points.length>=3){sparkline=points.slice(-36).map(point=>point.p);if(historyCoverage>=20*3600){const first=points[0].p;changePct=(price/first-1)*100}}
+  }
+ }catch(_){}
+ const marketOpen=goldSpotSessionOpen();
+ return {
+  symbol:item.symbol,name:item.name,short:item.short,group:item.group,price,
+  previousClose:changePct!==null?price/(1+changePct/100):null,changePct,
+  currency:'USD',exchange:'XAUS spot reference',marketState:marketOpen?'REGULAR':'CLOSED',
+  observedAt,observedAge:age,status:state.status==='stale'?'STALE_OBSERVATION':(marketOpen?'DELAYED_PROVIDER':'LAST_AVAILABLE_CLOSE'),
+  source:'XAUS · XAU/USD indicative spot (USD per troy ounce)',
+  sourceUrl:'https://xaus.com/api/',retrievedAt:Date.now(),sparkline,historyCoverageSeconds:historyCoverage,
+  providerFallbacks:[]
+ };
+}
 async function fetchMarketQuote(item){
  const errors=[];
+ if(item.symbol==='XAUUSD=X')return fetchXauSpotQuote(item);
+ if(item.symbol==='^TWII')return fetchTaiwanOfficialQuote(item);
  if(item.stooqSymbol||STOOQ_SYMBOLS[item.symbol]){
   try{return await fetchStooqQuote(item)}
   catch(error){errors.push('Stooq public CSV: '+String(error?.message||error).slice(0,130))}
@@ -1261,6 +1338,7 @@ function stockChangePct(quote){
 function stockPriceText(quote,item){
  if(!quote||num(quote.price)===null)return '—';
  const value=new Intl.NumberFormat('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}).format(quote.price);
+ if(item&&item.symbol==='XAUUSD=X')return value+' USD/oz';
  if(item&&item.group==='Commodity')return value+' USD';
  if(item&&item.group==='FX')return value+' IDR';
  if(item&&item.group==='Crypto')return value+' USD';
@@ -1286,6 +1364,26 @@ function buildStockSparkline(values,changePct){
  svg.append(line);
  return svg;
 }
+function marketSessionLabel(quote,item){
+ if(!quote)return 'FEED UNAVAILABLE';
+ if(quote.status==='STALE_OBSERVATION')return 'STALE OBSERVATION';
+ if(item?.symbol==='XAUUSD=X')return goldSpotSessionOpen()?'LIVE · SPOT':'MARKET CLOSE';
+ if(quote.marketState==='CLOSED'||quote.status==='LAST_AVAILABLE_CLOSE'||quote.marketState==='PUBLIC CSV SNAPSHOT')return 'MARKET CLOSE';
+ if(quote.transport==='WEBSOCKET')return 'LIVE';
+ if(quote.marketState==='REGULAR')return quote.status==='DELAYED_PROVIDER'?'SESSION OPEN · DELAYED':'LIVE';
+ if(quote.marketState==='PRE')return 'PRE-MARKET';
+ if(quote.marketState==='POST')return 'AFTER-HOURS';
+ return quote.status==='DELAYED_PROVIDER'?'SESSION OPEN · DELAYED':'MARKET STATUS · PROVIDER';
+}
+function goldSpotSessionOpen(){
+ const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
+ const get=name=>parts.find(part=>part.type===name)?.value||'0';
+ const weekday=get('weekday'),minutes=Number(get('hour'))*60+Number(get('minute'));
+ if(weekday==='Sat')return false;
+ if(weekday==='Sun')return minutes>=18*60;
+ if(weekday==='Fri')return minutes<17*60;
+ return !(minutes>=17*60&&minutes<18*60);
+}
 function createStockRow(item,quote,opts={}){
  const detail=document.createElement('details');detail.className='ios-stock-item';
  const summary=document.createElement('summary');summary.className='ios-stock-row';
@@ -1301,7 +1399,8 @@ function createStockRow(item,quote,opts={}){
  const price=document.createElement('strong');price.className='ios-stock-price';price.textContent=stockPriceText(quote,item);
  const badge=document.createElement('span');badge.className='ios-stock-change '+(pctValue===null?'unavailable':pctValue>0?'up':pctValue<0?'down':'flat');
  badge.textContent=pctValue===null?'—':pct(pctValue);
- right.append(price,badge);
+ const session=document.createElement('small');session.className='ios-stock-session';session.textContent=marketSessionLabel(quote,item);
+ right.append(price,badge,session);
  const chevron=document.createElement('span');chevron.className='ios-stock-chevron';chevron.textContent='›';
  summary.append(identity,sparkWrap,right,chevron);
  const extra=document.createElement('div');extra.className='ios-stock-detail';
@@ -1319,9 +1418,10 @@ function createStockRow(item,quote,opts={}){
  return detail;
 }
 function homeWatchlistItems(){
- const priority=['^JKSE','^JKLQ45','^IXIC','^DJI','^HSI','^GSPC','^NSEI','NQ=F','^N225','000001.SS','^TWII','^KS11','XAUUSD=X','CL=F','BZ=F','HG=F','GC=F'];
- const ordered=priority.map(symbol=>WATCHLIST.find(item=>item.symbol===symbol)).filter(Boolean);
- return ordered.concat(WATCHLIST.filter(item=>!priority.includes(item.symbol)));
+ const priority=['^JKSE','^JKLQ45','^GSPC','^IXIC','^DJI','NQ=F','000001.SS','^HSI','^TWII','^N225','^KS11','^NSEI','^VIX','EIDO','XAUUSD=X','GC=F','CL=F','BZ=F','HG=F','IDR=X'];
+ const eligible=WATCHLIST.filter(item=>!['Indonesia equity','US equity'].includes(item.group));
+ const ordered=priority.map(symbol=>eligible.find(item=>item.symbol===symbol)).filter(Boolean);
+ return ordered.concat(eligible.filter(item=>!priority.includes(item.symbol)));
 }
 function renderHomeStocks(){
  const host=document.getElementById('featuredQuotes');if(!host)return;
@@ -1330,10 +1430,33 @@ function renderHomeStocks(){
  host.replaceChildren();
  if(!items.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='No instruments match your search.';host.append(empty)}
  items.forEach(item=>host.append(createStockRow(item,QUOTES.get(item.symbol))));
- setText('homeWatchCount',items.length+' instruments · tap a row for source details');
+ setText('homeWatchCount',items.length+' market references · no individual equities · tap a row for source details');
  setText('homeSnapshotStamp',APP.yahooState==='loading'?'PUBLIC FEEDS · UPDATING':(APP.successCount||0)+' / '+WATCHLIST.length+' UPDATED');
  setText('homeDate',new Intl.DateTimeFormat('en-GB',{timeZone:TZ,day:'numeric',month:'long'}).format(new Date()));
- setText('quoteCount',QUOTES.size+' / '+WATCHLIST.length);
+ setText('quoteCount',QUOTES.size+' / '+WATCHLIST.length+' · '+items.length+' shown on Home');
+}
+function renderGroupedStockRows(host,items,emptyMessage='No validated observations for this segment yet.'){
+ host.replaceChildren();
+ const groups=new Map();
+ items.forEach(item=>{
+  const key=item.group==='Commodity'?'Commodities':item.group==='FX'?'Foreign Exchange':(item.region||item.group||'Other');
+  if(!groups.has(key))groups.set(key,[]);groups.get(key).push(item);
+ });
+ const order=['Indonesia','United States','Greater China','North Asia','South Asia','Commodities','Foreign Exchange','Other'];
+ const entries=[...groups.entries()].sort((a,b)=>{
+  const ai=order.indexOf(a[0]),bi=order.indexOf(b[0]);
+  return (ai<0?99:ai)-(bi<0?99:bi);
+ });
+ if(!entries.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent=emptyMessage;host.append(empty);return}
+ entries.forEach(([region,regionItems])=>{
+  const section=document.createElement('section');section.className='ios-market-region';
+  const head=document.createElement('div');head.className='ios-market-region-heading';
+  const title=document.createElement('h3');title.textContent=region;
+  const count=document.createElement('span');count.textContent=regionItems.length+' instruments';
+  head.append(title,count);section.append(head);
+  regionItems.forEach(item=>section.append(createStockRow(item,QUOTES.get(item.symbol))));
+  host.append(section);
+ });
 }
 function renderMarketOverview(){
  const host=document.getElementById('marketSnapshotGrid');if(!host)return;
@@ -1351,15 +1474,16 @@ function renderMarketOverview(){
   const active=button.dataset.marketFilter===selected;
   button.classList.toggle('active',active);button.setAttribute('aria-selected',active?'true':'false');
  });
- host.replaceChildren();
- current.items.forEach(item=>host.append(createStockRow(item,QUOTES.get(item.symbol))));
+ renderGroupedStockRows(host,current.items,'No verified public observations for this segment yet.');
  if(selected==='fx-crypto'){
   const bitcoinItem={symbol:'BTCUSDT',short:'BTC / USD',name:'Bitcoin',group:'Crypto'};
   const bitcoinQuote=APP.btc&&num(APP.btc.price)!==null?
    {...APP.btc,changePct:APP.btc.changePct,source:APP.btc.source,status:APP.btc.transport==='WEBSOCKET'?'LIVE TICK':'REST SNAPSHOT'}:null;
-  host.prepend(createStockRow(bitcoinItem,bitcoinQuote));
+  const bitcoinSection=document.createElement('section');bitcoinSection.className='ios-market-region';
+  const bitcoinHead=document.createElement('div');bitcoinHead.className='ios-market-region-heading';bitcoinHead.innerHTML='<h3>Crypto</h3><span>1 instrument</span>';
+  bitcoinSection.append(bitcoinHead,createStockRow(bitcoinItem,bitcoinQuote));host.prepend(bitcoinSection);
  }
- if(!host.children.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='No verified public observations for this segment yet.';host.append(empty)}
+
  setText('snapshotStamp',current.items.length+(selected==='fx-crypto'?1:0)+' instruments · public feed');
  setText('quoteCountMarkets',QUOTES.size+' / '+WATCHLIST.length);
  setText('lastRefreshMarkets',document.getElementById('lastRefresh')?.textContent||'Not refreshed');

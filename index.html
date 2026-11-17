@@ -2120,7 +2120,6 @@ function bootstrap(){
  safeInit('Clock',()=>{tickClock();setInterval(tickClock,1000);setMarketSession();setInterval(setMarketSession,60000)});
  safeInit('Quote view',renderQuoteViews);
  safeInit('Source health',renderQuality);
- safeInit('Chart',loadWidgets);
  safeInit('BTC WebSocket',connectBitcoinStream);
  safeInit('BTC REST',fetchBitcoinRest);
  safeInit('USD/IDR',loadFxReference);

@@ -393,3 +393,15 @@
 - Second browser regression exposed a stale Yahoo Taiwan percentage path: the shared mover/quote percentage helper could still return an unverified Yahoo percentage for ^TWII. It now returns no percentage unless the observation source is the official TWSE adapter. The official TWSE report remains the only source permitted to publish the Taiwan daily percentage.
 
 - Third browser regression found the official TWSE adapter's source label did not include the canonical TWSE token used by the source-trust guard. The observation itself was correct (40,092.11 / 41,040.14 / -2.31%), but the percentage helper correctly treated the label as unverified. Standardized the source label to explicitly identify TWSE so the official report is accepted while Yahoo remains suppressed.
+
+
+## v2.10.1 — Google Finance index feed and independent comparison (17 Nov 2026)
+
+- Added Google Finance public quote-page adapters for the mapped index watchlist: IDX Composite (COMPOSITE:IDX), S&P 500 (.INX:INDEXSP), Nasdaq Composite (.IXIC:INDEXNASDAQ), Dow Jones (.DJI:INDEXDJX), Shanghai Composite (000001:SHA), TAIEX (IX0001:TPE), KOSPI (KOSPI:KRX), NIFTY 50 (NIFTY_50:NSE), Nikkei 225 (NI225:INDEXNIKKEI), and Hang Seng (HSI:INDEXHANGSENG).
+- Google Finance is attempted first for mapped index instruments. A secondary snapshot is requested from Stooq for closed sessions where mapped, otherwise Yahoo Finance. The comparison (backup price, percentage delta, source, and ALIGNED / DIVERGENCE / UNAVAILABLE state) is displayed inside the expanded quote row.
+- Taiwan percentage validation now accepts either the official TWSE report or a timestamped Google Finance quote page. Yahoo-only Taiwan percentage remains suppressed.
+- Google page parsing requires a positive numeric price, a valid daily percentage, and a source timestamp; it rejects malformed / stale observations rather than assigning a browser retrieval time as the market observation time.
+- The Google Finance public page is accessed through existing public CORS relay routes. This is an unofficial page-reading adapter, not a Google-supported API; markup changes, relay outages, rate limits, or source delays can cause fallback to the existing Stooq / Yahoo / TWSE sources.
+- Google Finance's own data disclaimer lists different exchange delays: Taiwan index source is listed as real-time, IDX indices 15 minutes, Shanghai 1 minute, KRX 20 minutes, and Nikkei 20 minutes. Therefore APIS labels the provider source and does not call every index tick-by-tick live.
+- CI now checks Google Finance symbol coverage, parser wiring, timestamp guards, and a deterministic parser fixture. Browser regression's Taiwan previous-close check now allows a 0.10 point tolerance because the TWSE signed-change arithmetic yields 41,040.137... while the display rounds to 41,040.14.
+- Static validation and deployment browser smoke tests remain required before declaring the release live. A parser fixture does not prove that public Google Finance pages or CORS relays are reachable from every user's network.

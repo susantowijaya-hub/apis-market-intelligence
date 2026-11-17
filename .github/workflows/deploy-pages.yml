@@ -44,7 +44,8 @@ jobs:
           ];
           const missing = requiredIds.filter(id => !idSet.has(id));
           if (missing.length) throw new Error('Required terminal elements missing: ' + missing.join(', '));
-          const js = scripts[0][1];
+          const js = application[1];
+          fs.writeFileSync('/tmp/apis-diagnostic.js', diagnostic[1]);
           const refs = [...js.matchAll(/getElementById\(['"]([^'"]+)['"]\)/g)].map(m => m[1]);
           const unresolved = [...new Set(refs.filter(id => !idSet.has(id)))];
           if (unresolved.length) throw new Error('JavaScript references absent DOM IDs: ' + unresolved.join(', '));
@@ -70,8 +71,9 @@ jobs:
           if (html.includes('embed-widget-market-overview.js') || html.includes('embed-widget-events.js') || html.includes('embed-widget-timeline.js'))
             throw new Error('Disabled TradingView overview/news/calendar embeds remain in the page.');
           fs.writeFileSync('/tmp/apis-inline.js', js);
-          console.log('APIS QA passed: pages, controls, IDs, required functions, themes; IDs=' + ids.length + '; JS bytes=' + js.length);
+          console.log('APIS QA passed: pages, controls, IDs, required functions, themes, ES5 diagnostics; IDs=' + ids.length + '; app JS bytes=' + js.length);
           NODE
+          node --check /tmp/apis-diagnostic.js
           node --check /tmp/apis-inline.js
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

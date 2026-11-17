@@ -1551,7 +1551,7 @@ async function fetchQuoteSlice(){
     const reason=result.status==='rejected'?String(result.reason?.message||result.reason):'Invalid provider price';
     APP.failures.set(item.symbol,reason.slice(0,150));failed++;
     const old=QUOTES.get(item.symbol);
-    if(old){old.lastError=reason.slice(0,180);old.activeRunId=0;QUOTES.set(item.symbol,old)}
+    if(old){old.lastError=reason.slice(0,180);old.activeRunId=0;old.status='STALE_CACHE';QUOTES.set(item.symbol,old)}
    }
   });
   APP.sliceUpdated=(APP.sliceUpdated||0)+updated;APP.sliceFailed=(APP.sliceFailed||0)+failed;
@@ -1604,7 +1604,7 @@ function renderMovers(){
 function stockChangePct(quote){
  if(!quote)return null;
  if(quote.symbol==='^TWII'){
-  if(!quote.source||!String(quote.source).includes('Taiwan Stock Exchange')||quote.providerQuoteVerified===false)return null;
+  if(!quote.source||!String(quote.source).includes('Taiwan Stock Exchange')||quote.providerQuoteVerified!==true)return null;
   if(num(quote.changePct)===null)return null;
   return Number(quote.changePct);
  }
@@ -2435,7 +2435,7 @@ async function loadMacroCalendar(force=false){
  if(APP.calendarLoading)return APP.calendarLoading;
  const cached=loadJSON('apis_browser_calendar_cache',null);
  const cacheTtl=5*60*1000;
- if(!force&&cached&&cached.savedAt&&Date.now()-cached.savedAt<cacheTtl){
+ if(!force&&cached&&cached.version==='2.7.0'&&cached.savedAt&&Date.now()-cached.savedAt<cacheTtl){
   APP.calendarEvents=Array.isArray(cached.events)?cached.events.map(event=>({...event,date:new Date(event.date)})).filter(event=>!Number.isNaN(event.date.getTime())):[];
   APP.calendarState=APP.calendarEvents.length?'loaded':'unavailable';
   APP.calendarErrors=cached.errors||[];APP.calendarSourcesOK=cached.sourcesOK||0;
@@ -2506,7 +2506,7 @@ async function loadMacroCalendar(force=false){
   APP.calendarError=errors.join(' · ');
   APP.calendarSourceCounts={forexFactory:factory.length,investing:investing.length,xoomar:agency.length,indonesia:bi.length};
   const serializable=APP.calendarEvents.map(item=>({...item,date:item.date.toISOString()}));
-  saveJSON('apis_browser_calendar_cache',{events:serializable,savedAt:Date.now(),errors,sourcesOK:APP.calendarSourcesOK,counts:APP.calendarSourceCounts});
+  saveJSON('apis_browser_calendar_cache',{version:'2.7.0',events:serializable,savedAt:Date.now(),errors,sourcesOK:APP.calendarSourcesOK,counts:APP.calendarSourceCounts});
   saveJSON('apis_calendar_last_success',Date.now());
   renderMacroCalendar();calendarRefreshStatus();renderQuality();
  })();

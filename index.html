@@ -774,6 +774,54 @@ async function fetchStooqQuote(item){
  }
  throw new Error(errors.slice(0,3).join(' | ')||'Stooq public CSV unavailable');
 }
+async function fetchYahooQuote(item){
+ const encoded=encodeURIComponent(item.symbol);
+ const plans=[
+  {range:'1d',interval:'1m'},
+  {range:'5d',interval:'5m'},
+  {range:'1mo',interval:'1d'}
+ ];
+ const routesFor=target=>[
+  'https://corsproxy.io/?url='+encodeURIComponent(target),
+  'https://api.allorigins.win/raw?url='+encodeURIComponent(target),
+  'https://proxy.cors.dev/'+target
+ ];
+ const errors=[];
+ for(const plan of plans){
+  const target='https://query1.finance.yahoo.com/v8/finance/chart/'+encoded+'?range='+plan.range+'&interval='+plan.interval+'&includePrePost=true';
+  for(const route of routesFor(target)){
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);
+   try{
+    const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    const payload=await response.json(),result=payload?.chart?.result?.[0];
+    if(!result?.meta)throw new Error(payload?.chart?.error?.description||'No Yahoo quote metadata');
+    const meta=result.meta,ts=Array.isArray(result.timestamp)?result.timestamp:[];
+    const closes=result.indicators?.quote?.[0]?.close||[];
+    let index=-1;for(let i=closes.length-1;i>=0;i--){if(num(closes[i])!==null){index=i;break}}
+    const barPrice=index>=0?num(closes[index]):null,barTime=index>=0?num(ts[index]):null;
+    const marketPrice=num(meta.regularMarketPrice),marketTime=num(meta.regularMarketTime);
+    const useMeta=marketPrice!==null&&(marketTime||0)>=(barTime||0);
+    const price=useMeta?marketPrice:barPrice,observedAt=useMeta?marketTime:barTime;
+    const previousClose=num(meta.chartPreviousClose??meta.previousClose);
+    if(price===null||price<=0||!observedAt)throw new Error('Yahoo price/timestamp missing');
+    if(observedAt>Date.now()/1000+300)throw new Error('Yahoo timestamp is in the future');
+    const age=Math.max(0,Date.now()/1000-observedAt),state=String(meta.marketState||'UNKNOWN').toUpperCase();
+    const open=['REGULAR','PRE','POST','PREPRE','POSTPOST'].includes(state);
+    const status=age>48*3600?'STALE_OBSERVATION':(!open||age>20*60?'LAST_AVAILABLE_CLOSE':'DELAYED_PROVIDER');
+    return {
+     symbol:item.symbol,name:item.name,short:item.short,group:item.group,price,previousClose,
+     currency:meta.currency||item.currency||'',exchange:meta.exchangeName||meta.fullExchangeName||'',
+     marketState:state,observedAt,observedAge:age,status,intervalUsed:plan.interval,
+     source:'Yahoo Finance · public fallback (unofficial)',sourceUrl:'https://finance.yahoo.com/quote/'+encoded+'/',
+     retrievedAt:Date.now(),proxy:new URL(route).host,providerFallbacks:[]
+    };
+   }catch(error){errors.push(new URL(route).host+': '+(error?.name==='AbortError'?'timeout':String(error?.message||error).slice(0,75)))}
+   finally{clearTimeout(timer)}
+  }
+ }
+ throw new Error(errors.slice(0,9).join(' | ')||'Yahoo public chart endpoint unavailable');
+}
 async function fetchMarketQuote(item){
  const errors=[];
  if(item.stooqSymbol||STOOQ_SYMBOLS[item.symbol]){

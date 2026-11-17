@@ -706,6 +706,14 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
   }
   window.__APIS_REPORT_ERROR__=showError;
   window.addEventListener('error',function(event){
+    /* Optional external resources (TradingView scripts, icons, widgets) may be
+       blocked by privacy settings or the test network; do not label those as
+       APIS engine failures or cover the dashboard with a runtime panel. */
+    if(event&&event.target&&event.target!==window){
+      var target=event.target;
+      var tag=String(target.tagName||'').toUpperCase();
+      if(['SCRIPT','LINK','IMG','IFRAME'].indexOf(tag)>=0)return;
+    }
     var locationText=event&&event.filename?event.filename+':'+(event.lineno||0)+':'+(event.colno||0):'script execution';
     showError('JavaScript',event&&event.message,locationText);
   },true);

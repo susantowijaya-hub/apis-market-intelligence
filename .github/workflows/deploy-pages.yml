@@ -78,6 +78,72 @@ jobs:
           NODE
           node --check /tmp/apis-diagnostic.js
           node --check /tmp/apis-inline.js
+      - name: Install Chromium and WebKit test browsers
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium webkit
+      - name: Browser smoke tests (Chromium / WebKit)
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const http = require('http');
+          const path = require('path');
+          const { chromium, webkit } = require('playwright');
+          const server = http.createServer((req, res) => {
+            const url = new URL(req.url, 'http://127.0.0.1:4173');
+            const requested = url.pathname === '/' ? '/index.html' : url.pathname;
+            const file = path.join(process.cwd(), requested.replace(/^\/+/, ''));
+            if (!file.startsWith(process.cwd()) || !fs.existsSync(file)) {
+              res.writeHead(404); res.end('Not found'); return;
+            }
+            res.writeHead(200, { 'content-type': file.endsWith('.html') ? 'text/html; charset=utf-8' : 'application/octet-stream' });
+            fs.createReadStream(file).pipe(res);
+          });
+          (async () => {
+            await new Promise(resolve => server.listen(4173, '127.0.0.1', resolve));
+            for (const engine of [{name:'Chromium',type:chromium},{name:'WebKit',type:webkit}]) {
+              const browser = await engine.type.launch({headless:true});
+              const page = await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+              const errors = [];
+              page.on('pageerror', error => errors.push(error.message));
+              await page.route('https://**/*', route => route.abort());
+              await page.goto('http://127.0.0.1:4173/', {waitUntil:'domcontentloaded'});
+              await page.waitForFunction(() => window.__APIS_BOOTED__ === true, {timeout:8000});
+              await page.waitForFunction(() => {
+                const el=document.getElementById('feedState');
+                return el && !/Connecting feeds/.test(el.textContent);
+              }, {timeout:8000});
+              const boot = await page.evaluate(() => ({
+                booted: window.__APIS_BOOTED__ === true,
+                feed: document.getElementById('feedState')?.textContent || '',
+                cards: document.querySelectorAll('#featuredQuotes .quote-card').length,
+                refresh: !!document.getElementById('refreshTop')?.onclick,
+                routes: document.querySelectorAll('[data-page]').length
+              }));
+              if (!boot.booted || !boot.cards || !boot.refresh || boot.routes < 8)
+                throw new Error(engine.name + ' boot failed: ' + JSON.stringify(boot));
+              await page.locator('[data-page="news"]').click();
+              if (!(await page.locator('#research').evaluate(el => el.classList.contains('active'))))
+                throw new Error(engine.name + ' News navigation failed');
+              await page.locator('[data-page="macro"]').click();
+              if (!(await page.locator('#macroView').evaluate(el => el.classList.contains('active'))))
+                throw new Error(engine.name + ' Macro navigation failed');
+              await page.locator('.theme-menu summary').click();
+              await page.locator('[data-theme-choice="dark"]').click();
+              if (await page.locator('html').getAttribute('data-theme') !== 'dark')
+                throw new Error(engine.name + ' dark theme control failed');
+              await page.locator('[data-page="home"]').click();
+              await page.locator('#refreshTop').click();
+              if (errors.length) throw new Error(engine.name + ' runtime errors: ' + errors.join(' | '));
+              console.log(engine.name + ' PASS · boot=' + boot.booted + ' · quote cards=' + boot.cards + ' · routes=' + boot.routes + ' · News/Macro navigation · Dark theme · Refresh click');
+              await browser.close();
+            }
+          })().then(() => server.close()).catch(error => {
+            console.error(error);
+            server.close();
+            process.exit(1);
+          });
+          NODE
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload site artifact

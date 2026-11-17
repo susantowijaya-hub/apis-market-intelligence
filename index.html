@@ -1500,14 +1500,15 @@ async function fetchQuoteBatch(){
   if(APP.yahooState==='loading')return;
   APP.yahooState='loading';APP.failures.clear();APP.successCount=0;APP.currentRunId=++APP.runCounter;const runId=APP.currentRunId;updateFeedState();
   const buttons=['refreshBtn','refreshTop'];buttons.forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true});
-  setText('lastRefresh','Fetching '+WATCHLIST.length+' instruments…');
-  let cursor=0,successes=0,failures=0;const queue=WATCHLIST.slice();
+  const queue=homeWatchlistItems();
+  setText('lastRefresh','Fetching '+queue.length+' Home market references…');
+  let cursor=0,successes=0,failures=0;const queueSize=queue.length;
   const workers=Array.from({length:3},async()=>{while(cursor<queue.length){const item=queue[cursor++];try{const q=await fetchMarketQuote(item);q.activeRunId=runId;QUOTES.set(item.symbol,q);APP.failures.delete(item.symbol);successes++}
     catch(e){failures++;APP.failures.set(item.symbol,String(e?.message||'Provider request failed'));const old=QUOTES.get(item.symbol);if(old){const age=Date.now()/1000-old.observedAt;old.status=age>48*3600?'STALE_OBSERVATION':'STALE_CACHE';old.activeRunId=0;old.lastError=String(e?.message||'Refresh failed').slice(0,180);old.cacheRestored=true;QUOTES.set(item.symbol,old)}}
-    APP.successCount=successes;setText('lastRefresh',`Fetching ${successes+failures}/${WATCHLIST.length} · ${successes} updated · ${failures} failed`);
+    APP.successCount=successes;setText('lastRefresh',`Fetching ${successes+failures}/${queueSize} · ${successes} updated · ${failures} failed`);
   }});
   try{
-    await Promise.all(workers);APP.lastRefresh=Date.now();APP.nextRefreshAt=Date.now()+60000;APP.successCount=successes;APP.yahooState=successes===WATCHLIST.length?'ready':(successes?'partial':'unavailable');
+    await Promise.all(workers);APP.lastRefresh=Date.now();APP.nextRefreshAt=Date.now()+5000;APP.lastSliceRefreshAt=Date.now();APP.successCount=successes;APP.yahooState=successes===queueSize?'ready':(successes?'partial':'unavailable');
     const all=[...QUOTES.values()].filter(q=>num(q.price)!==null&&num(q.observedAt)!==null);
     saveJSON('apis_browser_quotes',all.slice(-WATCHLIST.length));APP.lastCacheSavedAt=Date.now();
     const checked=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date());

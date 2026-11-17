@@ -23,27 +23,53 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Validate APIS HTML, IDs and JavaScript
+      - name: Validate APIS terminal structure and functionality
         run: |
           node <<'NODE'
           const fs = require('fs');
           const html = fs.readFileSync('index.html', 'utf8');
           const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].filter(m => m[1].trim());
-          if (scripts.length !== 1) throw new Error('Expected exactly one inline application script; found ' + scripts.length);
+          if (scripts.length !== 1) throw new Error('Expected one inline application script; found ' + scripts.length);
           const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
           const duplicates = ids.filter((id, i) => ids.indexOf(id) !== i);
-          if (duplicates.length) throw new Error('Duplicate HTML ids: ' + [...new Set(duplicates)].join(', '));
+          if (duplicates.length) throw new Error('Duplicate HTML IDs: ' + [...new Set(duplicates)].join(', '));
           const idSet = new Set(ids);
-          if (!idSet.has('refreshBtn')) throw new Error('Critical refreshBtn is missing; startup would fail.');
+          const requiredIds = [
+            'refreshBtn','refreshTop','marketSnapshotGrid','snapshotStamp',
+            'newsSearch','newsFilters','newsFeedList','newsFeedStatus','refreshNewsBtn',
+            'macroView','tsy2','tsy5','tsy10','tsy30','tsySpread','calendarImpact','calendarEvents','refreshCalendarBtn',
+            'moversView','gainersList','losersList','filingsView','filingsFeedList',
+            'workbench','toolPrompt','toolDcf','toolBond','toolRisk','toolEvidence','toolData','toolAlerts',
+            'sources','sourceHealth'
+          ];
+          const missing = requiredIds.filter(id => !idSet.has(id));
+          if (missing.length) throw new Error('Required terminal elements missing: ' + missing.join(', '));
           const js = scripts[0][1];
           const refs = [...js.matchAll(/getElementById\(['"]([^'"]+)['"]\)/g)].map(m => m[1]);
-          const missing = [...new Set(refs.filter(id => !idSet.has(id)))];
-          if (missing.length) throw new Error('JavaScript references missing DOM IDs: ' + missing.join(', '));
-          for (const fn of ['fetchQuoteBatch','fetchBitcoinRest','connectBitcoinStream','loadFxReference','loadTreasuryCurve','loadPublicNews','loadEdgarFilings','renderMovers']) {
-            if (!js.includes('function ' + fn + '(') && !js.includes('async function ' + fn + '(')) throw new Error('Required function missing: ' + fn);
+          const unresolved = [...new Set(refs.filter(id => !idSet.has(id)))];
+          if (unresolved.length) throw new Error('JavaScript references absent DOM IDs: ' + unresolved.join(', '));
+          const requiredFunctions = [
+            'fetchQuoteBatch','fetchBitcoinRest','connectBitcoinStream','loadFxReference',
+            'loadTreasuryCurve','loadMacroCalendar','renderMacroCalendar','loadPublicNews',
+            'renderNewsFeed','initNewsControls','initCalendarControls','initPageRouter',
+            'initThemeControls','renderMarketOverview','loadEdgarFilings','renderMovers'
+          ];
+          for (const fn of requiredFunctions) {
+            if (!js.includes('function ' + fn + '(') && !js.includes('async function ' + fn + '('))
+              throw new Error('Required terminal function missing: ' + fn);
           }
+          const pageIds = new Set([...html.matchAll(/<section\b[^>]*\bid=["']([^"']+)["'][^>]*class=["'][^"']*page-view/g)].map(m => m[1]));
+          const routes = [...html.matchAll(/data-page="([^"]+)"/g)].map(m => m[1]);
+          if (!['home','markets','news','macro','movers','filings','tools','research'].every(x => routes.includes(x)))
+            throw new Error('A primary navigation route is missing.');
+          for (const id of ['overview','markets','research','macroView','moversView','filingsView','workbench','sources'])
+            if (!pageIds.has(id)) throw new Error('Page view missing: ' + id);
+          if (!html.includes('data-theme-choice="dark"') || !html.includes('data-theme-choice="light"') || !html.includes('data-theme-choice="system"'))
+            throw new Error('Light/Dark/System theme controls are incomplete.');
+          if (html.includes('embed-widget-market-overview.js') || html.includes('embed-widget-events.js') || html.includes('embed-widget-timeline.js'))
+            throw new Error('Disabled TradingView overview/news/calendar embeds remain in the page.');
           fs.writeFileSync('/tmp/apis-inline.js', js);
-          console.log('APIS structure checks passed; ids:', ids.length, 'JS bytes:', js.length);
+          console.log('APIS QA passed: pages, controls, IDs, required functions, themes; IDs=' + ids.length + '; JS bytes=' + js.length);
           NODE
           node --check /tmp/apis-inline.js
       - name: Configure GitHub Pages

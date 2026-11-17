@@ -171,3 +171,67 @@
 - Free price sources are not guaranteed to be real-time, complete, or continuously available.
 - Do not call stale, delayed or daily-reference data live.
 - Current product release: APIS v2.5.0.
+
+
+## 2026-11-17 — v2.6.0 verified market data and macro calendar
+
+### Home and Markets
+- Home now contains only 20 market references: equity indices, volatility / ETF references, FX and commodities. Individual company shares (BBCA, BMRI, BBRI, GOTO, AAPL, NVDA, MSFT) remain accessible under the separate Equities segment, not Home.
+- Home index rows are grouped by region: Indonesia, United States, Greater China, North Asia and South Asia.
+- Markets segments use regional group headings, with separate Commodities, Foreign Exchange and Crypto group headings.
+- Added a small session-status line below the move badge: LIVE, LIVE · SPOT, SESSION OPEN · DELAYED, MARKET CLOSE, MARKET CLOSE · STALE, PRE-MARKET, AFTER-HOURS, etc. The label follows provider state and exchange/spot-session logic; a stale quote is not labelled live.
+- Commodity segment retains XAU/USD spot, Gold Futures, WTI, Brent and Copper.
+
+### XAU/USD
+- Replaced the Yahoo Finance / CORS-proxy dependency for spot gold with XAUS GET https://xaus.com/api/v1/spot?compact=1.
+- Uses the direct public browser endpoint; XAUS documents open CORS, no API key, spot response cache of approximately 60 seconds and data-state metadata.
+- Reads spot_usd_oz, data_state.status, data_state.as_of / price_as_of, and age. Unavailable, stale or timestamp-less responses are rejected rather than replaced by a fallback estimate.
+- The intraday line / percentage uses XAUS first-party intraday points only when at least 20 hours of series coverage is available. Otherwise the price may be shown but percentage/history remains unavailable. No fabricated 24-hour percentage.
+- Source / provider link is shown in the expanded row. Quote is indicative spot (USD per troy ounce), not an executable broker quote.
+
+### Taiwan Weighted (TAIEX)
+- Added a dated TWSE daily-report-first adapter:
+  https://www.twse.com.tw/exchangeReport/MI_INDEX?response=json&date=YYYYMMDD&type=IND.
+- Parses the named 發行量加權股價指數 row and its official closing index, signed point change and percentage. It validates the report date against the Asia/Taipei trading date.
+- Only when the dated official daily report cannot be fetched does the adapter fall back to the TWSE OpenAPI monthly history endpoint:
+  https://openapi.twse.com.tw/v1/indicesReport/MI_5MINS_HIST.
+- This fallback is visibly attributed as a last-available-session observation; it cannot make an older quote appear to be today's close.
+- For 17 Nov 2026, the official TWSE report shows TAIEX close 40,092.11, down 947.97 points / 2.31%. The previous close was 41,040.08. The earlier APIS -8.20% badge used an inconsistent previous-close reference and was wrong.
+- Browser test fixtures independently assert 40,092.11 / 41,040.08 / -2.31% and verify the dated daily report is preferred over monthly history.
+
+### U.S. Treasury yield curve
+- Replaced the all-four-tenors-in-one-row requirement with independent FRED observation selection for DGS2, DGS5, DGS10 and DGS30.
+- Each tenor now shows its own observation date. Missing observations in one tenor do not erase available values in other tenors.
+- 10Y-2Y spread is calculated only when both tenors have valid observations for the same date; otherwise it remains blank.
+- Browser regression fixture sets DGS30 to 5.47% on 13 Nov 2026 while leaving 16 Nov DGS30 blank, and verifies 30Y remains displayed with its correct date.
+- FRED's DGS30 source is Board of Governors H.15 constant-maturity 30-year yield; daily percentages are not intraday prices.
+
+### Economic release calendar
+- Replaced the high-only official release list with a Forex Factory-style calendar.
+- Filter controls: High / Medium impact; countries/currencies AUD, CAD, CHF, CNY, EUR, GBP, IDR, JPY, NZD and USD; and Growth, Inflation, Employment, Central Bank, Bonds, Housing, Consumer Surveys, Business Surveys, Speeches, Misc categories.
+- Added 3D and 7D ranges, day grouping in WIB, red High / amber Medium indicators, and three Previous / Forecast / Actual value columns.
+- Same-day rows remain visible until the WIB calendar day changes, including after a scheduled release time has passed.
+- Forex Factory public weekly JSON supplies the event title, country, scheduled time, impact, previous and forecast where available.
+- XOOMAR public API supplies U.S. agency-sourced previous / actual values. XOOMAR explicitly does not supply consensus forecasts; where a matching Forex Factory event exists, its forecast is retained. A blank field means the source did not provide the value.
+- Indonesia RDG dates come from Bank Indonesia's official 2026 annual schedule: 17–18 Nov and 15–16 Dec 2026. APIS assigns Medium to the first meeting day and High to the decision day for filtering purposes; BI itself publishes dates, not Forex Factory impact ratings. No meeting time, previous rate, forecast rate or actual rate is invented.
+- Calendar cache is stored for 15 minutes to avoid excessive calls to public providers and to retain the current-day schedule.
+- Existing News page continues to use public publisher feeds including CNBC, BBC, Guardian, Reuters/Bloomberg via Google News RSS, Investing.com via Google News RSS, Federal Reserve and BIS.
+
+### Final QA / deployment
+- Static validation: SUCCESS for APIS v2.6.0.
+- Chromium iPhone 390px: PASS.
+- Chromium 826px touch/desktop-width: PASS.
+- WebKit iPhone 390px: PASS.
+- WebKit 826px touch/desktop-width: PASS.
+- Browser checks include: Home has 20 market-only rows and no individual company equities; XAU adapter returns expected fixture price and computed change; Taiwan daily TWSE adapter returns official -2.31%; all five regional index groups render; five commodities render; no broken chart embed; DGS30 remains visible despite a blank latest observation on other dates; previous/forecast/actual merge; Medium/High and IDR/category filters; 3D/7D buttons; no horizontal overflow; News/Macro navigation; animated theme; refresh; no JavaScript page errors.
+- GitHub Pages deployment: SUCCESS. Run: https://github.com/susantowijaya-hub/apis-market-intelligence/actions/runs/44041119759
+- Latest validated workflow commit: 51fd7c1ebfa02d48051a0a6f84ed8273d4cc9202.
+- Release version: APIS v2.6.0.
+
+### Data integrity and operating limitations
+- No paid quote API or private API key was added.
+- Public provider availability and rate limits may vary by network / browser. A source failure shows unavailable / stale; there is no generated replacement price.
+- XAUS spot is indicative mid-market, not an executable trading quote.
+- Forex Factory calendar is a public weekly schedule / consensus source; XOOMAR actuals are U.S.-focused. Outside U.S. releases, Actual remains blank unless the calendar provider actually supplies it.
+- BI RDG is calendar-only; official meeting dates are shown, while release times and policy outcomes remain blank until a primary source publishes them.
+- Never label daily reference FX, last close, stale cache or daily Treasury observations as live intraday quotes.

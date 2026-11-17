@@ -25,9 +25,9 @@ function parsePage(html, symbol, now = Date.now()) {
   const change = number(attr('data-last-price-change'));
   const pct = number(attr('data-last-percentage-change'));
   if (price === null || price <= 0) {
-    const markers=['data-last-price','YMlKec','fxKbKc','IX0001','TAIEX','__NEXT_DATA__'];
+    const markers=['data-last-price','YMlKec','fxKbKc','IX0001','TAIEX','__NEXT_DATA__','40092.11','40092','-2.31','947.97','mfs7Fc','lastPrice','quote-header-section'];
     const diagnostics=markers.map(marker=>marker+':'+html.indexOf(marker)).join(' ');
-    const snippets=markers.map(marker=>{const at=html.indexOf(marker);return at>=0?html.slice(Math.max(0,at-100),at+260).replace(/\\s+/g,' '):''}).filter(Boolean).join(' || ');
+    const snippets=markers.map(marker=>{const at=html.indexOf(marker);return at>=0?html.slice(Math.max(0,at-180),at+420).replace(/\\s+/g,' '):''}).filter(Boolean).join(' || ');
     throw new Error('price not found · '+diagnostics+' · '+snippets.slice(0,900));
   }
   let changePct = pct;

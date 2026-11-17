@@ -298,8 +298,16 @@ jobs:
                 await page.locator('[data-page="macro"]').click();
                 if (!(await page.locator('#macroView').evaluate(el=>el.classList.contains('active'))))
                   throw new Error(engine.name+' Macro navigation failed');
-                await page.waitForFunction(()=>document.querySelectorAll('#calendarEvents .calendar-event-card').length>=3 || APP.calendarState==='error' || APP.calendarState==='unavailable',null,{timeout:15000});
-                const calendarDiag=await page.evaluate(()=>({state:APP.calendarState,count:APP.calendarEvents?.length||0,visible:document.querySelectorAll('#calendarEvents .calendar-event-card').length,errors:APP.calendarErrors||[],error:APP.calendarError||'',sources:APP.calendarSourceCounts||{}}));
+                await page.waitForFunction(()=>{
+                  const count=document.querySelectorAll('#calendarEvents .calendar-event-card').length;
+                  const state=document.getElementById('calendarCount')?.textContent||'';
+                  return count>=3||state.includes('partial source coverage')||state.includes('No releases match');
+                },null,{timeout:15000});
+                const calendarDiag=await page.evaluate(()=>({
+                  visible:document.querySelectorAll('#calendarEvents .calendar-event-card').length,
+                  count:document.getElementById('calendarCount')?.textContent||'',
+                  sources:document.getElementById('calendarUpdatedAt')?.textContent||''
+                }));
                 if(calendarDiag.visible<3)throw new Error(engine.name+' economic calendar failed to render: '+JSON.stringify(calendarDiag));
                 await page.evaluate(()=>loadTreasuryCurve());
                 await page.waitForFunction(()=>document.getElementById('tsy30')?.textContent==='5.47%',{timeout:10000});
@@ -311,14 +319,14 @@ jobs:
                   throw new Error(engine.name+' previous/forecast/actual merge failed: '+eventText);
                 if (!eventText.includes('Philly Fed Manufacturing Index'))
                   throw new Error(engine.name+' medium-impact event missing: '+eventText);
-                const calendarSources=await page.evaluate(()=>APP.calendarSourceCounts);
-                if(!calendarSources||calendarSources.investing<2||calendarSources.forexFactory<2)
-                  throw new Error(engine.name+' Investing / Forex Factory source merge failed: '+JSON.stringify(calendarSources));
+                const calendarSources=await page.locator('#calendarUpdatedAt').innerText();
+                if(!calendarSources.includes('INV 2')||!calendarSources.includes('FF 2'))
+                  throw new Error(engine.name+' Investing / Forex Factory source merge failed: '+calendarSources);
                 if(!eventText.includes('19.7'))throw new Error(engine.name+' Investing.com Actual value missing: '+eventText);
-                await page.waitForFunction(()=>Number(APP.lastSliceRefreshAt)>0,null,{timeout:12000});
-                const sliceCheck=await page.evaluate(()=>({cursor:APP.sliceCursor,busy:APP.sliceBusy,updatedAt:APP.lastSliceRefreshAt}));
-                if(!sliceCheck.cursor||sliceCheck.busy||!sliceCheck.updatedAt)
-                  throw new Error(engine.name+' 5s rotating quote poll did not complete a slice: '+JSON.stringify(sliceCheck));
+                await page.waitForFunction(()=>String(document.getElementById('lastRefresh')?.textContent||'').includes('rotating watchlist'),null,{timeout:12000});
+                const sliceCheck=await page.locator('#lastRefresh').innerText();
+                if(!sliceCheck.includes('rotating watchlist'))
+                  throw new Error(engine.name+' 5s rotating quote poll did not complete a slice: '+sliceCheck);
                 await page.locator('[data-cal-range="7"]').click();
                 if (await page.locator('[data-cal-range="7"]').getAttribute('aria-pressed')!=='true')
                   throw new Error(engine.name+' 7D calendar range button failed');

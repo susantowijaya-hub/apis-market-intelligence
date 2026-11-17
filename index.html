@@ -104,6 +104,7 @@ body{background:var(--bg);color:var(--ink);font-size:13px}.topbar{background:rgb
 @media(max-width:700px){.topbar-inner{height:auto;min-height:54px;flex-wrap:wrap;padding:8px 11px;gap:6px}.brand{font-size:15px}.brand small{font-size:8px}.top-right{gap:5px}.feed-state{max-width:135px;overflow:hidden;font-size:9px}.refresh-hint{font-size:8px}.after-hours{display:none}.nav{order:3;flex-basis:100%;width:100%;padding:3px 0 1px;gap:2px}.nav a{font-size:9px;padding:7px 8px}.terminal-tape .tape-item{padding:8px 10px}.container{padding:12px 10px 42px}.hero{display:block;margin:4px 0 9px}.hero h1{font-size:25px}.hero p{font-size:10px}.hero-tools{margin-top:8px}.section{margin-top:16px}.section-head h2{font-size:18px}.section-head p{font-size:9px}.quote-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.quote-card{padding:9px;min-height:84px}.quote-value{font-size:18px}.quote-asof{font-size:7px}.two-col,.three-col,.workbench-grid{grid-template-columns:1fr}.movers-grid{grid-template-columns:1fr 1fr}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.module-card{min-height:106px;padding:9px}.widget-box{height:360px}.widget-box.compact{height:300px}.widget-box.timeline,.widget-box.calendar{height:400px}.card-pad,.chart-card,.tool-card{padding:11px}.filing-links{grid-template-columns:1fr}.table-wrap{border-radius:8px}table{min-width:650px}th,td{padding:7px 8px}.section-tools{flex-wrap:wrap}.source-pill{font-size:7px}}
 @media(max-width:360px){.brand small{display:none}.feed-state{max-width:112px}.movers-grid{grid-template-columns:1fr}.quote-value{font-size:17px}}
 
+.filings-feed{display:grid;gap:0;margin:6px 0 12px}.filing-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 2px;border-bottom:1px solid #edf0ed}.filing-row a{font-size:10px;font-weight:700;color:#245d49}.filing-row small{display:block;font-size:8px;color:#7d8781;margin-top:3px}
 </style>
 </head>
 <body>
@@ -155,7 +156,7 @@ body{background:var(--bg);color:var(--ink);font-size:13px}.topbar{background:rgb
   </div>
 <div class="card filings-panel" id="filingsPanel" style="margin-top:14px">
  <div class="card-title"><div><div class="eyebrow">REGULATORY DISCLOSURES</div><h3>Filings & corporate actions</h3><p>Public filing sources · no fabricated insider trades or issuer disclosures.</p></div><span class="source-pill" id="filingsStatus">PUBLIC SOURCES</span></div>
- <div class="filing-links">
+ <div class="filings-feed" id="filingsFeedList"><div class="empty-state">Loading SEC EDGAR company filings…</div></div><div class="filing-links">
   <a href="https://www.sec.gov/edgar/search/" target="_blank" rel="noopener"><strong>SEC EDGAR</strong><span>U.S. company filings · 10-K, 10-Q, 8-K</span></a>
   <a href="https://www.idx.co.id/id/perusahaan-tercatat/keterbukaan-informasi/" target="_blank" rel="noopener"><strong>IDX disclosures</strong><span>Indonesia listed-company disclosures</span></a>
   <a href="https://www.sec.gov/Archives/edgar/daily-index/" target="_blank" rel="noopener"><strong>SEC daily index</strong><span>Daily filing index and submissions</span></a>
@@ -512,7 +513,8 @@ function renderQuality(){
     ['Binance WebSocket',cryptoLive?'Timestamped BTC/USDT trade stream is fresh':cryptoRest?'BTC/USDT REST observation is fresh; not a live stream':cryptoCached?'Only a previously saved BTC observation is available':APP.btcError||'BTC/USDT unavailable',cryptoLive?'LIVE STREAM':cryptoRest?'REST UPDATE':cryptoCached?'STALE CACHE':'NOT LIVE',cryptoLive?'good':'warn'],
     ['Frankfurter FX',APP.fxState==='loaded'?'Daily reference-rate response received':APP.fxState==='cached'?'Saved dated reference rate; refresh failed':APP.fxError||'Reference-rate response unavailable',APP.fxState==='loaded'?'DAILY':APP.fxState==='cached'?'STALE':'UNAVAILABLE',APP.fxState==='loaded'?'good':'warn'],
     ['U.S. Treasury yield curve',APP.tsyState==='loaded'?'Official daily Treasury par-yield curve':APP.tsyError||'No daily Treasury response',APP.tsyState==='loaded'?'DAILY':'UNAVAILABLE',APP.tsyState==='loaded'?'good':'warn'],
-    ['Public market news RSS',APP.newsState==='loaded'?'Current RSS items with source and publication date':APP.newsError||'RSS unavailable',APP.newsState==='loaded'?'UPDATED':'UNAVAILABLE',APP.newsState==='loaded'?'good':'warn']
+    ['Public market news RSS',APP.newsState==='loaded'?'Current RSS items with source and publication date':APP.newsError||'RSS unavailable',APP.newsState==='loaded'?'UPDATED':'UNAVAILABLE',APP.newsState==='loaded'?'good':'warn'],
+    ['SEC EDGAR submissions',APP.filingsState==='loaded'?'Recent public company filings loaded':APP.filingsError||'SEC filing feed not yet available',APP.filingsState==='loaded'?'UPDATED':'UNAVAILABLE',APP.filingsState==='loaded'?'good':'warn']
   ];
   const container=document.getElementById('sourceHealth');container.replaceChildren();
   rows.forEach(([name,detail,status,kind])=>{const r=document.createElement('div');r.className='source-row';const l=document.createElement('div');const strong=document.createElement('strong');strong.textContent=name;const small=document.createElement('small');small.textContent=detail;l.append(strong,small);const badge=document.createElement('span');badge.className='badge '+kind;badge.textContent=status;r.append(l,badge);container.append(r)});
@@ -641,6 +643,46 @@ async function loadPublicNews(){
  renderQuality();
 }
 
+async function loadEdgarFilings(){
+ const host=document.getElementById('filingsFeedList');if(!host)return;
+ const companies=[
+  {ticker:'AAPL',name:'Apple',cik:'0000320193'},
+  {ticker:'MSFT',name:'Microsoft',cik:'0000789019'},
+  {ticker:'NVDA',name:'NVIDIA',cik:'0001045810'}
+ ];
+ const all=[];let errors=[];
+ for(const company of companies){
+  const target='https://data.sec.gov/submissions/CIK'+company.cik+'.json';
+  const routes=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target)];
+  let found=false;
+  for(const url of routes){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);try{
+   const r=await fetch(url,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
+   if(!r.ok)throw new Error('HTTP '+r.status);
+   const data=await r.json(),recent=data.filings?.recent;if(!recent)throw new Error('Recent filing array missing');
+   const count=Math.min(recent.form?.length||0,100);
+   for(let i=0;i<count;i++){
+    const form=recent.form?.[i],date=recent.filingDate?.[i],accession=recent.accessionNumber?.[i],doc=recent.primaryDocument?.[i],desc=recent.primaryDocDescription?.[i];
+    if(!form||!date||!accession||!doc)continue;
+    if(!['10-K','10-Q','8-K','20-F','6-K','SC 13D','SC 13G','4'].includes(form))continue;
+    const accessionPath=accession.replaceAll('-','');
+    all.push({ticker:company.ticker,name:company.name,form,date,description:desc||'',url:`https://www.sec.gov/Archives/edgar/data/${Number(company.cik)}/${accessionPath}/${doc}`});
+    if(all.filter(x=>x.ticker===company.ticker).length>=4)break;
+   }
+   found=true;break;
+  }catch(e){errors.push(company.ticker+': '+String(e?.message||e).slice(0,70))}finally{clearTimeout(timer)}}
+  if(!found)errors.push(company.ticker+': unavailable');
+ }
+ all.sort((a,b)=>b.date.localeCompare(a.date));host.replaceChildren();
+ if(!all.length){const e=document.createElement('div');e.className='empty-state';e.textContent='SEC EDGAR feed unavailable through free public access on this network. Use the official company search links below; no sample filings are shown.';host.append(e);APP.filingsState='unavailable';APP.filingsError=errors.join(' · ')}
+ else{
+  all.slice(0,10).forEach(f=>{const row=document.createElement('div');row.className='filing-row';
+   const main=document.createElement('div');const a=document.createElement('a');a.href=f.url;a.target='_blank';a.rel='noopener';a.textContent=f.ticker+' · '+f.form+' · '+f.name;
+   const small=document.createElement('small');small.textContent=f.date+(f.description?' · '+f.description:'');main.append(a,small);
+   const badge=document.createElement('span');badge.className='badge';badge.textContent=f.form;row.append(main,badge);host.append(row)});
+  APP.filingsState='loaded';APP.filingsError=errors.join(' · ');
+ }
+ renderQuality();
+}
 function loadChart(){const symbol=document.getElementById('chartSymbol').value;const item=WATCHLIST.find(x=>x.tv===symbol);setText('chartSubtitle',item?`${item.name} · TradingView chart`:'TradingView interactive chart');mountWidget('mainChart','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{autosize:true,symbol,interval:'5',timezone:TZ,theme:'light',style:'1',locale:'en',allow_symbol_change:true,calendar:false,hide_side_toolbar:false,hide_top_toolbar:false,save_image:false,withdateranges:true,details:true,hotlist:false,studies:[],support_host:'https://www.tradingview.com'});}
 function loadWidgets(){loadChart();mountWidget('marketOverviewWidget','https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js',{colorTheme:'light',dateRange:'12M',showChart:true,locale:'en',largeChartUrl:'',isTransparent:false,showSymbolLogo:true,showFloatingTooltip:false,width:'100%',height:'100%',plotLineColorGrowing:'rgba(0,113,227,1)',plotLineColorFalling:'rgba(210,70,70,1)',gridLineColor:'rgba(240,240,242,1)',scaleFontColor:'#6e6e73',belowLineFillColorGrowing:'rgba(0,113,227,0.08)',belowLineFillColorFalling:'rgba(210,70,70,0.06)',belowLineFillColorGrowingBottom:'rgba(0,113,227,0)',belowLineFillColorFallingBottom:'rgba(210,70,70,0)',symbolActiveColor:'rgba(0,113,227,0.08)',tabs:[{title:'US',symbols:[{s:'SP:SPX',d:'S&P 500'},{s:'NASDAQ:IXIC',d:'Nasdaq Composite'},{s:'DJ:DJI',d:'Dow Jones'}]},{title:'Asia',symbols:[{s:'SSE:000001',d:'Shanghai Composite'},{s:'TWSE:IX0001',d:'Taiwan Weighted'},{s:'KRX:KOSPI',d:'KOSPI'}]},{title:'Indonesia',symbols:[{s:'IDX:COMPOSITE',d:'IDX Composite'},{s:'IDX:BBCA',d:'BBCA'},{s:'IDX:BMRI',d:'BMRI'},{s:'IDX:BBRI',d:'BBRI'}]},{title:'Macro',symbols:[{s:'TVC:VIX',d:'VIX'},{s:'FX_IDC:USDIDR',d:'USD/IDR'},{s:'NYMEX:BZ1!',d:'Brent Futures'},{s:'COMEX:GC1!',d:'Gold Futures'}]}]});
   mountWidget('newsWidget','https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',{feedMode:'market',isTransparent:false,displayMode:'regular',width:'100%',height:'100%',colorTheme:'light',locale:'en'});
@@ -712,16 +754,17 @@ function bootstrap(){
  safeInit('Chart widgets',loadWidgets);
  safeInit('BTC WebSocket',connectBitcoinStream);safeInit('BTC REST',fetchBitcoinRest);
  safeInit('USD/IDR',loadFxReference);safeInit('Treasury yield',loadTreasuryCurve);
- safeInit('Market quotes',fetchQuoteBatch);safeInit('Public news RSS',loadPublicNews);
+ safeInit('Market quotes',fetchQuoteBatch);safeInit('Public news RSS',loadPublicNews);safeInit('SEC EDGAR filings',loadEdgarFilings);
  APP.nextRefreshAt=Date.now()+60000;
  APP.timer=setInterval(()=>{if(!document.hidden&&navigator.onLine&&APP.yahooState!=='loading')fetchQuoteBatch()},60000);
  APP.fxTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadFxReference()},60*60*1000);
  APP.tsyTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadTreasuryCurve()},6*60*60*1000);
  APP.newsTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadPublicNews()},10*60*1000);
+ APP.filingsTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadEdgarFilings()},20*60*1000);
  APP.btcRestTimer=setInterval(()=>{if(!btcIsFresh()||APP.btc?.transport!=='WEBSOCKET')fetchBitcoinRest()},30000);
  APP.staleTimer=setInterval(()=>{if(APP.btc&&!btcIsFresh()){setText('btcStatus','STALE · last observation retained');updateFeedState();renderQuality()}},3000);
- document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(!btcIsFresh())connectBitcoinStream();if(navigator.onLine&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>30000))fetchQuoteBatch();if(APP.fxState==='unavailable'||APP.fxState==='cached')loadFxReference();if(APP.tsyState!=='loaded')loadTreasuryCurve();if(APP.newsState!=='loaded')loadPublicNews()}});
- window.addEventListener('online',()=>{fetchQuoteBatch();loadFxReference();loadTreasuryCurve();loadPublicNews();if(!btcIsFresh())connectBitcoinStream()});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(!btcIsFresh())connectBitcoinStream();if(navigator.onLine&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>30000))fetchQuoteBatch();if(APP.fxState==='unavailable'||APP.fxState==='cached')loadFxReference();if(APP.tsyState!=='loaded')loadTreasuryCurve();if(APP.newsState!=='loaded')loadPublicNews();if(APP.filingsState!=='loaded')loadEdgarFilings()}});
+ window.addEventListener('online',()=>{fetchQuoteBatch();loadFxReference();loadTreasuryCurve();loadPublicNews();loadEdgarFilings();if(!btcIsFresh())connectBitcoinStream()});
  window.addEventListener('focus',()=>{if(navigator.onLine&&!document.hidden&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>45000))fetchQuoteBatch()});
  safeInit('Alert options',addAlertOptions);safeInit('Evidence ledger',renderLedger);safeInit('Alert rules',renderAlerts);
  if(QUOTES.size)setText('lastRefresh','Restored '+QUOTES.size+' saved observations · refresh pending');

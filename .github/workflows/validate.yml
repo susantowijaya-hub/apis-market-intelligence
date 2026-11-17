@@ -105,7 +105,7 @@ jobs:
           const calendarStart = html.indexOf('function calendarNumericValue(');
           const calendarEnd = html.indexOf('function renderMacroCalendar()', calendarStart);
           const calendarSource = calendarStart >= 0 && calendarEnd > calendarStart ? html.slice(calendarStart, calendarEnd) : '';
-          if (!baselineSource || !numericSource || !toneSource) throw new Error('Regression helper extraction failed');
+          if (!baselineSource || !calendarSource) throw new Error('Regression helper extraction failed');
           const unit = { exchangeWallClock: date => ({year:date.getUTCFullYear(),month:date.getUTCMonth()+1,day:date.getUTCDate()}) };
           vm.createContext(unit);
           vm.runInContext(baselineSource + '\\n' + numericSource + '\\n' + toneSource, unit);

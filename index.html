@@ -1639,7 +1639,10 @@ async function fetchGoogleFinanceQuote(item){
   throw new Error(errors.join(' · '));
  }
 }
+const INDEX_COMPARISON_CACHE=new Map();
 async function fetchIndexProviderComparison(item,googleQuote){
+ const cached=INDEX_COMPARISON_CACHE.get(item.symbol);
+ if(cached&&Date.now()-cached.retrievedAt<60000)return {...cached};
  const session=exchangeSession(item);
  try{
   let backup;
@@ -1647,14 +1650,16 @@ async function fetchIndexProviderComparison(item,googleQuote){
    try{backup=await fetchStooqQuote(item)}catch(_){backup=await fetchYahooQuote(item)}
   }else backup=await fetchYahooQuote(item);
   const differencePct=(backup.price/googleQuote.price-1)*100;
-  return {
+  const result={
    source:backup.source||backup.exchange||'Secondary provider',price:backup.price,
    changePct:stockChangePct(backup),differencePct,
    status:Math.abs(differencePct)>0.35?'DIVERGENCE':'ALIGNED',
    observationDate:backup.observationDate||null,retrievedAt:Date.now()
   };
+  INDEX_COMPARISON_CACHE.set(item.symbol,result);return {...result};
  }catch(error){
-  return {source:'Secondary provider unavailable',price:null,changePct:null,differencePct:null,status:'UNAVAILABLE',error:String(error?.message||error).slice(0,160),retrievedAt:Date.now()};
+  const result={source:'Secondary provider unavailable',price:null,changePct:null,differencePct:null,status:'UNAVAILABLE',error:String(error?.message||error).slice(0,160),retrievedAt:Date.now()};
+  INDEX_COMPARISON_CACHE.set(item.symbol,result);return {...result};
  }
 }
 async function fetchMarketQuote(item){

@@ -296,6 +296,27 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
  .mover-change{min-width:54px;font-size:10px}
 }
 
+
+@media(max-width:720px){
+ .watchlist-panel .table-wrap{overflow:visible;border:0;background:transparent}
+ .watchlist-panel table{display:block;min-width:0;width:100%}
+ .watchlist-panel thead{display:none}
+ .watchlist-panel tbody{display:grid;gap:8px}
+ .watchlist-panel tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"asset asset" "price change" "changePct status" "time time" "source source";gap:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:5px 8px}
+ .watchlist-panel td{display:flex;flex-direction:column;align-items:flex-start;text-align:left!important;white-space:normal;min-width:0;overflow-wrap:anywhere;border:0;padding:7px 4px;font-size:10px}
+ .watchlist-panel td:before{content:attr(data-label);font-size:8px;line-height:1.2;color:var(--secondary);font-weight:700;text-transform:uppercase;letter-spacing:.055em;margin-bottom:4px}
+ .watchlist-panel td:nth-child(1){grid-area:asset}
+ .watchlist-panel td:nth-child(2){grid-area:price}
+ .watchlist-panel td:nth-child(3){grid-area:change}
+ .watchlist-panel td:nth-child(4){grid-area:changePct}
+ .watchlist-panel td:nth-child(5){grid-area:status}
+ .watchlist-panel td:nth-child(6){grid-area:time}
+ .watchlist-panel td:nth-child(7){grid-area:source}
+ .watchlist-panel .asset-name{font-size:11px;white-space:normal}
+ .watchlist-panel .asset-sub{font-size:9px}
+ .watchlist-panel .status-label{white-space:normal;text-align:left}
+}
+
 </style>
 </head>
 <body>
@@ -959,13 +980,13 @@ function renderQuoteViews(){
    const q=QUOTES.get(item.symbol);if(q)usable++;
    const tr=document.createElement('tr'),cells=[];
    const n=document.createElement('td'),strong=document.createElement('div'),sub=document.createElement('div');
-   strong.className='asset-name';strong.textContent=item.name;sub.className='asset-sub';sub.textContent=item.short+' · '+item.group;n.append(strong,sub);cells.push(n);
-   const p=document.createElement('td');p.textContent=q?fmtPrice(q):'—';cells.push(p);
-   const d=document.createElement('td');d.textContent=q&&num(q.previousClose)!==null?fmt(q.price-q.previousClose,2):'—';if(q)d.className='change '+changeClass(q.price-q.previousClose);cells.push(d);
-   const pc=document.createElement('td');pc.textContent=q&&q.previousClose?pct((q.price/q.previousClose-1)*100):'—';if(q)pc.className='change '+changeClass(q.price-q.previousClose);cells.push(pc);
-   const st=document.createElement('td');st.textContent=q?quoteStatusLabel(q.status):'UNAVAILABLE';st.className='status-label '+(q?quoteStatusClass(q.status):'bad');cells.push(st);
-   const t=document.createElement('td');t.textContent=q?fmtTime(q.observedAt):'—';cells.push(t);
-   const src=document.createElement('td');if(q){const a=document.createElement('a');a.href=q.sourceUrl||'#';a.target='_blank';a.rel='noopener';a.textContent=q.source||'Provider';src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
+   strong.className='asset-name';strong.textContent=item.name;sub.className='asset-sub';sub.textContent=item.short+' · '+item.group;n.setAttribute('data-label','Instrumen');n.append(strong,sub);cells.push(n);
+   const p=document.createElement('td');p.setAttribute('data-label','Terakhir');p.textContent=q?fmtPrice(q):'—';cells.push(p);
+   const d=document.createElement('td');d.setAttribute('data-label','Perubahan');d.textContent=q&&num(q.previousClose)!==null?fmt(q.price-q.previousClose,2):'—';if(q)d.className='change '+changeClass(q.price-q.previousClose);cells.push(d);
+   const pc=document.createElement('td');pc.setAttribute('data-label','Perubahan %');pc.textContent=q&&q.previousClose?pct((q.price/q.previousClose-1)*100):'—';if(q)pc.className='change '+changeClass(q.price-q.previousClose);cells.push(pc);
+   const st=document.createElement('td');st.setAttribute('data-label','Status feed');st.textContent=q?quoteStatusLabel(q.status):'UNAVAILABLE';st.className='status-label '+(q?quoteStatusClass(q.status):'bad');cells.push(st);
+   const t=document.createElement('td');t.setAttribute('data-label','Waktu observasi');t.textContent=q?fmtTime(q.observedAt):'—';cells.push(t);
+   const src=document.createElement('td');src.setAttribute('data-label','Sumber');if(q){const a=document.createElement('a');a.href=q.sourceUrl||'#';a.target='_blank';a.rel='noopener';a.textContent=q.source||'Provider';src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
    cells.forEach(cell=>tr.append(cell));body.append(tr);
   });
   setText('quoteCount',usable+' / '+WATCHLIST.length+' observations');

@@ -29,7 +29,10 @@ jobs:
           const fs = require('fs');
           const html = fs.readFileSync('index.html', 'utf8');
           const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].filter(m => m[1].trim());
-          if (scripts.length !== 1) throw new Error('Expected one inline application script; found ' + scripts.length);
+          if (scripts.length !== 2) throw new Error('Expected ES5 diagnostic + APIS application scripts; found ' + scripts.length);
+          const diagnostic = scripts.find(m => m[1].includes('__APIS_REPORT_ERROR__'));
+          const application = scripts.find(m => m[1].includes('function bootstrap(){'));
+          if (!diagnostic || !application) throw new Error('Diagnostic or application script missing.');
           const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
           const duplicates = ids.filter((id, i) => ids.indexOf(id) !== i);
           if (duplicates.length) throw new Error('Duplicate HTML IDs: ' + [...new Set(duplicates)].join(', '));
@@ -45,7 +48,6 @@ jobs:
           const missing = requiredIds.filter(id => !idSet.has(id));
           if (missing.length) throw new Error('Required terminal elements missing: ' + missing.join(', '));
           const js = application[1];
-          fs.writeFileSync('/tmp/apis-diagnostic.js', diagnostic[1]);
           const refs = [...js.matchAll(/getElementById\(['"]([^'"]+)['"]\)/g)].map(m => m[1]);
           const unresolved = [...new Set(refs.filter(id => !idSet.has(id)))];
           if (unresolved.length) throw new Error('JavaScript references absent DOM IDs: ' + unresolved.join(', '));
@@ -70,8 +72,9 @@ jobs:
             throw new Error('Light/Dark/System theme controls are incomplete.');
           if (html.includes('embed-widget-market-overview.js') || html.includes('embed-widget-events.js') || html.includes('embed-widget-timeline.js'))
             throw new Error('Disabled TradingView overview/news/calendar embeds remain in the page.');
+          fs.writeFileSync('/tmp/apis-diagnostic.js', diagnostic[1]);
           fs.writeFileSync('/tmp/apis-inline.js', js);
-          console.log('APIS QA passed: pages, controls, IDs, required functions, themes, ES5 diagnostics; IDs=' + ids.length + '; app JS bytes=' + js.length);
+          console.log('APIS QA passed: pages, controls, IDs, required functions, themes and error reporting; IDs=' + ids.length + '; app JS bytes=' + js.length);
           NODE
           node --check /tmp/apis-diagnostic.js
           node --check /tmp/apis-inline.js

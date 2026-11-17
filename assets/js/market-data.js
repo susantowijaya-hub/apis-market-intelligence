@@ -82,15 +82,16 @@ async function fetchYahooQuote(item){
  const isDailyIndex=isDailyIndexSymbol(item.symbol);
  const plans=isDailyIndex?[{range:'1mo',interval:'1d'}]:[{range:'1d',interval:'1m'}];
  const routesFor=target=>[
-  'https://corsproxy.io/?url='+encodeURIComponent(target),
   'https://api.allorigins.win/raw?url='+encodeURIComponent(target),
-  'https://proxy.cors.dev/'+target
+  'https://corsproxy.io/?url='+encodeURIComponent(target),
+  'https://proxy.cors.dev/'+target,
+  'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(target)
  ];
  const errors=[];
  for(const plan of plans){
-  const target='https://query1.finance.yahoo.com/v8/finance/chart/'+encoded+'?range='+plan.range+'&interval='+plan.interval+'&includePrePost=true';
-  for(const route of routesFor(target)){
-   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),3500);
+  const targets=['https://query1.finance.yahoo.com/v8/finance/chart/'+encoded+'?range='+plan.range+'&interval='+plan.interval+'&includePrePost=true','https://query2.finance.yahoo.com/v8/finance/chart/'+encoded+'?range='+plan.range+'&interval='+plan.interval+'&includePrePost=true'];
+  for(const target of targets)for(const route of routesFor(target)){
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);
    try{
     const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
     if(!response.ok)throw new Error('HTTP '+response.status);
@@ -304,10 +305,10 @@ async function fetchMarketQuote(item){
  const errors=[];
  if(item.symbol==='XAUUSD=X')return fetchXauSpotQuote(item);
  if(item.symbol==='^JKLQ45'){
-  const session=exchangeSession(item);
-  if(session?.state==='OPEN'||session?.state==='PRECLOSE')return fetchYahooQuote(item);
-  try{return await fetchIdxOfficialIndexQuote(item)}catch(error){errors.push('IDX official LQ45 summary: '+String(error?.message||error).slice(0,130))}
-  try{const quote=await fetchYahooQuote(item);quote.providerFallbacks=errors.slice();return quote}catch(error){errors.push('Yahoo LQ45 daily fallback: '+String(error?.message||error).slice(0,130))}
+  // Yahoo Finance is the user-specified primary reference for LQ45. Its chart
+  // response provides a paired close history for a reproducible daily return.
+  try{return await fetchYahooQuote(item)}catch(error){errors.push('Yahoo Finance LQ45: '+String(error?.message||error).slice(0,150))}
+  try{const quote=await fetchIdxOfficialIndexQuote(item);quote.providerFallbacks=errors.slice();return quote}catch(error){errors.push('IDX official LQ45 fallback: '+String(error?.message||error).slice(0,150))}
   throw new Error(errors.join(' · ')||'No verified LQ45 quote provider returned an observation');
  }
  if(US_INDEX_SYMBOLS.has(item.symbol)||item.symbol==='^NSEI')return fetchYahooQuote(item);

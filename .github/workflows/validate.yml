@@ -33,7 +33,7 @@ jobs:
             catch (error) { throw new Error('Inline script ' + (index + 1) + ': ' + error.message); }
           });
           const checks = {
-            version: html.includes('build-version" content="2.9.3"'),
+            version: html.includes('build-version" content="2.10.0"'),
             dailyIndexCloseOnly: html.includes("const hasDailyBars=isDailyIndex&&plan.interval==='1d'") && html.includes('useDailyClose=hasDailyBars&&barPrice!==null') && html.includes('const dailyBars=hasDailyBars?closes.map'),
             dailyIndexCloseBaseline: html.includes('const baselineCutoff=useDailyClose?selectedDailyBarDay:sessionDay') && html.includes('const dailyPreviousClose=dailyBaselineBars.length?dailyBaselineBars[dailyBaselineBars.length-1].price:null'),
             usClosingAuction: html.includes("openWindows=[[9*60+30,15*60+50]];auctionWindow=[15*60+50,16*60]"),
@@ -97,6 +97,44 @@ jobs:
             moversIndividualEquitiesOnly: html.includes("const stockGroups=new Set(['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity'])") && html.includes("group==='Korea focus equity'") && html.includes("short:'TSMC'"),
             smoothQuoteTransitions: html.includes('@keyframes apis-quote-refresh') && html.includes('.ios-stock-item.is-updating')
           };
+          const vm = require('node:vm');
+          const assert = require('node:assert/strict');
+          const baselineSource = html.match(/function exchangeDateKey\\([\\s\\S]*?function selectDailyIndexPreviousClose\\([\\s\\S]*?\\n\\}/)?.[0];
+          const numericSource = html.match(/function calendarNumericValue\\(value\\)\\{[\\s\\S]*?\\n\\}/)?.[0];
+          const toneSource = html.match(/function calendarActualTone\\(item\\)\\{[\\s\\S]*?\\n\\}/)?.[0];
+          if (!baselineSource || !numericSource || !toneSource) throw new Error('Regression helper extraction failed');
+          const unit = { exchangeWallClock: date => ({year:date.getUTCFullYear(),month:date.getUTCMonth()+1,day:date.getUTCDate()}) };
+          vm.createContext(unit);
+          vm.runInContext(baselineSource + '\\n' + numericSource + '\\n' + toneSource, unit);
+          // Gate 1: session-date baseline ignores a same-day partial candle.
+          const bars = [
+            {price:5320.98,timestamp:Date.UTC(2026,10,16,12)/1000},
+            {price:5335.61,timestamp:Date.UTC(2026,10,17,12)/1000}
+          ];
+          assert.equal(unit.selectDailyIndexPreviousClose(bars,'2026-11-17','Asia/Jakarta'),5320.98);
+          // Gate 2: closed-session guard and previous-close requirements are wired.
+          assert.ok(html.includes("session?.state==='CLOSED'&&(!useDailyClose||selectedDailyBarDay!==sessionDay)"));
+          assert.ok(html.includes('Previous session close unavailable; refusing unverified daily percentage'));
+          // Gate 3: actual-vs-forecast semantics (higher/lower/neutral).
+          assert.equal(unit.calendarActualTone({title:'Employment Change 3M/3M',forecast:'102',actual:'156'}),'good');
+          assert.equal(unit.calendarActualTone({title:'Employment Change',forecast:'156',actual:'102'}),'bad');
+          assert.equal(unit.calendarActualTone({title:'Unemployment Rate',forecast:'4.7',actual:'4.6'}),'good');
+          assert.equal(unit.calendarActualTone({title:'Unemployment Rate',forecast:'4.6',actual:'4.7'}),'bad');
+          assert.equal(unit.calendarActualTone({title:'Average Earnings Index +Bonus',forecast:'3.8',actual:'3.6'}),'');
+          assert.equal(unit.calendarActualTone({title:'BI Rate',forecast:'5.75',actual:'5.75'}),'');
+          // Gate 4: Movers stay within the approved individual-stock markets and focus names.
+          const moverBlock = html.match(/const stockGroups=new Set\\(\\[(.*?)\\]\\)/)?.[1] || '';
+          for (const group of ['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity']) assert.ok(moverBlock.includes(group));
+          assert.ok(html.includes("short:'SAMSUNG',group:'Korea focus equity'"));
+          assert.ok(html.includes("short:'SK HYNIX',group:'Korea focus equity'"));
+          assert.ok(html.includes("short:'TSMC',group:'Taiwan focus equity'"));
+          assert.ok(html.includes('observed!==expected'));
+          // Gate 5: mobile header and semantic colors use the same light/dark theme tokens.
+          assert.ok(html.includes('.top-right .clock,.top-right .feed-state,.top-right .refresh-hint,.top-right .after-hours,.top-right .market-session-stamp{display:none!important}'));
+          assert.ok(html.includes('.calendar-event-metric.actual.good strong{color:var(--green)}'));
+          assert.ok(html.includes('.calendar-event-metric.actual.bad strong{color:var(--red)}'));
+          assert.ok(html.includes('html[data-theme="dark"] .calendar-event-metric.actual.good'));
+          console.log('Five regression gates passed: baseline, close guard, calendar scoring, mover scope, theme/header.');
           const failed = Object.entries(checks).filter(([, value]) => !value);
           console.log('Inline scripts compiled:', scripts.length);
           console.log(checks);

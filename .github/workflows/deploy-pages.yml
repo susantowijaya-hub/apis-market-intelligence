@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Validate dashboard JavaScript
+      - name: Validate APIS HTML, IDs and JavaScript
         run: |
           node <<'NODE'
           const fs = require('fs');
@@ -33,8 +33,17 @@ jobs:
           const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
           const duplicates = ids.filter((id, i) => ids.indexOf(id) !== i);
           if (duplicates.length) throw new Error('Duplicate HTML ids: ' + [...new Set(duplicates)].join(', '));
-          fs.writeFileSync('/tmp/apis-inline.js', scripts[0][1]);
-          console.log('HTML checks passed; inline JS bytes:', scripts[0][1].length);
+          const idSet = new Set(ids);
+          if (!idSet.has('refreshBtn')) throw new Error('Critical refreshBtn is missing; startup would fail.');
+          const js = scripts[0][1];
+          const refs = [...js.matchAll(/getElementById\(['"]([^'"]+)['"]\)/g)].map(m => m[1]);
+          const missing = [...new Set(refs.filter(id => !idSet.has(id)))];
+          if (missing.length) throw new Error('JavaScript references missing DOM IDs: ' + missing.join(', '));
+          for (const fn of ['fetchQuoteBatch','fetchBitcoinRest','connectBitcoinStream','loadFxReference','loadTreasuryCurve','loadPublicNews','loadEdgarFilings','renderMovers']) {
+            if (!js.includes('function ' + fn + '(') && !js.includes('async function ' + fn + '(')) throw new Error('Required function missing: ' + fn);
+          }
+          fs.writeFileSync('/tmp/apis-inline.js', js);
+          console.log('APIS structure checks passed; ids:', ids.length, 'JS bytes:', js.length);
           NODE
           node --check /tmp/apis-inline.js
       - name: Configure GitHub Pages

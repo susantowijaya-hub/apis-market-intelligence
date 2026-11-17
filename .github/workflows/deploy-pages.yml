@@ -31,7 +31,7 @@ jobs:
           const scriptPaths = ['assets/js/compat.js','assets/js/core.js','assets/js/market-data.js','assets/js/realtime-data.js','assets/js/workspace.js','assets/js/bootstrap.js'];
           const scripts = scriptPaths.map(file => fs.readFileSync(file, 'utf8'));
           const diagnostic = scripts[0];
-          const js = scripts.join('\n');
+          const js = scripts.slice(1).join('\n');
           if (!diagnostic.includes('__APIS_REPORT_ERROR__') || !js.includes('function bootstrap(){')) throw new Error('Diagnostic or application source missing.');
           scripts.forEach((script,index) => { try { new Function(script); } catch (error) { throw new Error(scriptPaths[index] + ': ' + error.message); } });
           const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);

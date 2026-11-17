@@ -58,3 +58,13 @@
 - Latest follow-up commit: `d0cfe0b9dac87580d22e5a0cd68c5b0b0d9e44f8`.
 - Static verification in the development session: both inline scripts compile; free-only Stooq → Yahoo wiring, BTC stream, FX, Treasury, Macro, News, and mobile watchlist checks pass.
 - The public endpoints were not claimed as universally reachable: browser CORS, Stooq quota, Yahoo throttling, provider outages, and instrument coverage remain external runtime dependencies.
+
+
+### Final verification note — 2026-11-17
+- Restored the Yahoo chart adapter after Stooq so the actual runtime path is Stooq → Yahoo, not Stooq-only.
+- Mocked Stooq CSV smoke test passed: CSV header/row parsed, close and previous close normalized, provider/source/date/status assigned.
+- Mocked Yahoo chart smoke test passed: provider metadata, timestamp, last price, previous close, and delayed status normalized.
+- Both inline scripts compile successfully after the final quote-adapter changes.
+- Static checks pass for free-only mode, no paid-provider names/adapters/key fields, 22 watchlist instruments, Stooq-first waterfall, Yahoo fallback, BTC, FX, Treasury, Macro, News, and responsive watchlist.
+- Latest index content blob: `73a89db42a989c503ab55d066b2df7556918ca4a`.
+- External live-feed connectivity and GitHub Pages browser rendering remain unverified from this execution environment; the new Actions workflow is the repository-side syntax/wiring gate.

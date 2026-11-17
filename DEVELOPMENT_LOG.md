@@ -383,3 +383,7 @@
 - Runtime free market quotes currently use Stooq public CSV where mapped and Yahoo Finance public chart fallback through CORS relays; Taiwan uses the official TWSE report after close, and spot gold uses XAUS. These sources are not all independent for every regional index, and their free endpoints can be delayed, rate-limited, blocked by browser CORS or unavailable.
 - No new provider is described as a backup until its endpoint, timestamp, symbol mapping, previous-close semantics and independent source lineage are verified. If an independent source is unavailable, APIS must label the observation accordingly or withhold it.
 - GitHub Actions static / fixture validation does not replace a deployed browser live-feed audit. Do not declare release fully verified until CI passes and the public page is checked in a real browser in both light and dark themes.
+
+- Additional close-finalization guard: after a market is marked closed, Yahoo's regular-market observation timestamp must be on the current exchange date and within ten minutes of the exchange's final-close boundary. If the provider only has an earlier intraday print (for example, a 15:21 WIB observation presented as a 16:00 WIB close), APIS withholds it.
+- Stooq daily snapshots are also rejected after close when their observation date is not the current exchange session date.
+- CI's five gates now additionally assert the Yahoo final-close timestamp and Stooq observation-date guards.

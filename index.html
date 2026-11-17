@@ -1533,7 +1533,7 @@ async function persistQuoteCache(){
 async function fetchQuoteSlice(){
  if(document.hidden||!navigator.onLine||APP.yahooState==='loading'||APP.sliceBusy)return;
  APP.sliceBusy=true;
- const queue=WATCHLIST,selected=[];
+ const queue=APP.marketFilter==='equities'?WATCHLIST.filter(item=>item.group==='Indonesia equity'||item.group==='US equity'):WATCHLIST,selected=[];
  const sliceSize=3;
  for(let i=0;i<sliceSize&&queue.length;i++){
   selected.push(queue[APP.sliceCursor%queue.length]);
@@ -1720,7 +1720,7 @@ function marketFeedTimestampLabel(quote,item){
   const descriptor=session.state==='CLOSED'&&quote.observationDate===today?'Close':'Last close';
   return feed+' · '+descriptor+' '+session.closeTime+' '+session.closeZone+' · '+day;
  }
- if(session&&quote.observedAt&&(quote.status==='LAST_AVAILABLE_CLOSE'||quote.status==='STALE_CACHE'||quote.status==='STALE_OBSERVATION')){
+ if(session&&quote.observedAt&&(session.state==='CLOSED'||quote.status==='LAST_AVAILABLE_CLOSE'||quote.status==='STALE_CACHE'||quote.status==='STALE_OBSERVATION')){
   const observed=new Date(quote.observedAt*1000);
   const day=new Intl.DateTimeFormat('en-GB',{timeZone:session.zone,day:'2-digit',month:'short'}).format(observed);
   const observedKey=new Intl.DateTimeFormat('en-CA',{timeZone:session.zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(observed);

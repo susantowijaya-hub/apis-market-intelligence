@@ -108,7 +108,7 @@ jobs:
           if (!baselineSource || !calendarSource) throw new Error('Regression helper extraction failed');
           const unit = { exchangeWallClock: date => ({year:date.getUTCFullYear(),month:date.getUTCMonth()+1,day:date.getUTCDate()}) };
           vm.createContext(unit);
-          vm.runInContext(baselineSource + '\\n' + numericSource + '\\n' + toneSource, unit);
+          vm.runInContext(baselineSource + '\n' + calendarSource, unit);
           // Gate 1: session-date baseline ignores a same-day partial candle.
           const bars = [
             {price:5320.98,timestamp:Date.UTC(2026,10,16,12)/1000},

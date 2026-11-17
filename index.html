@@ -2136,7 +2136,7 @@ function calendarSourceLink(source){
 function normalizeCalendarImpact(value){
  const text=String(value??'').toUpperCase().trim();
  if(text==='3'||/\bHIGH\b/.test(text)||text.includes('RED'))return 'HIGH';
- if(text==='2'||/\bMEDIUM\b/.test(text)||/\bMODERATE\b/.test(text)||text.includes('ORANGE'))return 'MEDIUM';
+ if(text==='2'||text==='MED'||/\bMEDIUM\b/.test(text)||/\bMODERATE\b/.test(text)||text.includes('ORANGE'))return 'MEDIUM';
  return '';
 }
 function normalizeCalendarCurrency(value){

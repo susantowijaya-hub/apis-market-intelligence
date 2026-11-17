@@ -510,7 +510,9 @@ function renderQuality(){
     ['Yahoo chart via cors.dev',yahooDetail,APP.yahooState==='ready'?'UPDATED':APP.yahooState==='partial'?'PARTIAL':APP.yahooState==='loading'?'FETCHING':'UNAVAILABLE',APP.yahooState==='ready'?'good':'warn'],
     ['TradingView widgets',APP.widgetError||'External embed only; widget data is not read into calculations',APP.widgetError?'LOAD FAILED':'EMBED ONLY','warn'],
     ['Binance WebSocket',cryptoLive?'Timestamped BTC/USDT trade stream is fresh':cryptoRest?'BTC/USDT REST observation is fresh; not a live stream':cryptoCached?'Only a previously saved BTC observation is available':APP.btcError||'BTC/USDT unavailable',cryptoLive?'LIVE STREAM':cryptoRest?'REST UPDATE':cryptoCached?'STALE CACHE':'NOT LIVE',cryptoLive?'good':'warn'],
-    ['Frankfurter',APP.fxState==='loaded'?'Daily reference-rate response received':APP.fxState==='cached'?'A saved dated reference rate is displayed; current refresh failed':APP.fxError||'Reference-rate response unavailable',APP.fxState==='loaded'?'REFERENCE':APP.fxState==='cached'?'STALE CACHE':'UNAVAILABLE',APP.fxState==='loaded'?'good':'warn']
+    ['Frankfurter FX',APP.fxState==='loaded'?'Daily reference-rate response received':APP.fxState==='cached'?'Saved dated reference rate; refresh failed':APP.fxError||'Reference-rate response unavailable',APP.fxState==='loaded'?'DAILY':APP.fxState==='cached'?'STALE':'UNAVAILABLE',APP.fxState==='loaded'?'good':'warn'],
+    ['U.S. Treasury yield curve',APP.tsyState==='loaded'?'Official daily Treasury par-yield curve':APP.tsyError||'No daily Treasury response',APP.tsyState==='loaded'?'DAILY':'UNAVAILABLE',APP.tsyState==='loaded'?'good':'warn'],
+    ['Public market news RSS',APP.newsState==='loaded'?'Current RSS items with source and publication date':APP.newsError||'RSS unavailable',APP.newsState==='loaded'?'UPDATED':'UNAVAILABLE',APP.newsState==='loaded'?'good':'warn']
   ];
   const container=document.getElementById('sourceHealth');container.replaceChildren();
   rows.forEach(([name,detail,status,kind])=>{const r=document.createElement('div');r.className='source-row';const l=document.createElement('div');const strong=document.createElement('strong');strong.textContent=name;const small=document.createElement('small');small.textContent=detail;l.append(strong,small);const badge=document.createElement('span');badge.className='badge '+kind;badge.textContent=status;r.append(l,badge);container.append(r)});
@@ -548,7 +550,7 @@ function connectBitcoinStream(){
  ];
  const plan=plans[APP.wsRetry%plans.length];APP.btcState='connecting';setText('btcStatus','CONNECTING · '+plan.name);
  try{const ws=new WebSocket(plan.url);APP.ws=ws;
-  ws.onopen=()=>{APP.btcState='connected';APP.wsRetry=0;setText('btcStatus','CONNECTED · '+plan.name);if(plan.subscribe)plan.subscribe(ws);updateFeedState();renderQuality()};
+  ws.onopen=()=>{APP.btcState='connected';setText('btcStatus','CONNECTED · '+plan.name);if(plan.subscribe)plan.subscribe(ws);updateFeedState();renderQuality()};
   ws.onmessage=event=>{let d;try{d=JSON.parse(event.data)}catch{return}const tick=plan.parse(d);if(!tick||!Number.isFinite(tick.price)||tick.price<=0)return;
    const eventTime=Number.isFinite(tick.time)&&tick.time>0?tick.time:Date.now();
    APP.btc={price:tick.price,changePct:Number.isFinite(tick.change)?tick.change:null,observedAt:eventTime,receivedAt:Date.now(),source:plan.name+' public WebSocket',transport:'WEBSOCKET'};
@@ -597,8 +599,49 @@ async function loadTreasuryCurve(){
  APP.tsyState='unavailable';APP.tsyError=error;setText('tsyStatus','UNAVAILABLE');setText('tsyDate',error);renderQuality();
 }
 /* TradingView widgets. Widget content remains provider-controlled and does not feed calculations. */
-function mountWidget(id,src,config){const host=document.getElementById(id);if(!host)return;host.replaceChildren();const wrap=document.createElement('div');wrap.className='tradingview-widget-container';const widget=document.createElement('div');widget.className='tradingview-widget-container__widget';wrap.append(widget);const copyright=document.createElement('div');copyright.className='tradingview-widget-copyright';const link=document.createElement('a');link.href='https://www.tradingview.com/';link.target='_blank';link.rel='noopener';link.textContent='TradingView';copyright.append(link,document.createTextNode(' · Financial data and charts'));wrap.append(copyright);const script=document.createElement('script');script.type='text/javascript';script.src=src;script.async=true;script.text=JSON.stringify(config);script.onerror=()=>{APP.widgetError='TradingView script failed to load from '+new URL(src).host+'; check network / browser local-file restrictions';host.innerHTML='<div class="widget-fallback"><div><strong>Widget unavailable</strong>TradingView could not be loaded. Check the network or open the provider directly.</div></div>';renderQuality()};wrap.append(script);host.append(wrap)}
-function loadChart(){const symbol=document.getElementById('chartSymbol').value;const item=WATCHLIST.find(x=>x.tv===symbol);setText('chartSubtitle',item?`${item.name} · TradingView chart`:'TradingView interactive chart');mountWidget('mainChart','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{autosize:true,symbol,interval:'D',timezone:TZ,theme:'light',style:'1',locale:'en',allow_symbol_change:true,calendar:false,hide_side_toolbar:false,hide_top_toolbar:false,save_image:false,withdateranges:true,details:true,hotlist:false,studies:[],support_host:'https://www.tradingview.com'});}
+function mountWidget(id,src,config){
+ const host=document.getElementById(id);if(!host)return;host.replaceChildren();
+ const wrap=document.createElement('div');wrap.className='tradingview-widget-container';
+ const widget=document.createElement('div');widget.className='tradingview-widget-container__widget';wrap.append(widget);
+ const copyright=document.createElement('div');copyright.className='tradingview-widget-copyright';
+ const link=document.createElement('a');link.href='https://www.tradingview.com/';link.target='_blank';link.rel='noopener';link.textContent='TradingView';copyright.append(link);wrap.append(copyright);
+ const script=document.createElement('script');script.type='text/javascript';script.src=src;script.async=true;script.text=JSON.stringify(config);
+ let settled=false;
+ const fallback=()=>{if(settled)return;settled=true;const box=document.createElement('div');box.className='widget-fallback';const inner=document.createElement('div');const strong=document.createElement('strong');strong.textContent='Widget unavailable';const p=document.createElement('p');p.textContent='External embed could not load on this network. APIS quote data is independent.';const a=document.createElement('a');a.href=id==='mainChart'?'https://www.tradingview.com/chart/':'https://www.tradingview.com/';a.target='_blank';a.rel='noopener';a.textContent='Open TradingView ↗';inner.append(strong,p,a);box.append(inner);host.replaceChildren(box);APP.widgetError=id+': external script or iframe unavailable';renderQuality()};
+ script.onerror=fallback;
+ script.onload=()=>{setTimeout(()=>{if(!host.querySelector('iframe'))fallback();else settled=true},10000)};
+ wrap.append(script);host.append(wrap);setTimeout(()=>{if(!host.querySelector('iframe'))fallback()},18000);
+}
+async function loadPublicNews(){
+ const host=document.getElementById('newsFeedList');if(!host)return;
+ const target='https://news.google.com/rss/search?q='+encodeURIComponent('(global markets OR stock market OR central banks)')+'&hl=en-US&gl=US&ceid=US:en';
+ const routes=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
+ let error='Public RSS is unavailable';
+ for(const url of routes){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);try{
+  const r=await fetch(url,{cache:'no-store',credentials:'omit',signal:controller.signal});if(!r.ok)throw new Error('HTTP '+r.status);
+  const xmlText=await r.text(),xml=new DOMParser().parseFromString(xmlText,'application/xml');
+  if(xml.querySelector('parsererror'))throw new Error('RSS parse error');
+  const items=[...xml.querySelectorAll('item')].slice(0,12);if(!items.length)throw new Error('No RSS items');
+  host.replaceChildren();items.forEach(item=>{
+   const title=item.querySelector('title')?.textContent?.trim()||'Untitled';
+   const link=item.querySelector('link')?.textContent?.trim()||'';
+   const source=item.querySelector('source')?.textContent?.trim()||'Google News';
+   const pub=item.querySelector('pubDate')?.textContent||'';
+   const row=document.createElement('div');row.className='news-item';
+   const a=document.createElement('a');a.textContent=title;a.href=link;a.target='_blank';a.rel='noopener';
+   const meta=document.createElement('div');meta.className='news-meta';
+   const s=document.createElement('span');s.textContent=source;
+   const t=document.createElement('time');t.textContent=pub?new Date(pub).toLocaleString('en-GB',{timeZone:TZ,dateStyle:'medium',timeStyle:'short'})+' WIB':'Publication time unavailable';
+   meta.append(s,t);row.append(a,meta);host.append(row);
+  });
+  APP.newsState='loaded';APP.newsError='';renderQuality();return;
+ }catch(e){error=String(e?.message||e).slice(0,90)}finally{clearTimeout(timer)}}
+ APP.newsState='unavailable';APP.newsError=error;
+ host.innerHTML='<div class="empty-state">News feed unavailable on this network. Open the original provider to view current headlines. No sample headlines are inserted.</div>';
+ renderQuality();
+}
+
+function loadChart(){const symbol=document.getElementById('chartSymbol').value;const item=WATCHLIST.find(x=>x.tv===symbol);setText('chartSubtitle',item?`${item.name} · TradingView chart`:'TradingView interactive chart');mountWidget('mainChart','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{autosize:true,symbol,interval:'5',timezone:TZ,theme:'light',style:'1',locale:'en',allow_symbol_change:true,calendar:false,hide_side_toolbar:false,hide_top_toolbar:false,save_image:false,withdateranges:true,details:true,hotlist:false,studies:[],support_host:'https://www.tradingview.com'});}
 function loadWidgets(){loadChart();mountWidget('marketOverviewWidget','https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js',{colorTheme:'light',dateRange:'12M',showChart:true,locale:'en',largeChartUrl:'',isTransparent:false,showSymbolLogo:true,showFloatingTooltip:false,width:'100%',height:'100%',plotLineColorGrowing:'rgba(0,113,227,1)',plotLineColorFalling:'rgba(210,70,70,1)',gridLineColor:'rgba(240,240,242,1)',scaleFontColor:'#6e6e73',belowLineFillColorGrowing:'rgba(0,113,227,0.08)',belowLineFillColorFalling:'rgba(210,70,70,0.06)',belowLineFillColorGrowingBottom:'rgba(0,113,227,0)',belowLineFillColorFallingBottom:'rgba(210,70,70,0)',symbolActiveColor:'rgba(0,113,227,0.08)',tabs:[{title:'US',symbols:[{s:'SP:SPX',d:'S&P 500'},{s:'NASDAQ:IXIC',d:'Nasdaq Composite'},{s:'DJ:DJI',d:'Dow Jones'}]},{title:'Asia',symbols:[{s:'SSE:000001',d:'Shanghai Composite'},{s:'TWSE:IX0001',d:'Taiwan Weighted'},{s:'KRX:KOSPI',d:'KOSPI'}]},{title:'Indonesia',symbols:[{s:'IDX:COMPOSITE',d:'IDX Composite'},{s:'IDX:BBCA',d:'BBCA'},{s:'IDX:BMRI',d:'BMRI'},{s:'IDX:BBRI',d:'BBRI'}]},{title:'Macro',symbols:[{s:'TVC:VIX',d:'VIX'},{s:'FX_IDC:USDIDR',d:'USD/IDR'},{s:'NYMEX:BZ1!',d:'Brent Futures'},{s:'COMEX:GC1!',d:'Gold Futures'}]}]});
   mountWidget('newsWidget','https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',{feedMode:'market',isTransparent:false,displayMode:'regular',width:'100%',height:'100%',colorTheme:'light',locale:'en'});
   mountWidget('calendarWidget','https://s3.tradingview.com/external-embedding/embed-widget-events.js',{colorTheme:'light',isTransparent:false,locale:'en',importanceFilter:'-1,0,1',countryFilter:'us,eu,cn,jp,kr,tw,id,gb',width:'100%',height:'100%'});
@@ -648,52 +691,40 @@ function exportEvidence(){if(!APP.ledger.length){toast('Buku bukti is empty.');r
 
 /* Navigation, clock and bootstrap. */
 function tickClock(){setText('clock',new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date())+' WIB');const hint=document.getElementById('autoRefreshLabel');if(hint){const left=APP.nextRefreshAt?Math.max(0,Math.ceil((APP.nextRefreshAt-Date.now())/1000)):60;hint.textContent=document.hidden?'AUTO · PAUSED':('AUTO · '+left+'s')}}
-const navLinks=[...document.querySelectorAll('.nav a')];const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){navLinks.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+entry.target.id))}})},{rootMargin:'-25% 0px -65% 0px'});['overview','markets','research','workbench','sources'].forEach(id=>{const e=document.getElementById(id);if(e)observer.observe(e)});
-document.getElementById('refreshBtn').onclick=()=>fetchQuoteBatch();document.getElementById('refreshTop').onclick=()=>fetchQuoteBatch();document.getElementById('reloadChart').onclick=loadChart;document.getElementById('chartSymbol').onchange=loadChart;
+const navLinks=[...document.querySelectorAll('.nav a')];const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){navLinks.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+entry.target.id))}})},{rootMargin:'-25% 0px -65% 0px'});['overview','markets','research','workbench','sources','macroPanel','watchlistPanel','moversPanel','filingsPanel'].forEach(id=>{const e=document.getElementById(id);if(e)observer.observe(e)});
+['refreshBtn','refreshTop'].forEach(id=>{const e=document.getElementById(id);if(e)e.onclick=()=>fetchQuoteBatch()});const reload=document.getElementById('reloadChart');if(reload)reload.onclick=loadChart;const chartSelect=document.getElementById('chartSymbol');if(chartSelect)chartSelect.onchange=loadChart;
 function safeInit(label,fn){
-  try{fn();return true}
-  catch(error){
-    const message=label+': '+String(error?.message||error).slice(0,150);
-    console.error('[APIS init]',message);
-    if(label==='Market data'||label==='Chart widgets'||label==='BTC stream'||label==='USD/IDR')setText('feedState','INIT ERROR · '+message);
-    if(label==='Market data')setText('lastRefresh','Startup error · '+message);
-    return false;
-  }
+ try{fn();return true}catch(error){const message=label+': '+String(error?.message||error).slice(0,160);console.error('[APIS]',message);setText('feedState','ERROR · '+message);return false}
+}
+function setMarketSession(){
+ const el=document.getElementById('marketSession');if(!el)return;
+ const now=new Date(),weekday=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short'}).format(now);
+ const hour=Number(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',hourCycle:'h23'}).format(now));
+ const minute=Number(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',minute:'2-digit'}).format(now));
+ const mins=hour*60+minute,open=!['Sat','Sun'].includes(weekday)&&mins>=570&&mins<960;
+ el.textContent=open?'US SESSION · REGULAR':'AFTER HOURS · US';
 }
 function bootstrap(){
-  /* Critical market services start first. A broken local workbench record must
-     never prevent public market feeds, chart widgets, or refresh timers. */
-  safeInit('Quote cache',restoreQuoteCache);
-  safeInit('Auxiliary cache',restoreAuxCache);
-  safeInit('Clock',()=>{tickClock();APP.clockTimer=setInterval(tickClock,1000)});
-  safeInit('Chart widgets',loadWidgets);
-  safeInit('BTC stream',connectBitcoinStream);
-  safeInit('BTC REST fallback',fetchBitcoinRest);
-  safeInit('USD/IDR',loadFxReference);
-  safeInit('Market data',fetchQuoteBatch);
-  APP.nextRefreshAt=Date.now()+60000;
-  APP.staleTimer=setInterval(()=>{if(APP.btc&&!btcIsFresh()){setText('btcStatus','STALE · last provider observation retained');updateFeedState();safeInit('Data quality',renderQuality)}},3000);
-  APP.btcRestTimer=setInterval(()=>{if(!btcIsFresh()||APP.btc?.transport!=='WEBSOCKET')fetchBitcoinRest()},30000);
-  APP.timer=setInterval(()=>{if(!document.hidden&&navigator.onLine&&APP.yahooState!=='loading')fetchQuoteBatch()},60000);
-  APP.fxTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadFxReference()},60*60*1000);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(!btcIsFresh())connectBitcoinStream();if(navigator.onLine&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>30000))fetchQuoteBatch();if(APP.fxState==='unavailable'||APP.fxState==='cached')loadFxReference()}});
-  window.addEventListener('online',()=>{fetchQuoteBatch();loadFxReference();if(!btcIsFresh())connectBitcoinStream()});
-  window.addEventListener('focus',()=>{if(navigator.onLine&&!document.hidden&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>45000))fetchQuoteBatch()});
-  /* Optional/local modules are isolated: malformed localStorage data or a
-     missing workbench element cannot abort the market terminal. */
-  safeInit('Alert options',addAlertOptions);
-  safeInit('Evidence ledger',renderLedger);
-  safeInit('Alert rules',renderAlerts);
-  safeInit('Quote views',renderQuoteViews);
-  safeInit('Data quality',renderQuality);
-  if(QUOTES.size)setText('lastRefresh','Restored '+QUOTES.size+' cached observations · stale until refreshed');
-  const previousOnError=window.onerror;
-  window.onerror=function(message,source,line,column,error){
-    console.error('[APIS runtime]',message,source,line,column,error);
-    setText('feedState','RUNTIME ERROR · '+String(message).slice(0,100));
-    if(typeof previousOnError==='function')return previousOnError.apply(this,arguments);
-    return false;
-  };
+ /* Feed services initialize first; local tools must never block the terminal. */
+ safeInit('Quote cache',restoreQuoteCache);safeInit('Auxiliary cache',restoreAuxCache);
+ safeInit('Clock',()=>{tickClock();setInterval(tickClock,1000);setMarketSession();setInterval(setMarketSession,60000)});
+ safeInit('Quote view',renderQuoteViews);safeInit('Source health',renderQuality);
+ safeInit('Chart widgets',loadWidgets);
+ safeInit('BTC WebSocket',connectBitcoinStream);safeInit('BTC REST',fetchBitcoinRest);
+ safeInit('USD/IDR',loadFxReference);safeInit('Treasury yield',loadTreasuryCurve);
+ safeInit('Market quotes',fetchQuoteBatch);safeInit('Public news RSS',loadPublicNews);
+ APP.nextRefreshAt=Date.now()+60000;
+ APP.timer=setInterval(()=>{if(!document.hidden&&navigator.onLine&&APP.yahooState!=='loading')fetchQuoteBatch()},60000);
+ APP.fxTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadFxReference()},60*60*1000);
+ APP.tsyTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadTreasuryCurve()},6*60*60*1000);
+ APP.newsTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadPublicNews()},10*60*1000);
+ APP.btcRestTimer=setInterval(()=>{if(!btcIsFresh()||APP.btc?.transport!=='WEBSOCKET')fetchBitcoinRest()},30000);
+ APP.staleTimer=setInterval(()=>{if(APP.btc&&!btcIsFresh()){setText('btcStatus','STALE · last observation retained');updateFeedState();renderQuality()}},3000);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(!btcIsFresh())connectBitcoinStream();if(navigator.onLine&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>30000))fetchQuoteBatch();if(APP.fxState==='unavailable'||APP.fxState==='cached')loadFxReference();if(APP.tsyState!=='loaded')loadTreasuryCurve();if(APP.newsState!=='loaded')loadPublicNews()}});
+ window.addEventListener('online',()=>{fetchQuoteBatch();loadFxReference();loadTreasuryCurve();loadPublicNews();if(!btcIsFresh())connectBitcoinStream()});
+ window.addEventListener('focus',()=>{if(navigator.onLine&&!document.hidden&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>45000))fetchQuoteBatch()});
+ safeInit('Alert options',addAlertOptions);safeInit('Evidence ledger',renderLedger);safeInit('Alert rules',renderAlerts);
+ if(QUOTES.size)setText('lastRefresh','Restored '+QUOTES.size+' saved observations · refresh pending');
 }
 bootstrap();</script>
 </body>

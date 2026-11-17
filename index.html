@@ -1509,8 +1509,11 @@ function buildStockSparkline(values,changePct){
 }
 function marketSessionLabel(quote,item){
  if(!quote)return 'FEED UNAVAILABLE';
- if(quote.status==='STALE_OBSERVATION')return 'STALE OBSERVATION';
- if(item?.symbol==='XAUUSD=X')return goldSpotSessionOpen()?'LIVE · SPOT':'MARKET CLOSE';
+ if(item?.symbol==='XAUUSD=X'){
+  if(quote.status==='STALE_OBSERVATION')return goldSpotSessionOpen()?'STALE · SPOT':'MARKET CLOSE · STALE';
+  return goldSpotSessionOpen()?'LIVE · SPOT':'MARKET CLOSE';
+ }
+ if(quote.status==='STALE_OBSERVATION')return (quote.marketState==='CLOSED'||quote.marketState==='PUBLIC CSV SNAPSHOT')?'MARKET CLOSE · STALE':'STALE OBSERVATION';
  if(quote.marketState==='CLOSED'||quote.status==='LAST_AVAILABLE_CLOSE'||quote.marketState==='PUBLIC CSV SNAPSHOT')return 'MARKET CLOSE';
  if(quote.transport==='WEBSOCKET')return 'LIVE';
  if(quote.marketState==='REGULAR')return quote.status==='DELAYED_PROVIDER'?'SESSION OPEN · DELAYED':'LIVE';
@@ -1880,7 +1883,9 @@ function macroImpact(title){
  return null;
 }
 function calendarWibDayKey(date){
- return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
+ const parts=new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
+ const get=type=>parts.find(part=>part.type===type)?.value||'';
+ return get('year')+'-'+get('month')+'-'+get('day');
 }
 function calendarDateKeyPlus(days){
  const today=calendarWibDayKey(new Date()),parts=today.split('-').map(Number);
@@ -2044,7 +2049,9 @@ function renderMacroCalendar(){
    [['PREVIOUS',item.previous],['FORECAST',item.forecast],['ACTUAL',item.actual]].forEach(([label,value])=>{
     const metric=document.createElement('div');metric.className='calendar-event-metric '+label.toLowerCase();
     const small=document.createElement('small');small.textContent=label;
-    const strong=document.createElement('strong');strong.textContent=value===null||value===undefined||value===''?'—':String(value)+(item.unit&&label==='ACTUAL'?' '+item.unit:'');
+    const strong=document.createElement('strong');
+    const showUnit=item.unit&&(label==='PREVIOUS'||label==='ACTUAL')&&!String(value??'').includes(item.unit);
+    strong.textContent=value===null||value===undefined||value===''?'—':String(value)+(showUnit?' '+item.unit:'');
     metric.append(small,strong);values.append(metric);
    });
    const footer=document.createElement('div');footer.className='calendar-event-footer';

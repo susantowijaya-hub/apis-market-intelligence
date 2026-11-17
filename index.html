@@ -1374,7 +1374,7 @@ function parseTwseIndexReport(payload){
    const price=Number(String(row[priceIndex]||'').replace(/[,\s]/g,''));
    if(!date||!Number.isFinite(price)||price<=0)continue;
    const signText=String(signIndex>=0?row[signIndex]||'':'').replace(/<[^>]*>/g,'').trim();
-   const signedText=value=>{const raw=String(value??'').replace(/<[^>]*>/g,'');const arrowSign=/[▼▽]/.test(raw)?'-':/[▲△]/.test(raw)?'+':'';return raw.replace(/[−－﹣]/g,'-').replace(/[＋]/g,'+').replace(/[▲△▼▽]/g,'').replace(/[,，％%\s]/g,'').trim()||arrowSign};
+   const signedText=value=>{const raw=String(value??'').replace(/<[^>]*>/g,'');const arrowSign=/[▼▽]/.test(raw)?'-':/[▲△]/.test(raw)?'+':'';const cleaned=raw.replace(/[−－﹣]/g,'-').replace(/[＋]/g,'+').replace(/[▲△▼▽]/g,'').replace(/[,，％%\s]/g,'').trim();return cleaned&&arrowSign&&!/^[+-]/.test(cleaned)?arrowSign+cleaned:cleaned||arrowSign};
    const sign=signedText(signIndex>=0?row[signIndex]:'');
    const changeText=signedText(changeIndex>=0?row[changeIndex]:'');
    let changePct=changeText===''?NaN:Number(changeText);

@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f5">
-<meta name="build-version" content="2.1.0">
+<meta name="build-version" content="2.1.1">
 <meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — The Market Terminal v2.1.0</title>
+<title>APIS — The Market Terminal v2.1.1</title>
 <style>
 :root{
   color-scheme:light;
@@ -148,6 +148,9 @@ html[data-theme="dark"] .footer{border-color:var(--line);background:var(--surfac
  .news-item{grid-template-columns:50px minmax(0,1fr);gap:8px;padding:12px 1px}.news-item a{font-size:14px}.news-meta{font-size:10px}.news-filter{font-size:10px;padding:8px 10px}
  td{font-size:12px}th{font-size:9px}.quote-value{font-size:21px}
 }
+
+.treasury-links{display:flex;gap:10px;flex-wrap:wrap}.treasury-links a{font-size:10px;font-weight:650}
+html[data-theme="dark"] .treasury-links a{color:#a9e8c9}
 
 </style>
 </head>
@@ -365,7 +368,7 @@ html[data-theme="dark"] .footer{border-color:var(--line);background:var(--surfac
   <div class="note" style="margin-top:14px"><strong>Cara menjalankan:</strong> simpan file ini di komputer lalu buka dengan Chrome, Edge, Safari, atau Firefox yang terhubung ke internet. Sebagian jaringan memblokir penyedia data pasar publik atau widget eksternal; dashboard akan menandainya unavailable dan tidak mengganti data dengan simulasi. Untuk akses provider yang lebih konsisten, file dapat dijalankan melalui web server statis lokal (opsional)—tanpa backend API.</div>
 </section>
 </main>
-<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.1.0</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
+<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.1.1</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>

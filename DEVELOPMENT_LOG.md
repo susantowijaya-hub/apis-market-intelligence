@@ -321,3 +321,11 @@
 - Confirmed required v2.9.1 markers for daily index baseline, Hong Kong lunch break, Taiwan official report parser, Indonesia calendar source wiring, movers universe and smooth quote transitions.
 - Updated GitHub Actions static validation to v2.9.1 and added checks for the new daily-close, Hong Kong session and persisted close-refresh guard.
 - Provider availability and live market correctness still require runtime observation in the deployed GitHub Pages browser; no static check can guarantee third-party feed availability or exchange holiday exceptions.
+
+
+## 2026-11-17 — v2.9.2 Closed-Session Index Snapshot Safety
+
+- Closed / pre-open index quotes now prefer the last completed daily candle close over possibly stale regular-market metadata. During open sessions, the provider's current market quote remains preferred.
+- The daily previous-close calculation is applied only when the selected Yahoo response is actually a 1-day interval. If the daily endpoint fails and the adapter falls back to 5-minute / 1-minute bars, it no longer mistakes the previous intraday candle for the previous session close.
+- This additional guard specifically protects closing price and daily percentage integrity for Nikkei, Hang Seng, Shanghai, IHSG, KOSPI, Taiwan and US benchmark indices.
+- Updated static CI version and added a regression marker for daily-interval-only close selection.

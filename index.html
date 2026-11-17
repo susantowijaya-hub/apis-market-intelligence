@@ -664,7 +664,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
     <div class="empty-state">Loading verified public market observations…</div>
   </div>
   <section class="ios-home-aux">
-    <div class="ios-aux-heading"><div><h2>Cross-asset pulse</h2><p>Streaming and official reference data</p></div><span class="source-pill" id="snapshotStamp">Awaiting feeds</span></div>
+    <div class="ios-aux-heading"><div><h2>Cross-asset pulse</h2><p>Streaming and official reference data</p></div><span class="source-pill" id="homeSnapshotStamp">Awaiting feeds</span></div>
     <div class="ios-aux-grid">
       <article class="ios-aux-card">
         <div class="ios-aux-card-head"><div><strong>Bitcoin</strong><small>BTC / USD · public exchange ticker</small></div><span class="ios-feed-badge" id="btcStatus">CONNECTING</span></div>
@@ -686,7 +686,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
   </section>
   <div class="ios-home-tools">
     <button class="button secondary" id="exportSnapshotTop" type="button">Export watchlist CSV</button>
-    <button class="button" id="refreshBtn" type="button">Refresh data</button>
+    <button class="button" id="refreshHomeBtn" type="button">Refresh data</button>
   </div>
 </section>
 
@@ -858,7 +858,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
     <div class="card card-pad"><div class="card-title"><div><h3>Registri sumber</h3><p>Dependensi data dan visualisasi</p></div></div><div class="source-list">
       <div class="source-row"><div><strong>Stooq public CSV snapshots</strong><small>No paid subscription or API key. Daily/delayed public quote snapshots for mapped instruments; coverage is selective and the provider may rate-limit or block automated requests.</small></div><span class="badge warn">FREE · EOD / DELAYED</span></div>
       <div class="source-row"><div><strong>Yahoo Finance public chart fallback</strong><small>Unofficial public endpoint through CORS relays. Used only when Stooq has no mapped symbol or its public endpoint is unavailable. May be delayed and can be blocked.</small></div><span class="badge warn">FREE · BEST EFFORT</span></div>
-      <div class="source-row"><div><strong>TradingView chart embed (optional)</strong><small>Optional chart only. APIS market snapshot, news feed and macro calendar are rendered internally from their respective sources.</small></div><span class="badge warn">EXTERNAL EMBED</span></div>
+
       <div class="source-row"><div><strong>Binance / Coinbase / Kraken public streams</strong><small>BTC spot WebSocket tickers with REST snapshot fallback. Tick-by-tick label only while a provider WebSocket message is fresh.</small></div><span class="badge good">PUBLIC STREAM</span></div>
       <div class="source-row"><div><strong>U.S. Treasury / FRED H.15</strong><small>Daily par yield curve 2Y/5Y/10Y/30Y; official Treasury table first, free FRED CSV fallback; not intraday.</small></div><span class="badge good">DAILY</span></div>
       <div class="source-row"><div><strong>Publisher RSS / news aggregation</strong><small>CNBC, BBC, Guardian, Reuters, Bloomberg and Investing.com headlines. Reuters/Bloomberg/Investing headlines are discovered via Google News RSS; these are news sources, not price feeds.</small></div><span class="badge good">PUBLIC HEADLINES</span></div>
@@ -972,7 +972,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
 /* APIS The Market Terminal 2.5.0 · Mobile-first free public-data terminal
    - No synthetic market data or fabricated news.
    - Yahoo Finance is an unofficial public fallback accessed through third-party CORS relays.
-   - TradingView widgets are visual embeds; their data is not read back into calculations.
+   - No external chart embed is required; sparklines are drawn only from real provider history.
    - Binance websocket is used for genuine public BTC/USDT market-data messages.
    - Local browser tools are a subset, not a replacement for the APIS Python runtime.
 */
@@ -1261,7 +1261,10 @@ function stockChangePct(quote){
 function stockPriceText(quote,item){
  if(!quote||num(quote.price)===null)return '—';
  const value=new Intl.NumberFormat('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}).format(quote.price);
- return item&&item.group==='Commodity'?value+' USD':value;
+ if(item&&item.group==='Commodity')return value+' USD';
+ if(item&&item.group==='FX')return value+' IDR';
+ if(item&&item.group==='Crypto')return value+' USD';
+ return value;
 }
 function buildStockSparkline(values,changePct){
  const series=(Array.isArray(values)?values:[]).map(Number).filter(Number.isFinite).slice(-36);
@@ -1328,6 +1331,7 @@ function renderHomeStocks(){
  if(!items.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='No instruments match your search.';host.append(empty)}
  items.forEach(item=>host.append(createStockRow(item,QUOTES.get(item.symbol))));
  setText('homeWatchCount',items.length+' instruments · tap a row for source details');
+ setText('homeSnapshotStamp',APP.yahooState==='loading'?'PUBLIC FEEDS · UPDATING':(APP.successCount||0)+' / '+WATCHLIST.length+' UPDATED');
  setText('homeDate',new Intl.DateTimeFormat('en-GB',{timeZone:TZ,day:'numeric',month:'long'}).format(new Date()));
  setText('quoteCount',QUOTES.size+' / '+WATCHLIST.length);
 }
@@ -1851,6 +1855,7 @@ function initHomeControls(){
  toggle.addEventListener('click',()=>setOpen(toggle.getAttribute('aria-expanded')!=='true'));
  input.addEventListener('input',renderHomeStocks);
  if(clear)clear.addEventListener('click',()=>{input.value='';renderHomeStocks();input.focus()});
+ const refresh=document.getElementById('refreshHomeBtn');if(refresh)refresh.addEventListener('click',fetchQuoteBatch);
 }
 function initMarketControls(){
  const filters=document.getElementById('marketFilters');if(!filters)return;
@@ -1922,9 +1927,6 @@ async function loadEdgarFilings(){
  }
  renderQuality();
 }
-function loadChart(){const symbol=document.getElementById('chartSymbol').value;const item=WATCHLIST.find(x=>x.tv===symbol);setText('chartSubtitle',item?`${item.name} · TradingView chart`:'TradingView interactive chart');mountWidget('mainChart','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{autosize:true,symbol,interval:'5',timezone:TZ,theme:(document.documentElement.dataset.theme==='dark'?'dark':'light'),style:'1',locale:'en',allow_symbol_change:true,calendar:false,hide_side_toolbar:false,hide_top_toolbar:false,save_image:false,withdateranges:true,details:true,hotlist:false,studies:[],support_host:'https://www.tradingview.com'});}
-function loadWidgets(){loadChart();}
-
 /* M01 prompt audit: local heuristic only. */
 const INJECTION_PATTERNS=[/ignore (all )?(previous|prior|above) instructions/i,/reveal (the )?(system|hidden) prompt/i,/bypass (security|safety|policy)/i,/exfiltrat(e|ion)/i,/ignore your developer/i];
 function promptChecks(text){return {objective:/\b(objective|goal|tujuan|analisis|buat|hasilkan|create|write|evaluate)\b/i.test(text),context:text.trim().length>=80,constraints:/\b(constraint|batasan|must|jangan|only|maksimal|scope|ruang lingkup)\b/i.test(text),output:/\b(format|table|tabel|report|laporan|json|dashboard|deliverable)\b/i.test(text),validation:/\b(validate|validasi|verify|verifikasi|source|sumber|citation|evidence)\b/i.test(text)}}
@@ -2074,7 +2076,7 @@ function initCalendarControls(){
  const button=document.getElementById('refreshCalendarBtn');
  if(button)button.onclick=loadMacroCalendar;
 }
-['refreshBtn','refreshTop'].forEach(id=>{const e=document.getElementById(id);if(e)e.onclick=()=>fetchQuoteBatch()});
+['refreshBtn','refreshTop','refreshHomeBtn'].forEach(id=>{const e=document.getElementById(id);if(e)e.onclick=()=>fetchQuoteBatch()});
 function safeInit(label,fn){
  try{
   const result=fn();

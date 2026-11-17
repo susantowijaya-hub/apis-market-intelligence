@@ -55,7 +55,7 @@ jobs:
             twseGregorianDate: html.includes('if(raw.length===8)'),
             twsePreviousCloseValidation: html.includes('const signedText=value=>') && html.includes('previousClose=price/(1+changePct/100)'),
             taiwanPercentSourceGuard: html.includes('async function fetchTaiwanOfficialQuote') && html.includes("if(item.symbol==='^TWII')") && html.includes('return fetchYahooQuote(item)'),
-            yahooTaiwanPercentSuppression: html.includes("quote.symbol==='^TWII'&&!String(quote.source||'').toUpperCase().includes('TWSE')"),
+            yahooTaiwanPercentSuppression: html.includes("quote.symbol==='^TWII'&&!['TWSE','GOOGLE FINANCE'].some(token=>String(quote.source||'').toUpperCase().includes(token))"),
             regionalGroups: html.includes('function renderGroupedStockRows') && html.includes("region:'Greater China'"),
             homeExcludesStocks: html.includes("!['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity'].includes(item.group)"),
             exchangeSessionSchedule: html.includes('function exchangeSession(') && html.includes("closeTime='16:00'") && html.includes("closeTime='16:10'") && html.includes('auctionWindow=[15*60+25,15*60+30]') && html.includes('function marketPollEligible('),

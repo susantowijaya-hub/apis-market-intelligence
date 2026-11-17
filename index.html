@@ -1243,8 +1243,9 @@ let STOOQ_LAST_REQUEST=0;
 async function fetchStooqQuote(item){
  const symbol=item.stooqSymbol||STOOQ_SYMBOLS[item.symbol];
  if(!symbol)throw new Error('Stooq has no mapped symbol for this instrument');
- const cached=STOOQ_CACHE.get(item.symbol);
- if(cached&&Date.now()-cached.retrievedAt<10*60*1000)return {...cached};
+ const cached=STOOQ_CACHE.get(item.symbol),session=exchangeSession(item);
+ const sessionDay=session?[session.tradeDate.year,String(session.tradeDate.month).padStart(2,'0'),String(session.tradeDate.day).padStart(2,'0')].join('-'):'';
+ if(cached&&Date.now()-cached.retrievedAt<10*60*1000&&(!session||cached.observationDate===sessionDay))return {...cached};
  const wait=Math.max(0,1100-(Date.now()-STOOQ_LAST_REQUEST));
  if(wait)await new Promise(resolve=>setTimeout(resolve,wait));
  STOOQ_LAST_REQUEST=Date.now();
@@ -1723,7 +1724,9 @@ function marketPollEligible(item,now=new Date()){
  const minute=session.tradeDate.hour*60+session.tradeDate.minute;if(minute<session.finalCloseMinute)return false;
  const p=session.tradeDate,key=[p.year,String(p.month).padStart(2,'0'),String(p.day).padStart(2,'0')].join('-');
  const prior=QUOTES.get(item.symbol),retrieved=Number(prior?.retrievedAt||0),retrievedLocal=retrieved?exchangeWallClock(new Date(retrieved),session.zone):null;
- if(marketQuoteDayKey(prior,session)===key&&retrievedLocal&&retrievedLocal.hour*60+retrievedLocal.minute>=session.finalCloseMinute){APP.closedRefreshDone[item.symbol]=key;return false}
+ const closePublishMinute=session.finalCloseMinute+3;
+ if(marketQuoteDayKey(prior,session)===key&&retrievedLocal&&retrievedLocal.hour*60+retrievedLocal.minute>=closePublishMinute){APP.closedRefreshDone[item.symbol]=key;return false}
+ if(minute<closePublishMinute)return false;
  return APP.closedRefreshDone[item.symbol]!==key;
 }
 function markClosedRefreshAttempt(item,now=new Date()){

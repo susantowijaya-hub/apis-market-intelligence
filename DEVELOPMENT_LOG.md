@@ -345,3 +345,41 @@
 - Updated static validation to v2.9.3 and added regression assertions for exchange-local daily-baseline alignment and the US closing-auction boundary.
 - The change does not invent values or substitute an index's provider percentage when a valid previous close can be derived from dated daily candles.
 - Runtime correctness still depends on the quote provider returning correctly dated daily candles; the dashboard retains source and observation timestamps for audit.
+
+ 
+## 2026-11-17 — v2.10.0 Mobile Header, Verified Index Closes, Calendar Semantics and Movers Scope
+
+### Mobile presentation
+- Reworked the compact mobile top bar into a stable brand / action / navigation layout. Non-essential feed-state text is hidden from the narrow header to prevent the clock, session labels and logo from colliding; detailed feed and session timestamps remain available in the instrument rows and status areas.
+- Calendar Actual cards now use theme tokens for green / red semantic states. The card is green only when the actual value is better than forecast for an event with a defensible directional interpretation, red when worse, and neutral when the direction is ambiguous or values are missing/equal.
+- Direction rules are deliberately conservative: unemployment / claims / inflation / deficit-style measures are lower-is-better; GDP / employment change / payroll / retail sales / PMI / production-style measures are higher-is-better. Ambiguous indicators such as policy rates and average earnings remain neutral.
+
+### Index close integrity
+- A closed-session daily index observation is now rejected unless the selected Yahoo daily candle is dated to the current exchange-local session date. A stale intraday candle or old regular-market metadata can no longer be relabelled as today's market close.
+- A closed-session index close is also rejected when the prior session daily close is unavailable; APIS no longer falls back to a possibly mismatched percentage reference to manufacture a daily move.
+- Added a deterministic exchange-date previous-close selector so the prior daily close is selected by session date, not array position.
+- This is a fail-closed accuracy guard, not a claim that Yahoo is an independent verification source. APIS still needs a second independent live feed for IDX / Shanghai / Hang Seng / Nifty before it can claim cross-provider confirmation on those symbols.
+
+### Movers scope
+- Movers remain individual stocks only and are restricted to Indonesia, United States, Hong Kong, Samsung Electronics / SK Hynix for Korea, and TSMC for Taiwan.
+- Rows must have a current exchange-session observation date and be no older than six hours. Prior-session, cached and stale observations are excluded.
+- Gainers and losers are ranked by the largest positive / negative session moves; index, ETF, futures and other non-equity instruments cannot enter the Movers list.
+
+### Source cross-check performed for 17 Nov 2026
+- IHSG: CNBC Indonesia reports official close 5,304.76, down 16.23 points / 0.30%; Bisnis.com / IDX Mobile corroborates 5,304.76 and prior close 5,320.98. An Investing.com historical page returned a conflicting 5,299.56 / -0.40%, so it is not accepted as an independent confirmation for that session.
+- Shanghai Composite: Investing.com historical data reports 3,584.58, down 0.50%, versus 3,602.57 previous close.
+- Hang Seng: FT historical prices reports final close 23,535.49 versus 23,753.84 previous close (approximately -0.92%). The Hang Seng Indexes official page observed 23,571.61 at 12:01 HKT, which is an intraday snapshot, not the final close.
+- Nifty 50: Investing.com historical data reports 25,434.55, up 0.57%, versus 25,291.10 previous close.
+- These are research cross-checks for the 17 Nov session, not hard-coded quote overrides. Provider disagreements are evidence to withhold / flag a quote, not choose whichever value appears convenient.
+
+### Five regression gates added to CI
+1. Dated daily-baseline selector fixture with a same-day partial candle.
+2. Closed-session date-match and previous-close guards.
+3. Calendar actual-vs-forecast directional scoring (positive, negative and neutral fixtures).
+4. Movers market-universe / Korea / Taiwan focus restrictions and current-session observation guard.
+5. Mobile header and dark/light semantic color-token checks.
+
+### Provider limitations
+- Runtime free market quotes currently use Stooq public CSV where mapped and Yahoo Finance public chart fallback through CORS relays; Taiwan uses the official TWSE report after close, and spot gold uses XAUS. These sources are not all independent for every regional index, and their free endpoints can be delayed, rate-limited, blocked by browser CORS or unavailable.
+- No new provider is described as a backup until its endpoint, timestamp, symbol mapping, previous-close semantics and independent source lineage are verified. If an independent source is unavailable, APIS must label the observation accordingly or withhold it.
+- GitHub Actions static / fixture validation does not replace a deployed browser live-feed audit. Do not declare release fully verified until CI passes and the public page is checked in a real browser in both light and dark themes.

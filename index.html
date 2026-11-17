@@ -1687,6 +1687,7 @@ function marketSessionLabel(quote,item){
  const session=exchangeSession(item);
  if(session){
   if(session.state==='OPEN'){
+   if(quote.marketState==='PUBLIC CSV SNAPSHOT')return 'SESSION OPEN · SNAPSHOT';
    if(quote.status==='STALE_CACHE'||quote.status==='STALE_OBSERVATION'||quote.status==='LAST_AVAILABLE_CLOSE')return 'SESSION OPEN · STALE';
    return quote.status==='DELAYED_PROVIDER'?'SESSION OPEN · DELAYED':'SESSION OPEN';
   }
@@ -1717,7 +1718,7 @@ function marketFeedTimestampLabel(quote,item){
   const descriptor=session.state==='CLOSED'&&quote.observationDate===today?'Close':'Last close';
   return feed+' · '+descriptor+' '+session.closeTime+' '+session.closeZone+' · '+day;
  }
- if(session?.state==='CLOSED'&&quote.status==='LAST_AVAILABLE_CLOSE'&&quote.observedAt){
+ if(session?.state==='CLOSED'&&quote.observedAt){
   const day=new Intl.DateTimeFormat('en-GB',{timeZone:session.zone,day:'2-digit',month:'short'}).format(new Date(quote.observedAt*1000));
   return feed+' · Last close '+session.closeTime+' '+session.closeZone+' · '+day;
  }
@@ -2127,9 +2128,9 @@ function calendarSourceLink(source){
  return 'https://www.forexfactory.com/calendar';
 }
 function normalizeCalendarImpact(value){
- const text=String(value||'').toUpperCase();
- if(/\bHIGH\b/.test(text)||text.includes('RED'))return 'HIGH';
- if(/\bMEDIUM\b/.test(text)||/\bMODERATE\b/.test(text)||text.includes('ORANGE'))return 'MEDIUM';
+ const text=String(value??'').toUpperCase().trim();
+ if(text==='3'||/\bHIGH\b/.test(text)||text.includes('RED'))return 'HIGH';
+ if(text==='2'||/\bMEDIUM\b/.test(text)||/\bMODERATE\b/.test(text)||text.includes('ORANGE'))return 'MEDIUM';
  return '';
 }
 function normalizeCalendarCurrency(value){
@@ -2192,6 +2193,13 @@ function investingApiDate(value){
  const day=String(p.day).padStart(2,'0'),month=String(p.month).padStart(2,'0');
  return p.year+'-'+month+'-'+day;
 }
+function parseCalendarDateValue(value){
+ if(typeof value==='number'&&Number.isFinite(value))return new Date(value<100000000000?value*1000:value);
+ const text=String(value||'').trim();
+ if(/^\d{10}$/.test(text))return new Date(Number(text)*1000);
+ if(/^\d{13}$/.test(text))return new Date(Number(text));
+ return new Date(text);
+}
 async function fetchInvestingCalendar(){
  const now=new Date(),wib=new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
  const get=t=>wib.find(p=>p.type===t)?.value||'';
@@ -2201,7 +2209,7 @@ async function fetchInvestingCalendar(){
  const end=zonedDateToUtc(endDay.getUTCFullYear(),endDay.getUTCMonth()+1,endDay.getUTCDate(),23,59,TZ);
  const params=new URLSearchParams({
   domain_id:'1',limit:'300',start_date:start.toISOString().replace('.000Z','Z'),
-  end_date:end.toISOString().replace('.000Z','Z'),importance:'high,medium'
+  end_date:end.toISOString().replace('.000Z','Z')
  });
  const target='https://endpoints.investing.com/pd-instruments/v1/calendars/economic/events/occurrences?'+params.toString();
  const payload=await fetchCalendarJSON(target,'Investing.com calendar');
@@ -2212,7 +2220,7 @@ async function fetchInvestingCalendar(){
  const output=[];
  occurrences.forEach(occ=>{
   const event=eventMap.get(String(occ.event_id??''))||{};
-  const date=new Date(occ.occurrence_time||occ.date||'');
+  const date=parseCalendarDateValue(occ.occurrence_time||occ.date||'');
   if(Number.isNaN(date.getTime()))return;
   const title=event.event_translated||event.event_name||event.name||occ.event_name||'';
   const item=normalizeFxCalendarEvent({
@@ -2239,15 +2247,14 @@ function calendarEventSimilarity(a,b){
  const aa=calendarEventNameKey(a).split(' ').filter(Boolean),bb=calendarEventNameKey(b).split(' ').filter(Boolean);
  if(!aa.length||!bb.length)return 0;
  const aliases=[
-  [['nonfarm','payrolls'],['employment','situation']],
-  [['unemployment','claims'],['initial','jobless','claims']],
-  [['consumer','price'],['cpi']],
-  [['producer','price'],['ppi']],
-  [['gross','domestic','product'],['gdp']],
-  [['retail','sales'],['retail','sales']]
+  [/nonfarm payroll|non-farm payroll/,/employment situation|employment change/],
+  [/initial jobless claims|unemployment claims/,/initial claims|jobless claims/],
+  [/consumer price index|\bcpi\b/,/consumer price index|\bcpi\b/],
+  [/producer price index|\bppi\b/,/producer price index|\bppi\b/],
+  [/gross domestic product|\bgdp\b/,/gross domestic product|\bgdp\b/]
  ];
  const joinedA=aa.join(' '),joinedB=bb.join(' ');
- if(aliases.some(group=>group.every(words=>words.some(word=>joinedA.includes(word))&&words.some(word=>joinedB.includes(word)))))return .92;
+ if(aliases.some(([left,right])=>(left.test(joinedA)&&right.test(joinedB))||(left.test(joinedB)&&right.test(joinedA))))return .92;
  const right=new Set(bb),common=aa.filter(word=>right.has(word)).length;
  return common/Math.max(aa.length,bb.length);
 }

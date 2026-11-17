@@ -235,3 +235,33 @@
 - Forex Factory calendar is a public weekly schedule / consensus source; XOOMAR actuals are U.S.-focused. Outside U.S. releases, Actual remains blank unless the calendar provider actually supplies it.
 - BI RDG is calendar-only; official meeting dates are shown, while release times and policy outcomes remain blank until a primary source publishes them.
 - Never label daily reference FX, last close, stale cache or daily Treasury observations as live intraday quotes.
+
+
+## 2026-11-17 — v2.8.0 market-session, Taiwan and calendar reliability
+
+### Market session and timestamps
+- IDX regular-session state now transitions from CLOSING AUCTION (15:50–16:00 WIB) to MARKET CLOSE at 16:00 WIB; it no longer remains in a pre-close state beyond the scheduled cash-market close.
+- Added a compact status-adjacent timestamp showing the latest IHSG feed-check time and the scheduled/observed close time and date. Session status and timestamp refresh with the 4-second display cycle.
+- Quote observation labels include the full close date with year, preserving the distinction between feed retrieval time and market observation/close time.
+
+### Taiwan Weighted
+- TWSE parser now respects a signed point-move value even when the separate sign column is blank.
+- Previous close is derived from close minus signed point move; displayed percentage is calculated from the same close/previous-close pair. The TWSE percentage remains a cross-check, not a mismatched baseline.
+- The Taiwan percentage remains hidden unless the quote is a verified TWSE observation.
+
+### Economic calendar
+- Forex Factory now loads both this-week and next-week public JSON schedules, so a 7-day range can include events crossing the weekly boundary.
+- Investing.com occurrence parsing now checks value fields on both occurrence and event records, including common *_value aliases.
+- Normalization accepts additional previous / forecast / actual field aliases.
+- Calendar source merges retain explicitly supplied values, including numeric zero, instead of relying on truthiness.
+- Previous / Forecast / Actual remain independent fields; blanks are preserved when no provider supplies a value.
+- Calendar provider fetch remains on its 5-minute cadence; cached calendar is invalidated by the v2.8.0 cache schema marker.
+
+### Runtime cadence and performance
+- Market quote slice fetch cadence remains 5 seconds; each fetch is guarded against overlap and processes a bounded slice of the watchlist.
+- Display/status refresh remains 4 seconds and now updates market session timestamps without forcing another provider request.
+- This separation avoids turning the 4-second display cycle into additional network traffic.
+
+### Verification boundary
+- Source updated on main; GitHub Actions / Pages deployment must complete before the public page reflects the change.
+- No claim of live provider connectivity is made by source-level changes. Public feeds remain subject to CORS, rate limits, provider delay and endpoint availability.

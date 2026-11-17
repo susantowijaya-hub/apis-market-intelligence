@@ -952,7 +952,7 @@ function zonedDateToUtc(year,month,day,hour,minute,timeZone){
 }
 function parseIcsDate(value,timeZone){
  if(!value)return null;
- const match=String(value).match(/^(\\d{4})(\\d{2})(\\d{2})T?(\\d{2})?(\\d{2})?(\\d{2})?Z?$/);
+ const match=String(value).match(/^(\d{4})(\d{2})(\d{2})T?(\d{2})?(\d{2})?(\d{2})?Z?$/);
  if(!match)return null;
  const year=Number(match[1]),month=Number(match[2]),day=Number(match[3]),hour=Number(match[4]||8),minute=Number(match[5]||30),second=Number(match[6]||0);
  if(![year,month,day,hour,minute,second].every(Number.isInteger)||second<0||second>59)return null;
@@ -1052,7 +1052,7 @@ async function loadMacroCalendar(){
    if(!dateMatch)return;
    const monthNames=['january','february','march','april','may','june','july','august','september','october','november','december'];
    const month=monthNames.indexOf(dateMatch[1].toLowerCase())+1,day=Number(dateMatch[2]);
-   let year=Number((combined.match(/\\b20\\d{2}\\b/)||[])[0])||new Date().getFullYear();
+   let year=Number((combined.match(/\b20\d{2}\b/)||[])[0])||new Date().getFullYear();
    if(month<new Date().getMonth()+1-1&&year===new Date().getFullYear())year++;
    let hour=timeMatch?Number(timeMatch[1]):8,minute=timeMatch?Number(timeMatch[2]):30;
    if(month<1||day<1||day>31||hour<0||hour>12||minute<0||minute>59)return;

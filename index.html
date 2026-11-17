@@ -899,7 +899,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
     </div>
    </div>
   </details>
-  <div class="calendar-summary"><span id="calendarCount">Loading high and medium impact releases…</span><span id="calendarUpdatedAt">Forex Factory · XOOMAR · Bank Indonesia</span></div>
+  <div class="calendar-summary"><span id="calendarCount">Loading high and medium impact releases…</span><span id="calendarUpdatedAt">Forex Factory · Investing.com · XOOMAR · Bank Indonesia</span></div>
   <div class="calendar-impact-legend"><span><i class="impact-swatch high"></i>High impact</span><span><i class="impact-swatch medium"></i>Medium impact</span><span class="calendar-legend-note">Times: Asia/Jakarta (WIB)</span></div>
   <div id="calendarEvents" class="calendar-events"><div class="empty-state">Loading economic release schedules…</div></div>
   <div class="calendar-foot">Schedule and consensus fields: Forex Factory public calendar. U.S. published actuals / previous: XOOMAR with agency attribution. Indonesia dates: Bank Indonesia. A blank actual or forecast means the provider has not supplied it; no values are estimated.</div>
@@ -1896,7 +1896,7 @@ function renderQuality(){
     ['Frankfurter FX',APP.fxState==='loaded'?'Daily reference-rate response received':APP.fxState==='cached'?'Saved dated reference rate; refresh failed':APP.fxError||'Reference-rate response unavailable',APP.fxState==='loaded'?'DAILY':APP.fxState==='cached'?'STALE':'UNAVAILABLE',APP.fxState==='loaded'?'good':'warn'],
     ['U.S. Treasury yield curve',APP.tsyState==='loaded'?(APP.tsySource||'Official daily Treasury par-yield curve'):APP.tsyError||'No daily Treasury response',APP.tsyState==='loaded'?'DAILY':'UNAVAILABLE',APP.tsyState==='loaded'?'good':'warn'],
     ['Publisher news RSS',APP.newsState==='loaded'?(APP.newsItems?.length||0)+' headlines from '+(APP.newsSourcesOK||0)+' free publisher feeds':APP.newsError||'RSS unavailable',APP.newsState==='loaded'?'UPDATED':'UNAVAILABLE',APP.newsState==='loaded'?'good':'warn'],
-    ['Official macro calendar',APP.calendarState==='loaded'?(APP.calendarEvents?.length||0)+' major releases from BLS / BEA / Fed':APP.calendarError||'Calendar unavailable',APP.calendarState==='loaded'?'UPDATED':'UNAVAILABLE',APP.calendarState==='loaded'?'good':'warn'],
+    ['Economic calendar',APP.calendarState==='loaded'?(APP.calendarEvents?.length||0)+' releases · Forex Factory / Investing.com / XOOMAR / BI':APP.calendarError||'Calendar unavailable',APP.calendarState==='loaded'?'UPDATED':'UNAVAILABLE',APP.calendarState==='loaded'?'good':'warn'],
     ['SEC EDGAR submissions',APP.filingsState==='loaded'?'Recent public company filings loaded':APP.filingsError||'SEC filing feed not yet available',APP.filingsState==='loaded'?'UPDATED':'UNAVAILABLE',APP.filingsState==='loaded'?'good':'warn']
   ];
   const container=document.getElementById('sourceHealth');if(container)container.replaceChildren();

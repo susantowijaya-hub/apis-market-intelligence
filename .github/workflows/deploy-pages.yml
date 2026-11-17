@@ -125,6 +125,9 @@ jobs:
                 }));
                 if (!boot.booted || boot.rows < 8 || !boot.refresh || boot.routes < 8)
                   throw new Error(engine.name+' '+viewport.name+' boot failed: '+JSON.stringify({boot,errors}));
+                await page.locator('[data-page="markets"]').click();
+                if (!(await page.locator('#markets').evaluate(el=>el.classList.contains('active'))))
+                  throw new Error(engine.name+' Markets navigation failed before layout measurement');
                 const layout = await page.evaluate(() => {
                   const summary=document.getElementById('marketSnapshotGrid');
                   const summaryCard=document.querySelector('.market-snapshot-card');

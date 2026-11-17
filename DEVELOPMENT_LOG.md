@@ -47,3 +47,14 @@
 - APIS The Market Terminal v2.4.1
 - Primary source file: `index.html`
 - Branch: `main`
+
+
+### Follow-up hardening — 2026-11-17
+- Restored and syntax-checked the Yahoo public chart adapter as the final fallback after Stooq. This is required for instruments without Stooq symbol coverage and when Stooq is blocked.
+- Added a Stooq 48-hour freshness guard so stale Stooq snapshots fall through to Yahoo rather than being treated as a successful current refresh.
+- Added observation-date rendering for Stooq snapshots to avoid presenting a date-only EOD observation as a precise intraday timestamp.
+- Reduced public quote batch concurrency to three workers and retained per-symbol Stooq throttling/cache.
+- Added `.github/workflows/validate.yml` to compile all inline JavaScript and assert free-only provider wiring on pushes and pull requests.
+- Latest follow-up commit: `d0cfe0b9dac87580d22e5a0cd68c5b0b0d9e44f8`.
+- Static verification in the development session: both inline scripts compile; free-only Stooq → Yahoo wiring, BTC stream, FX, Treasury, Macro, News, and mobile watchlist checks pass.
+- The public endpoints were not claimed as universally reachable: browser CORS, Stooq quota, Yahoo throttling, provider outages, and instrument coverage remain external runtime dependencies.

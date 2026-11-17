@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f5">
-<meta name="build-version" content="2.8.0">
+<meta name="build-version" content="2.9.0">
 <meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — The Market Terminal v2.8.0</title>
+<title>APIS — The Market Terminal v2.9.0</title>
 <style>
 :root{
   color-scheme:light;
@@ -715,6 +715,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
  .ios-stock-updated{font-size:6.5px}
 }
 
+.ios-stock-item .ios-stock-price,.ios-stock-item .ios-stock-change,.mover-row .mover-value,.mover-row .mover-change{transition:color .28s ease,opacity .28s ease,transform .28s ease}.ios-stock-item.is-updating{animation:apis-quote-refresh .52s cubic-bezier(.2,.75,.25,1)}.mover-row{animation:apis-mover-in .32s ease both}@keyframes apis-quote-refresh{0%{background-color:rgba(74,144,226,.12)}100%{background-color:transparent}}@keyframes apis-mover-in{from{opacity:.55;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -865,6 +866,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
      <div class="calendar-check-grid impact-filter-grid">
       <label><input type="checkbox" data-cal-impact="HIGH" checked><i class="impact-swatch high"></i>High impact</label>
       <label><input type="checkbox" data-cal-impact="MEDIUM" checked><i class="impact-swatch medium"></i>Medium impact</label>
+      <label><input type="checkbox" data-cal-impact="LOW" checked><i class="impact-swatch low"></i>Low impact</label>
      </div>
     </div>
     <div class="calendar-filter-block">
@@ -1036,7 +1038,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
   <div class="note" style="margin-top:14px"><strong>Cara menjalankan:</strong> simpan file ini di komputer lalu buka dengan Chrome, Edge, Safari, atau Firefox yang terhubung ke internet. Sebagian jaringan memblokir penyedia data pasar publik atau widget eksternal; dashboard akan menandainya unavailable dan tidak mengganti data dengan simulasi. Untuk akses provider yang lebih konsisten, file dapat dijalankan melalui web server statis lokal (opsional)—tanpa backend API.</div>
 </section>
 </main>
-<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.8.0</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
+<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.9.0</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -1158,7 +1160,20 @@ const WATCHLIST=[
   {symbol:'GOTO.JK',name:'GoTo Gojek Tokopedia',short:'GOTO',group:'Indonesia equity',tv:'IDX:GOTO'},
   {symbol:'AAPL',name:'Apple',short:'AAPL',group:'US equity',tv:'NASDAQ:AAPL',stooqSymbol:'aapl.us'},
   {symbol:'NVDA',name:'NVIDIA',short:'NVDA',group:'US equity',tv:'NASDAQ:NVDA',stooqSymbol:'nvda.us'},
-  {symbol:'MSFT',name:'Microsoft',short:'MSFT',group:'US equity',tv:'NASDAQ:MSFT',stooqSymbol:'msft.us'}
+  {symbol:'MSFT',name:'Microsoft',short:'MSFT',group:'US equity',tv:'NASDAQ:MSFT',stooqSymbol:'msft.us'},
+  {symbol:'AMZN',name:'Amazon',short:'AMZN',group:'US equity',tv:'NASDAQ:AMZN'},
+  {symbol:'META',name:'Meta Platforms',short:'META',group:'US equity',tv:'NASDAQ:META'},
+  {symbol:'GOOGL',name:'Alphabet',short:'GOOGL',group:'US equity',tv:'NASDAQ:GOOGL'},
+  {symbol:'TSLA',name:'Tesla',short:'TSLA',group:'US equity',tv:'NASDAQ:TSLA'},
+  {symbol:'AVGO',name:'Broadcom',short:'AVGO',group:'US equity',tv:'NASDAQ:AVGO'},
+  {symbol:'0700.HK',name:'Tencent Holdings',short:'TENCENT',group:'Hong Kong equity',region:'Hong Kong',tv:'HKEX:700'},
+  {symbol:'9988.HK',name:'Alibaba Group',short:'ALIBABA',group:'Hong Kong equity',region:'Hong Kong',tv:'HKEX:9988'},
+  {symbol:'3690.HK',name:'Meituan',short:'MEITUAN',group:'Hong Kong equity',region:'Hong Kong',tv:'HKEX:3690'},
+  {symbol:'1810.HK',name:'Xiaomi',short:'XIAOMI',group:'Hong Kong equity',region:'Hong Kong',tv:'HKEX:1810'},
+  {symbol:'0941.HK',name:'China Mobile',short:'CHINA MOBILE',group:'Hong Kong equity',region:'Hong Kong',tv:'HKEX:941'},
+  {symbol:'005930.KS',name:'Samsung Electronics',short:'SAMSUNG',group:'Korea focus equity',region:'South Korea',tv:'KRX:005930'},
+  {symbol:'000660.KS',name:'SK Hynix',short:'SK HYNIX',group:'Korea focus equity',region:'South Korea',tv:'KRX:000660'},
+  {symbol:'2330.TW',name:'Taiwan Semiconductor Manufacturing',short:'TSMC',group:'Taiwan focus equity',region:'Taiwan',tv:'TWSE:2330'}
 ];
 const QUOTES=new Map();
 /* Restore only previously received provider observations. Restored values are
@@ -1179,7 +1194,7 @@ function restoreQuoteCache(){
   }
   return restored;
 }
-const APP={lastRefresh:null,yahooState:'idle',runCounter:0,currentRunId:0,btcState:'connecting',btc:null,btcLastSavedAt:0,btcError:'',ws:null,wsRetry:0,fxState:'loading',fxError:'',widgetError:'',failures:new Map(),successCount:0,storageWarned:false,alerts:Array.isArray(loadJSON('apis_browser_alerts',[]))?loadJSON('apis_browser_alerts',[]):[],ledger:Array.isArray(loadJSON('apis_browser_ledger',[]))?loadJSON('apis_browser_ledger',[]):[],fired:new Set(),timer:null,staleTimer:null,btcRestTimer:null};
+const APP={lastRefresh:null,closedRefreshDone:{},yahooState:'idle',runCounter:0,currentRunId:0,btcState:'connecting',btc:null,btcLastSavedAt:0,btcError:'',ws:null,wsRetry:0,fxState:'loading',fxError:'',widgetError:'',failures:new Map(),successCount:0,storageWarned:false,alerts:Array.isArray(loadJSON('apis_browser_alerts',[]))?loadJSON('apis_browser_alerts',[]):[],ledger:Array.isArray(loadJSON('apis_browser_ledger',[]))?loadJSON('apis_browser_ledger',[]):[],fired:new Set(),timer:null,staleTimer:null,btcRestTimer:null};
 function loadJSON(k,fallback){try{const v=JSON.parse(localStorage.getItem(k));return v??fallback}catch{return fallback}}
 function saveJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast('Browser storage is unavailable in this session.')}}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -1304,14 +1319,17 @@ async function fetchYahooQuote(item){
     const marketPrice=num(meta.regularMarketPrice),marketTime=num(meta.regularMarketTime);
     const useMeta=marketPrice!==null&&(marketTime||0)>=(barTime||0);
     const price=useMeta?marketPrice:barPrice,observedAt=useMeta?marketTime:barTime;
-    const previousClose=num(meta.chartPreviousClose??meta.previousClose);
+    const providerPreviousClose=num(meta.regularMarketPreviousClose??meta.chartPreviousClose??meta.previousClose);
+    const providerChangePct=useMeta?num(meta.regularMarketChangePercent):null;
+    const previousClose=providerChangePct!==null&&providerChangePct>-100?price/(1+providerChangePct/100):providerPreviousClose;
+    const changePct=previousClose!==null&&previousClose>0?(price/previousClose-1)*100:null;
     if(price===null||price<=0||!observedAt)throw new Error('Yahoo price/timestamp missing');
     if(observedAt>Date.now()/1000+300)throw new Error('Yahoo timestamp is in the future');
     const age=Math.max(0,Date.now()/1000-observedAt),state=String(meta.marketState||'UNKNOWN').toUpperCase();
     const open=['REGULAR','PRE','POST','PREPRE','POSTPOST'].includes(state);
     const status=age>48*3600?'STALE_OBSERVATION':(!open||age>20*60?'LAST_AVAILABLE_CLOSE':'DELAYED_PROVIDER');
     return {
-     symbol:item.symbol,name:item.name,short:item.short,group:item.group,region:item.region,price,previousClose,
+     symbol:item.symbol,name:item.name,short:item.short,group:item.group,region:item.region,price,previousClose,changePct,
      currency:meta.currency||item.currency||'',exchange:meta.exchangeName||meta.fullExchangeName||'',
      marketState:state,observedAt,observedAge:age,status,intervalUsed:plan.interval,
      source:'Yahoo Finance · public fallback (unofficial)',sourceUrl:'https://finance.yahoo.com/quote/'+encoded+'/',
@@ -1354,28 +1372,17 @@ function parseTwseIndexReport(payload){
    const price=Number(String(row[priceIndex]||'').replace(/[,\s]/g,''));
    if(!date||!Number.isFinite(price)||price<=0)continue;
    const signText=String(signIndex>=0?row[signIndex]||'':'').replace(/<[^>]*>/g,'').trim();
-   const changeText=String(changeIndex>=0?row[changeIndex]||'':'').replace(/<[^>]*>/g,'').replace(/[,％%]/g,'').trim();
+   const signedText=value=>String(value??'').replace(/<[^>]*>/g,'').replace(/[−－﹣]/g,'-').replace(/[＋]/g,'+').replace(/[,，％%\s]/g,'').trim();
+   const sign=signedText(signIndex>=0?row[signIndex]:'');
+   const changeText=signedText(changeIndex>=0?row[changeIndex]:'');
    let changePct=changeText===''?NaN:Number(changeText);
-   if(Number.isFinite(changePct)){
-    if(signText.includes('-'))changePct=-Math.abs(changePct);
-    else if(signText.includes('+'))changePct=Math.abs(changePct);
-   }
-   const pointText=String(pointIndex>=0?row[pointIndex]||'':'').replace(/<[^>]*>/g,'').replace(/[,，]/g,'').trim();
-   const pointMove=pointText===''?NaN:Number(pointText);
+   if(Number.isFinite(changePct)&&sign){if(sign.includes('-'))changePct=-Math.abs(changePct);else if(sign.includes('+'))changePct=Math.abs(changePct)}
+   const pointText=signedText(pointIndex>=0?row[pointIndex]:'');
+   let pointMove=pointText===''?NaN:Number(pointText);
+   if(Number.isFinite(pointMove)&&sign){if(sign.includes('-'))pointMove=-Math.abs(pointMove);else if(sign.includes('+'))pointMove=Math.abs(pointMove)}
    let previousClose=null;
-   if(Number.isFinite(pointMove)){
-    // TWSE may put the sign in the points field while the sign column is blank.
-    const signedMove=signText.includes('-')?-Math.abs(pointMove):signText.includes('+')?Math.abs(pointMove):pointMove;
-    previousClose=price-signedMove;
-   }
-   if(Number.isFinite(previousClose)&&previousClose>0){
-    const implied=(price/previousClose-1)*100;
-    if(Number.isFinite(changePct)&&Math.abs(implied-changePct)>0.12)continue;
-    changePct=implied;
-   }else if(Number.isFinite(changePct)&&changePct>-100){
-    previousClose=price/(1+changePct/100);
-    changePct=(price/previousClose-1)*100;
-   }
+   if(Number.isFinite(changePct)&&changePct>-100)previousClose=price/(1+changePct/100);
+   else if(Number.isFinite(pointMove)){previousClose=price-pointMove;if(previousClose>0)changePct=(price/previousClose-1)*100}
    if(!Number.isFinite(changePct)||!Number.isFinite(previousClose)||previousClose<=0)continue;
    const dayKey=[date.year,String(date.month).padStart(2,'0'),String(date.day).padStart(2,'0')].join('-');
    return {price,previousClose,changePct,date,dayKey};
@@ -1547,7 +1554,7 @@ function updateQuoteRowsInPlace(){
   const session=row.querySelector('.ios-stock-session');
   const stamp=row.querySelector('.ios-stock-updated');
   const spark=row.querySelector('.ios-stock-spark');
-  if(price)price.textContent=stockPriceText(quote,item);
+  if(price){const nextPrice=stockPriceText(quote,item);if(price.textContent!==nextPrice){row.classList.remove('is-updating');void row.offsetWidth;row.classList.add('is-updating');price.textContent=nextPrice;setTimeout(()=>row.classList.remove('is-updating'),600)}}
   if(badge){
    badge.textContent=pctValue===null?'—':pct(pctValue);
    badge.className='ios-stock-change '+(pctValue===null?'unavailable':pctValue>0?'up':pctValue<0?'down':'flat');
@@ -1570,33 +1577,22 @@ function updateQuoteRowsInPlace(){
 async function fetchQuoteSlice(){
  if(document.hidden||!navigator.onLine||APP.yahooState==='loading'||APP.sliceBusy)return;
  APP.sliceBusy=true;
- const queue=APP.marketFilter==='equities'?WATCHLIST.filter(item=>item.group==='Indonesia equity'||item.group==='US equity'):WATCHLIST,selected=[];
- const sliceSize=3;
- for(let i=0;i<sliceSize&&queue.length;i++){
-  selected.push(queue[APP.sliceCursor%queue.length]);
-  APP.sliceCursor=(APP.sliceCursor+1)%queue.length;
- }
+ const now=new Date(),queue=WATCHLIST.filter(item=>marketPollEligible(item,now)),selected=[],sliceSize=6;
+ for(let i=0;i<Math.min(sliceSize,queue.length);i++){selected.push(queue[APP.sliceCursor%queue.length]);APP.sliceCursor=(APP.sliceCursor+1)%queue.length}
+ if(!selected.length){APP.lastSliceRefreshAt=Date.now();setText('lastRefresh','All tracked exchanges closed · close snapshots already checked');APP.sliceBusy=false;return}
  const runId=APP.currentRunId||1;
  try{
-  const results=await Promise.allSettled(selected.map(item=>fetchMarketQuote(item)));
-  let updated=0,failed=0;
+  const results=await Promise.allSettled(selected.map(item=>fetchMarketQuote(item)));let updated=0,failed=0;
   results.forEach((result,index)=>{
-   const item=selected[index];
-   if(result.status==='fulfilled'&&num(result.value.price)!==null){
-    const quote=result.value;quote.activeRunId=runId;QUOTES.set(item.symbol,quote);APP.failures.delete(item.symbol);updated++;
-   }else{
-    const reason=result.status==='rejected'?String(result.reason?.message||result.reason):'Invalid provider price';
-    APP.failures.set(item.symbol,reason.slice(0,150));failed++;
-    const old=QUOTES.get(item.symbol);
-    if(old){old.lastError=reason.slice(0,180);old.activeRunId=0;old.status='STALE_CACHE';QUOTES.set(item.symbol,old)}
-   }
+   const item=selected[index],session=exchangeSession(item,now);if(session?.state==='CLOSED')markClosedRefreshAttempt(item,now);
+   if(result.status==='fulfilled'&&num(result.value.price)!==null){const quote=result.value;quote.activeRunId=runId;QUOTES.set(item.symbol,quote);APP.failures.delete(item.symbol);updated++}
+   else{const reason=result.status==='rejected'?String(result.reason?.message||result.reason):'Invalid provider price';APP.failures.set(item.symbol,reason.slice(0,150));failed++;const old=QUOTES.get(item.symbol);if(old){old.lastError=reason.slice(0,180);old.activeRunId=0;old.status='STALE_CACHE';QUOTES.set(item.symbol,old)}}
   });
-  APP.sliceUpdated=(APP.sliceUpdated||0)+updated;APP.sliceFailed=(APP.sliceFailed||0)+failed;
-  APP.lastSliceRefreshAt=Date.now();APP.nextRefreshAt=Date.now()+5000;
+  APP.sliceUpdated=(APP.sliceUpdated||0)+updated;APP.sliceFailed=(APP.sliceFailed||0)+failed;APP.lastSliceRefreshAt=Date.now();APP.nextRefreshAt=Date.now()+5000;
   if(Date.now()-(APP.lastCacheSavedAt||0)>15000)await persistQuoteCache();
   updateQuoteRowsInPlace();renderTape();renderMovers();evaluateAlerts();updateFeedState();renderQuality();
   const stamp=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).format(new Date());
-  setText('lastRefresh','Feed '+stamp+' WIB · '+updated+' updated · '+failed+' failed · rotating watchlist');
+  setText('lastRefresh','Feed '+stamp+' WIB · '+updated+' updated · '+failed+' failed · session-aware queue');
  }finally{APP.sliceBusy=false}
 }
 function btcIsFresh(){if(!APP.btc)return false;const age=Date.now()-APP.btc.receivedAt;if(APP.btc.transport==='WEBSOCKET')return !!(typeof WebSocket!=='undefined'&&APP.ws&&APP.ws.readyState===WebSocket.OPEN&&age<=15000&&(Date.now()-APP.btc.observedAt)<=15000);return APP.btc.transport==='REST'&&age<=90000&&(Date.now()-APP.btc.observedAt)<=90000;}
@@ -1627,8 +1623,8 @@ function updateFeedState(){
 
 function createQuoteCard(item,quote){const card=document.createElement('article');card.className='card quote-card'+(quote?'':' empty');const top=document.createElement('div');top.className='quote-top';const name=document.createElement('div');name.className='quote-name';name.textContent=item.name;const sym=document.createElement('span');sym.className='symbol';sym.textContent=item.short;top.append(name,sym);card.append(top);const value=document.createElement('div');value.className='quote-value';value.textContent=quote?fmtPrice(quote):'Unavailable';card.append(value);const bottom=document.createElement('div');bottom.className='quote-bottom';const ch=document.createElement('span');ch.className='change '+(quote?changeClass((quote.price-(quote.previousClose??quote.price))):'flat');ch.textContent=quote&&num(quote.previousClose)!==null?`${fmt(quote.price-quote.previousClose,2)} (${pct((quote.price/quote.previousClose-1)*100)})`:'No verified observation';const status=document.createElement('span');status.className='status-label '+(quote?quoteStatusClass(quote.status):'bad');status.textContent=quote?quoteStatusLabel(quote.status):'UNAVAILABLE';bottom.append(ch,status);card.append(bottom);const asof=document.createElement('div');asof.className='quote-asof';asof.textContent=quote?`Observed ${formatQuoteObservation(quote)} · ${quote.exchange||'provider quote'}`:'No price shown because a valid provider observation was not received';card.append(asof);return card;}
 function renderMovers(){
- const rows=[...QUOTES.values()].filter(q=>num(q.price)!==null&&num(q.previousClose)!==null&&q.previousClose>0&&q.status!=='STALE_OBSERVATION')
-  .map(q=>({...q,changePct:(q.price/q.previousClose-1)*100})).sort((a,b)=>b.changePct-a.changePct);
+ const stockGroups=new Set(['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity']);
+ const rows=[...QUOTES.values()].filter(q=>stockGroups.has(q.group)&&num(q.price)!==null&&stockChangePct(q)!==null&&q.status!=='STALE_OBSERVATION').map(q=>({...q,changePct:stockChangePct(q)})).sort((a,b)=>b.changePct-a.changePct);
  const draw=(id,items,cls)=>{const host=document.getElementById(id);if(!host)return;host.replaceChildren();
   if(!items.length){const e=document.createElement('div');e.className='empty-state';e.textContent='No validated mover observations available.';host.append(e);return}
   items.forEach(q=>{const row=document.createElement('div');row.className='mover-row';const name=document.createElement('div');const symbol=document.createElement('span');symbol.className='mover-symbol';symbol.textContent=q.short;const label=document.createElement('span');label.className='mover-name';label.textContent=q.name;name.append(symbol,label);
@@ -1636,18 +1632,14 @@ function renderMovers(){
  };
  draw('gainersList',rows.filter(q=>q.changePct>0).slice(0,5),'up');
  draw('losersList',rows.filter(q=>q.changePct<0).slice(-5).reverse(),'down');
- setText('moversStamp',rows.length+' instruments · '+(APP.lastRefresh?'latest snapshot':'provider pending'));
+ setText('moversStamp',rows.length+' individual stocks · Indonesia / US / Hong Kong + Samsung / SK Hynix / TSMC focus');
 }
 function stockChangePct(quote){
  if(!quote)return null;
- if(quote.symbol==='^TWII'){
-  if(!quote.source||!String(quote.source).includes('Taiwan Stock Exchange')||quote.providerQuoteVerified!==true)return null;
-  if(num(quote.previousClose)!==null&&quote.previousClose>0&&num(quote.price)!==null)return (quote.price/quote.previousClose-1)*100;
-  if(num(quote.changePct)===null)return null;
-  return Number(quote.changePct);
- }
- if(num(quote.previousClose)!==null&&quote.previousClose!==0)return (quote.price/quote.previousClose-1)*100;
- return num(quote.changePct);
+ if(quote.symbol==='^TWII'&&(!quote.source||!String(quote.source).includes('Taiwan Stock Exchange')||quote.providerQuoteVerified!==true))return null;
+ if(num(quote.changePct)!==null)return Number(quote.changePct);
+ if(num(quote.previousClose)!==null&&quote.previousClose>0&&num(quote.price)!==null)return (quote.price/quote.previousClose-1)*100;
+ return null;
 }
 function stockPriceText(quote,item){
  if(!quote||num(quote.price)===null)return '—';
@@ -1688,34 +1680,48 @@ function exchangeMinutes(date,timeZone){
 }
 function exchangeSession(item,now=new Date()){
  const symbol=item?.symbol||'',group=item?.group||'';
- let zone='',openWindows=[],closeTime='',closeZone='';
- if(symbol==='^JKSE'||symbol==='^JKLQ45'){
-  zone='Asia/Jakarta';closeTime='16:00';closeZone='WIB';
+ let zone='',openWindows=[],closeTime='',closeZone='',finalCloseMinute=0,auctionWindow=null;
+ if(symbol==='^JKSE'||symbol==='^JKLQ45'||group==='Indonesia equity'){
+  zone='Asia/Jakarta';closeTime='16:02';closeZone='WIB';finalCloseMinute=16*60+2;
   const p=exchangeWallClock(now,zone),minute=p.hour*60+p.minute;
-  if(p.weekday==='Sat'||p.weekday==='Sun')return {state:'CLOSED',label:'MARKET CLOSE',zone,closeTime,closeZone,tradeDate:p};
+  if(p.weekday==='Sat'||p.weekday==='Sun')return {state:'CLOSED',label:'MARKET CLOSE',zone,closeTime,closeZone,finalCloseMinute,tradeDate:p};
   const friday=p.weekday==='Fri';
   openWindows=friday?[[9*60,11*60+30],[14*60,15*60+50]]:[[9*60,12*60],[13*60+30,15*60+50]];
-  if(openWindows.some(([a,b])=>minute>=a&&minute<b))return {state:'OPEN',label:'SESSION OPEN',zone,closeTime,closeZone,tradeDate:p};
-  if(minute>=15*60+50&&minute<16*60)return {state:'PRECLOSE',label:'CLOSING AUCTION',zone,closeTime,closeZone,tradeDate:p};
-  if((!friday&&minute>=12*60&&minute<13*60+30)||(friday&&minute>=11*60+30&&minute<14*60))return {state:'BREAK',label:'LUNCH BREAK',zone,closeTime,closeZone,tradeDate:p};
-  if(minute<9*60)return {state:'PREOPEN',label:'PRE-MARKET',zone,closeTime,closeZone,tradeDate:p};
-  return {state:'CLOSED',label:'MARKET CLOSE',zone,closeTime,closeZone,tradeDate:p};
+  auctionWindow=[15*60+50,16*60+2];
+  return sessionState(p,minute,{zone,closeTime,closeZone,finalCloseMinute,openWindows,auctionWindow});
  }
- if(symbol==='^TWII'){zone='Asia/Taipei';closeTime='13:30';closeZone='TST';openWindows=[[9*60,13*60+30]]}
- else if(symbol==='000001.SS'){zone='Asia/Shanghai';closeTime='15:00';closeZone='CST';openWindows=[[9*60+30,11*60+30],[13*60,15*60]]}
- else if(symbol==='^HSI'){zone='Asia/Hong_Kong';closeTime='16:00';closeZone='HKT';openWindows=[[9*60+30,12*60],[13*60,16*60]]}
- else if(symbol==='^N225'){zone='Asia/Tokyo';closeTime='15:30';closeZone='JST';openWindows=[[9*60,11*60+30],[12*60+30,15*60+30]]}
- else if(symbol==='^KS11'){zone='Asia/Seoul';closeTime='15:30';closeZone='KST';openWindows=[[9*60,15*60+30]]}
- else if(symbol==='^NSEI'){zone='Asia/Kolkata';closeTime='15:30';closeZone='IST';openWindows=[[9*60+15,15*60+30]]}
- else if(['^GSPC','^IXIC','^DJI','^VIX','AAPL','NVDA','MSFT'].includes(symbol)){zone='America/New_York';closeTime='16:00';closeZone='ET';openWindows=[[9*60+30,16*60]]}
+ if(symbol==='^TWII'||group==='Taiwan focus equity'){zone='Asia/Taipei';closeTime='13:30';closeZone='TST';finalCloseMinute=13*60+30;openWindows=[[9*60,13*60+30]]}
+ else if(symbol==='000001.SS'){zone='Asia/Shanghai';closeTime='15:00';closeZone='CST';finalCloseMinute=15*60;openWindows=[[9*60+30,11*60+30],[13*60,14*60+57]];auctionWindow=[14*60+57,15*60]}
+ else if(symbol==='^HSI'||group==='Hong Kong equity'){zone='Asia/Hong_Kong';closeTime='16:10';closeZone='HKT';finalCloseMinute=16*60+10;openWindows=[[9*60+30,16*60]];auctionWindow=[16*60,16*60+10]}
+ else if(symbol==='^N225'){zone='Asia/Tokyo';closeTime='15:30';closeZone='JST';finalCloseMinute=15*60+30;openWindows=[[9*60,11*60+30],[12*60+30,15*60+25]];auctionWindow=[15*60+25,15*60+30]}
+ else if(symbol==='^KS11'||group==='Korea focus equity'){zone='Asia/Seoul';closeTime='15:30';closeZone='KST';finalCloseMinute=15*60+30;openWindows=[[9*60,15*60+20]];auctionWindow=[15*60+20,15*60+30]}
+ else if(group==='US equity'||['^GSPC','^IXIC','^DJI','^VIX'].includes(symbol)){zone='America/New_York';closeTime='16:00';closeZone='ET';finalCloseMinute=16*60;openWindows=[[9*60+30,16*60]];auctionWindow=[15*60+50,16*60]}
+ else if(symbol==='^NSEI'){zone='Asia/Kolkata';closeTime='15:30';closeZone='IST';finalCloseMinute=15*60+30;openWindows=[[9*60+15,15*60+30]]}
  else return null;
  const p=exchangeWallClock(now,zone),minute=p.hour*60+p.minute;
- if(p.weekday==='Sat'||p.weekday==='Sun')return {state:'CLOSED',label:'MARKET CLOSE',zone,closeTime,closeZone,tradeDate:p};
- if(openWindows.some(([a,b])=>minute>=a&&minute<b))return {state:'OPEN',label:'SESSION OPEN',zone,closeTime,closeZone,tradeDate:p};
- const first=openWindows[0][0],last=openWindows[openWindows.length-1][1];
- if(minute<first)return {state:'PREOPEN',label:'PRE-MARKET',zone,closeTime,closeZone,tradeDate:p};
- if(openWindows.length===2&&minute>=openWindows[0][1]&&minute<openWindows[1][0])return {state:'BREAK',label:'LUNCH BREAK',zone,closeTime,closeZone,tradeDate:p};
- return {state:'CLOSED',label:'MARKET CLOSE',zone,closeTime,closeZone,tradeDate:p};
+ return sessionState(p,minute,{zone,closeTime,closeZone,finalCloseMinute,openWindows,auctionWindow});
+}
+function sessionState(p,minute,config){
+ const {zone,closeTime,closeZone,finalCloseMinute,openWindows,auctionWindow}=config,base={zone,closeTime,closeZone,finalCloseMinute,tradeDate:p};
+ if(p.weekday==='Sat'||p.weekday==='Sun')return {...base,state:'CLOSED',label:'MARKET CLOSE'};
+ if(openWindows.some(([a,b])=>minute>=a&&minute<b))return {...base,state:'OPEN',label:'SESSION OPEN'};
+ if(auctionWindow&&minute>=auctionWindow[0]&&minute<auctionWindow[1])return {...base,state:'PRECLOSE',label:'CLOSING AUCTION'};
+ if(openWindows.length===2&&minute>=openWindows[0][1]&&minute<openWindows[1][0])return {...base,state:'BREAK',label:'LUNCH BREAK'};
+ if(minute<openWindows[0][0])return {...base,state:'PREOPEN',label:'PRE-MARKET'};
+ return {...base,state:'CLOSED',label:'MARKET CLOSE'};
+}
+function marketPollEligible(item,now=new Date()){
+ const session=exchangeSession(item,now);if(!session)return true;
+ if(session.state==='OPEN'||session.state==='PRECLOSE')return true;
+ if(session.state!=='CLOSED'||session.tradeDate.weekday==='Sat'||session.tradeDate.weekday==='Sun')return false;
+ const minute=session.tradeDate.hour*60+session.tradeDate.minute;if(minute<session.finalCloseMinute)return false;
+ const p=session.tradeDate,key=[p.year,String(p.month).padStart(2,'0'),String(p.day).padStart(2,'0')].join('-');
+ if(marketQuoteDayKey(QUOTES.get(item.symbol),session)===key){APP.closedRefreshDone[item.symbol]=key;return false}
+ return APP.closedRefreshDone[item.symbol]!==key;
+}
+function markClosedRefreshAttempt(item,now=new Date()){
+ const session=exchangeSession(item,now);
+ if(session&&session.state==='CLOSED'&&session.tradeDate.weekday!=='Sat'&&session.tradeDate.weekday!=='Sun'){const p=session.tradeDate;APP.closedRefreshDone[item.symbol]=[p.year,String(p.month).padStart(2,'0'),String(p.day).padStart(2,'0')].join('-')}
 }
 function marketQuoteDayKey(quote,session){
  if(!quote||!session)return '';
@@ -1823,7 +1829,7 @@ function createStockRow(item,quote,opts={}){
 }
 function homeWatchlistItems(){
  const priority=['^JKSE','^JKLQ45','^GSPC','^IXIC','^DJI','NQ=F','000001.SS','^HSI','^TWII','^N225','^KS11','^NSEI','^VIX','EIDO','XAUUSD=X','GC=F','CL=F','BZ=F','HG=F','IDR=X'];
- const eligible=WATCHLIST.filter(item=>!['Indonesia equity','US equity'].includes(item.group));
+ const eligible=WATCHLIST.filter(item=>!['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity'].includes(item.group));
  const ordered=priority.map(symbol=>eligible.find(item=>item.symbol===symbol)).filter(Boolean);
  return ordered.concat(eligible.filter(item=>!priority.includes(item.symbol)));
 }
@@ -2183,6 +2189,7 @@ function normalizeCalendarImpact(value){
  const text=String(value??'').toUpperCase().trim();
  if(text==='3'||/\bHIGH\b/.test(text)||text.includes('RED'))return 'HIGH';
  if(text==='2'||text==='MED'||/\bMEDIUM\b/.test(text)||/\bMODERATE\b/.test(text)||text.includes('ORANGE'))return 'MEDIUM';
+ if(text==='1'||/\bLOW\b/.test(text)||text.includes('YELLOW'))return 'LOW';
  return '';
 }
 function normalizeCalendarCurrency(value){
@@ -2347,7 +2354,7 @@ function parseInvestingCalendarHtml(markup){
   const currency=read(row.querySelector('td.flagCur,td[class*="flagCur"]')).replace(/[^A-Z]/g,'').slice(0,3);
   const sentiment=row.querySelector('td.sentiment,td[class*="sentiment"]');
   const indicator=(sentiment?.getAttribute('title')||sentiment?.className||'').toLowerCase();
-  const impact=indicator.includes('high')?'HIGH':indicator.includes('moderate')||indicator.includes('medium')?'MEDIUM':'';
+  const impact=indicator.includes('high')?'HIGH':indicator.includes('moderate')||indicator.includes('medium')?'MEDIUM':indicator.includes('low')?'LOW':'';
   const rawDate=row.getAttribute('data-event-datetime')||row.getAttribute('data-event-date')||'';
   const dateMatch=rawDate.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
   const date=dateMatch?zonedDateToUtc(+dateMatch[1],+dateMatch[2],+dateMatch[3],+dateMatch[4],+dateMatch[5],'UTC'):new Date(rawDate);
@@ -2416,31 +2423,26 @@ function mergeUsCalendarActuals(primary,agencyEvents){
  return merged;
 }
 function buildIndonesiaCalendarEvents(){
- const official='https://www.bi.go.id/id/publikasi/Kalender/Default.aspx';
+ const official='https://www.bi.go.id/id/publikasi/Kalender/Default.aspx',research='https://www.bca.co.id/-/media/Feature/Report/File/S8/Laporan-Riset-Ekonomi/2026/11/tfp-w44-2026-when-the-valve-blows-04-nov-2026.pdf';
  const rows=[
-  {day:'2026-11-17',title:'Bank Indonesia · Board of Governors Meeting (day 1)',impact:'MEDIUM'},
-  {day:'2026-11-18',title:'Bank Indonesia · RDG monetary policy decision (day 2)',impact:'HIGH'},
-  {day:'2026-12-15',title:'Bank Indonesia · Board of Governors Meeting (day 1)',impact:'MEDIUM'},
-  {day:'2026-12-16',title:'Bank Indonesia · RDG monetary policy decision (day 2)',impact:'HIGH'}
+  {day:'2026-11-17',title:'Indonesia External Debt Statistics (SULNI) · September 2026',impact:'MEDIUM',category:'Growth',source:official,note:'BI calendar listing; no numeric values are published in the calendar entry'},
+  {day:'2026-11-17',title:'Bank Indonesia · Board of Governors Meeting (day 1)',impact:'MEDIUM',category:'Central Bank',source:official,note:'Official schedule only; no policy decision on day 1'},
+  {day:'2026-11-18',title:'Bank Indonesia · BI Rate Decision',impact:'HIGH',category:'Central Bank',previous:'5.75%',forecast:'6.00%',source:research,note:'Previous / forecast from BCA Economics research dated 4 Nov 2026; actual pending BI'},
+  {day:'2026-11-18',title:'Bank Indonesia · RDG monetary policy decision (day 2)',impact:'HIGH',category:'Central Bank',source:official,note:'Official schedule; actual only after BI release'},
+  {day:'2026-11-18',title:'Indonesia Loan Growth YoY',impact:'MEDIUM',category:'Growth',previous:'13.26%',source:research,note:'Previous from BCA research; consensus forecast not supplied'},
+  {day:'2026-11-20',title:'Indonesia Foreign Direct Investment YoY',impact:'MEDIUM',category:'Growth',previous:'27.4%',source:research,note:'Previous from BCA research; forecast not supplied'},
+  {day:'2026-11-21',title:'Indonesia Current Account · Q3 2026',impact:'HIGH',category:'Growth',previous:'-12.5',forecast:'-3.3',source:research,note:'Previous / forecast from BCA research; actual pending'},
+  {day:'2026-12-15',title:'Bank Indonesia · Board of Governors Meeting (day 1)',impact:'MEDIUM',category:'Central Bank',source:official,note:'Official schedule only'},
+  {day:'2026-12-16',title:'Bank Indonesia · RDG monetary policy decision (day 2)',impact:'HIGH',category:'Central Bank',source:official,note:'Official schedule only'}
  ];
- return rows.map(row=>{
-  const date=new Date(row.day+'T00:00:00+07:00');
-  return {
-   id:'BI|'+row.day+'|'+row.title,title:row.title,country:'IDR',countryName:'Indonesia',
-   date,dateKey:row.day,impact:row.impact,category:'Central Bank',
-   previous:'',forecast:'',actual:'',unit:'',periodLabel:'',
-   timeLabel:'Time TBA · official calendar date only',
-   source:'Bank Indonesia · official RDG annual calendar',sourceLink:official,
-   sourceNote:'Official schedule · no release time published'
-  };
- });
+ return rows.map(row=>{const date=new Date(row.day+'T00:00:00+07:00');return {id:'ID|'+row.day+'|'+row.title,title:row.title,country:'IDR',countryName:'Indonesia',date,dateKey:row.day,impact:row.impact,category:row.category||classifyCalendarCategory(row.title),previous:row.previous||'',forecast:row.forecast||'',actual:row.actual||'',unit:'',periodLabel:'',timeLabel:'Time TBA · WIB release time unconfirmed',source:'Bank Indonesia / BCA Economics research',sourceLink:row.source,sourceNote:row.note}});
 }
 function calendarRefreshStatus(){
  const errors=APP.calendarErrors||[];
  const status=APP.calendarSourcesOK||0;
  const checked=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date());
  const counts=APP.calendarSourceCounts||{};
- const detail=['FF '+(counts.forexFactory||0),'INV '+(counts.investing||0),'XOOMAR '+(counts.xoomar||0),'BI '+(counts.indonesia||0)].join(' · ');
+ const detail=['FF '+(counts.forexFactory||0),'INV '+(counts.investing||0),'XOOMAR '+(counts.xoomar||0),'TE-ID '+(counts.tradingEconomicsIndonesia||0),'BI '+(counts.indonesia||0)].join(' · ');
  setText('calendarUpdatedAt',(status?status+' sources · ':'')+detail+' · Updated '+checked+' WIB');
  if(errors.length)setText('calendarCount', (APP.calendarEvents||[]).length+' releases · partial source coverage');
 }
@@ -2461,7 +2463,7 @@ function renderMacroCalendar(){
   button.classList.toggle('active',active);button.setAttribute('aria-pressed',active?'true':'false');
  });
  const impactCount=selectedImpacts.length,countryCount=selectedCountries.length,categoryCount=selectedCategories.length;
- setText('calendarFilterSummary',(impactCount===2?'High + Medium':impactCount?selectedImpacts.join(' + '):'No impact')+' · '+(countryCount===10?'all countries':countryCount+' currencies')+' · '+(categoryCount===10?'all categories':categoryCount+' types'));
+ setText('calendarFilterSummary',(impactCount===3?'High + Medium + Low':impactCount?selectedImpacts.join(' + '):'No impact')+' · '+(countryCount===10?'all countries':countryCount+' currencies')+' · '+(categoryCount===10?'all categories':categoryCount+' types'));
  if(!events.length){
   const empty=document.createElement('div');empty.className='empty-state';
   empty.textContent=(APP.calendarEvents||[]).length?'No releases match these filters in the selected '+(APP.calendarRangeDays||3)+'D window.':'No economic events were received from the public calendar providers.';
@@ -2507,13 +2509,13 @@ function renderMacroCalendar(){
   });
   host.append(group);
  });
- setText('calendarCount',events.length+' high / medium releases · '+(APP.calendarRangeDays||3)+'D · current day retained');
+ setText('calendarCount',events.length+' economic releases · '+(APP.calendarRangeDays||3)+'D · current day retained');
 }
 async function loadMacroCalendar(force=false){
  if(APP.calendarLoading)return APP.calendarLoading;
  const cached=loadJSON('apis_browser_calendar_cache',null);
  const cacheTtl=5*60*1000;
- if(!force&&cached&&cached.version==='2.8.0'&&cached.savedAt&&Date.now()-cached.savedAt<cacheTtl){
+ if(!force&&cached&&cached.version==='2.9.0'&&cached.savedAt&&Date.now()-cached.savedAt<cacheTtl){
   APP.calendarEvents=Array.isArray(cached.events)?cached.events.map(event=>({...event,date:new Date(event.date)})).filter(event=>!Number.isNaN(event.date.getTime())):[];
   APP.calendarState=APP.calendarEvents.length?'loaded':'unavailable';
   APP.calendarErrors=cached.errors||[];APP.calendarSourcesOK=cached.sourcesOK||0;
@@ -2527,6 +2529,7 @@ async function loadMacroCalendar(force=false){
   setText('calendarUpdatedAt','Updating Forex Factory · Investing.com · XOOMAR · Bank Indonesia…');
   const ffUrl='https://nfs.faireconomy.media/ff_calendar_thisweek.json';
   const ffNextUrl='https://nfs.faireconomy.media/ff_calendar_nextweek.json';
+  const teUrl=()=>{const today=calendarWibDayKey(new Date()),end=calendarDateKeyPlus(7);return 'https://api.tradingeconomics.com/calendar/country/indonesia?c=guest:guest&d1='+today+'&d2='+end};
   const highUrl='https://xoomar.com/api/markets/calendar?importance=high';
   const mediumUrl='https://xoomar.com/api/markets/calendar?importance=med';
   const investingPromise=fetchInvestingCalendar().catch(async apiError=>{
@@ -2538,9 +2541,10 @@ async function loadMacroCalendar(force=false){
    fetchCalendarJSON(ffNextUrl,'Forex Factory next week'),
    investingPromise,
    fetchCalendarJSON(highUrl,'XOOMAR high-impact'),
-   fetchCalendarJSON(mediumUrl,'XOOMAR medium-impact')
+   fetchCalendarJSON(mediumUrl,'XOOMAR medium-impact'),
+   fetchCalendarJSON(teUrl(),'Trading Economics Indonesia')
   ]);
-  const errors=[],factory=[],investing=[],agency=[];
+  const errors=[],factory=[],investing=[],agency=[],indonesiaTe=[];
   [0,1].forEach(index=>{
    const result=results[index],label=index===0?'this week':'next week';
    if(result.status==='fulfilled'&&Array.isArray(result.value))result.value.forEach(raw=>{const item=normalizeFxCalendarEvent(raw);if(item)factory.push(item)});
@@ -2568,17 +2572,18 @@ async function loadMacroCalendar(force=false){
     if(item)agency.push(item);
    });
   });
-  let merged=mergeCalendarSources(factory,investing);
-  merged=mergeUsCalendarActuals(merged,agency);
+  if(results[5].status==='fulfilled'&&Array.isArray(results[5].value))results[5].value.forEach(raw=>{const item=normalizeFxCalendarEvent({title:raw.Event||raw.event||raw.Category,country:'IDR',date:raw.Date||raw.date,impact:raw.Importance||raw.importance,previous:raw.Previous??raw.previous,forecast:raw.Forecast??raw.forecast,actual:raw.Actual??raw.actual,unit:raw.Unit||raw.unit,periodLabel:raw.Reference||raw.reference,sourceLabel:'Trading Economics · Indonesia calendar',sourceLink:'https://tradingeconomics.com/indonesia/calendar',sourceNote:'Indonesia calendar · consensus / official-source actuals'});if(item)indonesiaTe.push(item)});
+  else errors.push('Trading Economics Indonesia: '+String(results[5].reason?.message||results[5].reason||'calendar unavailable'));
+  let merged=mergeCalendarSources(factory,investing);merged=mergeUsCalendarActuals(merged,agency);merged=mergeCalendarSources(merged,indonesiaTe);
   const bi=buildIndonesiaCalendarEvents();
   const unique=new Map();
   [...merged,...bi].forEach(item=>{
    const key=[item.country,item.dateKey,calendarEventNameKey(item.title)].join('|');
    if(!unique.has(key)){unique.set(key,item);return}
    const previous=unique.get(key);
-   if(!previous.actual&&item.actual)previous.actual=item.actual;
-   if(!previous.previous&&item.previous)previous.previous=item.previous;
-   if(!previous.forecast&&item.forecast)previous.forecast=item.forecast;
+   if((previous.actual===''||previous.actual===null||previous.actual===undefined)&&item.actual!==''&&item.actual!==null&&item.actual!==undefined)previous.actual=item.actual;
+   if((previous.previous===''||previous.previous===null||previous.previous===undefined)&&item.previous!==''&&item.previous!==null&&item.previous!==undefined)previous.previous=item.previous;
+   if((previous.forecast===''||previous.forecast===null||previous.forecast===undefined)&&item.forecast!==''&&item.forecast!==null&&item.forecast!==undefined)previous.forecast=item.forecast;
    if(item.source&&!previous.source.includes(item.source))previous.source+=' + '+item.source;
   });
   APP.calendarEvents=[...unique.values()].sort((a,b)=>a.date-b.date);
@@ -2586,9 +2591,9 @@ async function loadMacroCalendar(force=false){
   APP.calendarSourcesOK=results.filter(result=>result.status==='fulfilled').length+1;
   APP.calendarState=APP.calendarEvents.length?'loaded':'unavailable';
   APP.calendarError=errors.join(' · ');
-  APP.calendarSourceCounts={forexFactory:factory.length,investing:investing.length,xoomar:agency.length,indonesia:bi.length};
+  APP.calendarSourceCounts={forexFactory:factory.length,investing:investing.length,xoomar:agency.length,tradingEconomicsIndonesia:indonesiaTe.length,indonesia:bi.length};
   const serializable=APP.calendarEvents.map(item=>({...item,date:item.date.toISOString()}));
-  saveJSON('apis_browser_calendar_cache',{version:'2.8.0',events:serializable,savedAt:Date.now(),errors,sourcesOK:APP.calendarSourcesOK,counts:APP.calendarSourceCounts});
+  saveJSON('apis_browser_calendar_cache',{version:'2.9.0',events:serializable,savedAt:Date.now(),errors,sourcesOK:APP.calendarSourcesOK,counts:APP.calendarSourceCounts});
   saveJSON('apis_calendar_last_success',Date.now());
   renderMacroCalendar();calendarRefreshStatus();renderQuality();
  })();

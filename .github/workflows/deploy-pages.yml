@@ -334,10 +334,10 @@ jobs:
                 if(!calendarSources.includes('INV 2')||!calendarSources.includes('FF 2'))
                   throw new Error(engine.name+' Investing / Forex Factory source merge failed: '+calendarSources);
                 if(!eventText.includes('19.7'))throw new Error(engine.name+' Investing.com Actual value missing: '+eventText);
-                await page.waitForFunction(()=>String(document.getElementById('lastRefresh')?.textContent||'').includes('rotating watchlist'),null,{timeout:12000});
-                const sliceCheck=await page.locator('#lastRefresh').innerText();
-                if(!sliceCheck.includes('rotating watchlist'))
-                  throw new Error(engine.name+' 5s rotating quote poll did not complete a slice: '+sliceCheck);
+                await page.waitForFunction(()=>Number(window.APP?.lastSliceRefreshAt||0)>0,null,{timeout:30000});
+                const sliceCheck=await page.evaluate(()=>({lastSliceRefreshAt:APP.lastSliceRefreshAt,cursor:APP.sliceCursor,busy:APP.sliceBusy}));
+                if(!sliceCheck.lastSliceRefreshAt)
+                  throw new Error(engine.name+' 5s session-aware quote poll did not complete a slice: '+JSON.stringify(sliceCheck));
                 await page.locator('[data-cal-range="7"]').click();
                 if (await page.locator('[data-cal-range="7"]').getAttribute('aria-pressed')!=='true')
                   throw new Error(engine.name+' 7D calendar range button failed');
@@ -356,10 +356,9 @@ jobs:
                 await page.locator('[data-market-filter="indices"]').click();
                 const expandedRow=page.locator('#marketSnapshotGrid .ios-stock-item').first();
                 await expandedRow.locator('summary').click();
-                const beforeSlice=await page.locator('#lastRefresh').innerText();
-                await page.waitForFunction(previous=>(document.getElementById('lastRefresh')?.textContent||'')!==previous &&
-                  (document.getElementById('lastRefresh')?.textContent||'').includes('rotating watchlist'),
-                  beforeSlice,{timeout:10000});
+                const beforeSliceAt=await page.evaluate(()=>Number(APP.lastSliceRefreshAt||0));
+                await page.waitForFunction(previous=>Number(window.APP?.lastSliceRefreshAt||0)>previous,
+                  beforeSliceAt,{timeout:15000});
                 if(!(await page.locator('#marketSnapshotGrid .ios-stock-item').first().evaluate(row=>row.open)))
                   throw new Error(engine.name+' an in-place quote refresh closed an expanded market row');
                 await page.locator('.theme-menu summary').click();

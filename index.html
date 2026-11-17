@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f5f7">
 <meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — Market Intelligence Terminal v1.7.2</title>
+<title>APIS — Market Intelligence Terminal v1.8.0</title>
 <style>
 :root{
   color-scheme:light;
@@ -28,6 +28,53 @@ a{color:var(--blue);text-decoration:none}button,input,select,textarea{font:inher
 @media(max-width:1100px){.quote-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.topbar-inner{gap:12px}.nav{overflow-x:auto}.two-col{grid-template-columns:1fr}}
 @media(max-width:720px){.topbar-inner{height:auto;min-height:62px;padding:10px 15px;flex-wrap:wrap}.brand{font-size:18px}.nav{order:3;width:100%;flex-basis:100%;overflow-x:auto;padding-bottom:2px}.nav a{font-size:11px;padding:7px 9px}.clock{display:none}.container{padding:25px 15px 60px}.hero{display:block}.hero-tools{justify-content:flex-start;margin-top:17px}.hero h1{font-size:38px}.section-head h2{font-size:22px}.quote-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.quote-card{padding:14px;min-height:129px}.quote-value{font-size:22px}.two-col,.three-col,.workbench-grid{grid-template-columns:1fr}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.module-card{padding:14px;min-height:150px}.apis-banner{align-items:flex-start;flex-direction:column}.widget-box{height:420px}.widget-box.timeline{height:650px}.field-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.footer{padding:22px 15px}.footer-inner{display:block}.footer-inner>*{margin:4px 0}.top-right{gap:7px}.feed-state{font-size:10px;padding:6px 9px}}
 @media(max-width:380px){.quote-grid{grid-template-columns:1fr}.module-grid{grid-template-columns:1fr}.quote-card{min-height:120px}}
+
+/* APIS 1.8.0 — compact institutional terminal presentation */
+:root{--bg:#f1f3f6;--surface:#fff;--surface-2:#f8f9fb;--ink:#172235;--secondary:#667085;--muted:#8993a3;--line:rgba(20,35,58,.11);--blue:#1769c2;--blue-soft:#eaf2fb;--shadow:0 2px 10px rgba(19,36,61,.035);--radius:14px;--radius-sm:10px}
+body{font-size:13px;background:var(--bg);color:var(--ink)}
+.topbar{background:rgba(250,251,253,.94);border-bottom:1px solid #dfe4ec}
+.topbar-inner{height:62px;gap:18px;padding:0 22px}
+.brand{font-size:18px}.brand-mark{width:29px;height:29px;border-radius:9px}
+.brand small{font-size:9px}.nav a{font-size:11px;padding:7px 10px}.nav a.active{background:#e8edf4;color:#14243a}
+.feed-state{font-size:10px;padding:6px 9px;background:#fff}.refresh-hint{font-size:9px;color:#667085;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.container{max-width:1640px;padding:22px 22px 56px}
+.hero{align-items:center;margin:0 0 15px;padding:0 0 14px;border-bottom:1px solid var(--line);gap:18px}
+.hero h1{font-size:clamp(25px,2.7vw,34px);letter-spacing:-.045em;line-height:1.08;font-weight:730}
+.hero p{font-size:12px;max-width:760px;margin:7px 0 0;color:#667085;line-height:1.45}
+.eyebrow{font-size:9px;letter-spacing:.13em;margin-bottom:5px;color:#68758a}
+.hero-tools{gap:7px}.button{font-size:11px;padding:8px 12px;border-radius:9px}.button.secondary{background:#fff}
+.section{margin-top:24px;scroll-margin-top:78px}.section-head{margin-bottom:10px}.section-head h2{font-size:20px;letter-spacing:-.035em}.section-head p{font-size:11px}
+.grid{gap:10px}.quote-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.card{border-radius:14px;box-shadow:var(--shadow)}
+.quote-card{padding:11px 13px;min-height:105px;border-radius:11px;box-shadow:none}
+.quote-name{font-size:10px}.symbol{font-size:9px}.quote-value{font-size:21px;margin:8px 0 2px;letter-spacing:-.035em}.quote-bottom{font-size:10px}.quote-asof{font-size:9px;margin-top:5px}
+.tape-wrap{margin-top:9px;border-radius:9px}.tape-item{padding:8px 12px}.tape-item strong,.tape-item span{font-size:10px}
+.section-tools{gap:6px}.source-pill{font-size:9px;padding:4px 7px}
+.table-wrap{border-radius:11px}table{min-width:780px}th{font-size:9px;padding:9px 11px}td{font-size:11px;padding:9px 11px}.asset-name{font-size:11px}.asset-sub{font-size:9px}
+.two-col{grid-template-columns:minmax(0,1.4fr) minmax(300px,.85fr);gap:10px}
+.chart-card,.card-pad{padding:14px}.card-title{margin-bottom:9px}.card-title h3{font-size:13px}.card-title p{font-size:10px}
+.widget-box{height:430px}.widget-box.compact{height:330px}
+.note{font-size:10px;padding:10px 12px}.module-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.module-card{padding:13px 14px;min-height:120px}.module-card h3{font-size:13px;margin:9px 0 4px}.module-card p{font-size:10px;line-height:1.4}.module-status{font-size:8px;padding:3px 6px}
+.apis-banner{padding:15px 17px;border-radius:13px}.apis-banner h3{font-size:15px}.apis-banner p{font-size:11px}
+.workbench-grid{gap:10px}.tool-card{padding:15px}.tool-card h3{font-size:15px}.tool-card>p{font-size:10px;margin-bottom:12px}
+.field label{font-size:9px}.field input,.field textarea,.field select{font-size:11px;padding:9px 10px}
+.result-box{font-size:11px}.footer{padding:20px 22px}
+@media(max-width:1100px){.topbar-inner{gap:10px}.nav{overflow-x:auto}.two-col{grid-template-columns:1fr}}
+@media(max-width:900px){.quote-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){
+ .topbar-inner{height:auto;min-height:58px;padding:8px 12px;gap:7px}.brand{font-size:17px}.top-right{gap:6px}.feed-state{max-width:155px;overflow:hidden}.refresh-hint{font-size:8px}
+ .nav{order:3;flex-basis:100%;width:100%;padding:4px 0 1px;gap:3px}.nav a{font-size:10px;padding:7px 9px}
+ .container{padding:15px 11px 45px}.hero{display:block;margin-bottom:11px;padding-bottom:11px}.hero h1{font-size:26px}.hero p{font-size:11px}.hero-tools{margin-top:10px;justify-content:flex-start}
+ .section{margin-top:19px}.section-head{align-items:flex-start;gap:8px}.section-head h2{font-size:18px}.section-head p{font-size:10px}
+ .quote-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.quote-card{padding:10px;min-height:99px}.quote-value{font-size:19px}.quote-asof{font-size:8px}
+ .two-col,.three-col,.workbench-grid{grid-template-columns:1fr}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.module-card{min-height:120px;padding:11px}
+ .widget-box{height:390px}.widget-box.compact{height:320px}.widget-box.timeline{height:570px}.widget-box.calendar{height:520px}
+ .table-wrap{border-radius:9px}table{min-width:650px}th,td{padding:8px 9px}.card-pad,.chart-card,.tool-card{padding:12px}
+ .apis-banner{padding:13px}.footer{padding:18px 12px}
+}
+@media(max-width:390px){.brand small{font-size:8px}.refresh-hint{display:none}.feed-state{max-width:132px}.module-card p{font-size:9px}}
+
 </style>
 </head>
 <body>
@@ -36,14 +83,14 @@ a{color:var(--blue);text-decoration:none}button,input,select,textarea{font:inher
   <nav class="nav" aria-label="Main navigation">
     <a href="#overview" class="active">Ringkasan</a><a href="#markets">Pasar</a><a href="#research">Berita & Agenda</a><a href="#workbench">Ruang Kerja APIS</a><a href="#sources">Data & Sumber</a>
   </nav>
-  <div class="top-right"><span class="clock" id="clock">--:--:-- WIB</span><span class="feed-state"><i class="dot" id="feedDot"></i><span id="feedState">Connecting feeds</span></span><button class="icon-button" id="refreshBtn" title="Refresh data" aria-label="Refresh data">↻</button></div>
+  <div class="top-right"><span class="clock" id="clock">--:--:-- WIB</span><span class="feed-state"><i class="dot" id="feedDot"></i><span id="feedState">Connecting feeds</span></span><span class="refresh-hint" id="autoRefreshLabel">AUTO · 60s</span><button class="icon-button id="refreshBtn" title="Refresh data" aria-label="Refresh data">↻</button></div>
 </div></div>
 
 <main class="container">
 <section id="overview">
-  <div class="hero"><div><div class="eyebrow">APIS · ruang kerja intelijen institusional</div><h1>Pasar, dengan konteks.</h1><p>Intelijen pasar global dan Indonesia dengan asal-usul data yang transparan, waktu observasi, serta perangkat analisis praktis. Berjalan langsung di browser tanpa API key privat atau backend.</p></div><div class="hero-tools"><button class="button secondary" id="exportSnapshotTop">Ekspor data pasar</button><button class="button" id="refreshTop">Perbarui data pasar</button></div></div>
+  <div class="hero"><div><div class="eyebrow">APIS MARKET INTELLIGENCE TERMINAL · WIB</div><h1>Global Market Monitor</h1><p>Terminal pemantauan lintas aset: indeks, saham, valas, komoditas, risiko, dan crypto. Harga menampilkan waktu observasi serta status feed; BTC memiliki streaming real-time, sedangkan quote publik Yahoo dapat tertunda sesuai bursa.</p></div><div class="hero-tools"><button class="button secondary" id="exportSnapshotTop">Ekspor data pasar</button><button class="button" id="refreshTop">Perbarui data pasar</button></div></div>
   <div class="grid quote-grid" id="featuredQuotes" aria-live="polite"></div>
-  <div class="tape-wrap"><div class="tape" id="tickerTape"><div class="tape-item"><strong>APIS</strong><span class="minor">Waiting for provider observations. Press “Perbarui data pasar” if no quotes appear.</span></div></div></div>
+  <div class="tape-wrap"><div class="tape" id="tickerTape"><div class="tape-item"><strong>APIS</strong><span class="minor">Memuat observasi penyedia · pembaruan otomatis setiap 60 detik selama halaman aktif.</span></div></div></div>
 </section>
 
 <section class="section" id="markets">
@@ -190,7 +237,7 @@ a{color:var(--blue);text-decoration:none}button,input,select,textarea{font:inher
 
 <script>
 'use strict';
-/* APIS Browser Edition 1.7.0 · Restored UX + repaired data connectors
+/* APIS Browser Edition 1.8.0 · Intraday quote polling + terminal UI
    - No synthetic market data or fabricated news.
    - Yahoo Finance chart endpoint is unofficial and accessed through the public CORS.dev proxy.
    - TradingView widgets are visual embeds; their data is not read back into calculations.
@@ -275,34 +322,55 @@ function restoreAuxCache(){
    CORS.dev is an external intermediary; this adapter is best-effort and not a licensed real-time feed. */
 async function fetchYahooQuote(item){
   const encoded=encodeURIComponent(item.symbol);
-  const targetFor=host=>`https://${host}/v8/finance/chart/${encoded}?range=1d&interval=1d`;
-  const targets=[targetFor('query1.finance.yahoo.com'),targetFor('query2.finance.yahoo.com')];
+  const plans=[
+    {host:'query1.finance.yahoo.com',range:'1d',interval:'1m'},
+    {host:'query2.finance.yahoo.com',range:'1d',interval:'1m'},
+    {host:'query1.finance.yahoo.com',range:'5d',interval:'5m'},
+    {host:'query2.finance.yahoo.com',range:'5d',interval:'5m'},
+    {host:'query1.finance.yahoo.com',range:'1mo',interval:'1d'},
+    {host:'query2.finance.yahoo.com',range:'1mo',interval:'1d'}
+  ];
   const errors=[];
-  for(const yahooUrl of targets){
+  for(const plan of plans){
+    const yahooUrl=`https://${plan.host}/v8/finance/chart/${encoded}?range=${plan.range}&interval=${plan.interval}&includePrePost=true`;
     const proxyUrl='https://proxy.cors.dev/'+yahooUrl;
-    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),33000);
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),12000);
     try{
       const response=await fetch(proxyUrl,{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',signal:controller.signal,headers:{'Accept':'application/json'}});
       if(!response.ok){const proxyError=response.headers.get('X-Cors-Error');throw new Error(proxyError||`HTTP ${response.status}`)}
-      const body=await response.json();const result=body?.chart?.result?.[0];
+      const body=await response.json(),result=body?.chart?.result?.[0];
       if(!result?.meta)throw new Error(body?.chart?.error?.description||'No chart metadata');
-      const m=result.meta,timestamps=Array.isArray(result.timestamp)?result.timestamp:[];
-      const closes=result.indicators?.quote?.[0]?.close||[];
-      const lastClose=[...closes].reverse().find(v=>num(v)!==null);
-      const rawPrice=num(m.regularMarketPrice)??num(lastClose);
-      const lastTimestamp=num(m.regularMarketTime)??num(timestamps[timestamps.length-1]);
-      const previous=num(m.chartPreviousClose??m.previousClose);
-      if(rawPrice===null||rawPrice<=0||!lastTimestamp)throw new Error('Quote missing a valid price or provider timestamp');
-      const observedAge=Date.now()/1000-lastTimestamp;
-      if(observedAge < -300)throw new Error('Provider timestamp is in the future');
-      const state=String(m.marketState||'UNKNOWN').toUpperCase();
-      const status=observedAge>48*3600?'STALE_OBSERVATION':(state==='CLOSED'?'LAST_AVAILABLE_CLOSE':'PROVIDER_QUOTE');
-      const quote={symbol:item.symbol,name:item.name,short:item.short,group:item.group,price:rawPrice,previousClose:previous,currency:m.currency||'',exchange:m.exchangeName||m.fullExchangeName||'',marketState:state,observedAt:lastTimestamp,observedAge,status,source:'Yahoo Finance chart via cors.dev',sourceUrl:`https://finance.yahoo.com/quote/${encoded}/`,retrievedAt:Date.now(),proxy:'proxy.cors.dev'};
-      return quote;
-    }catch(e){errors.push(`${yahooUrl.includes('query1')?'query1':'query2'}: ${e?.name==='AbortError'?'timeout':String(e?.message||e).slice(0,120)}`)}
-    finally{clearTimeout(timeout)}
+      const meta=result.meta,ts=Array.isArray(result.timestamp)?result.timestamp:[];
+      const quoteRows=result.indicators?.quote?.[0]||{},closes=Array.isArray(quoteRows.close)?quoteRows.close:[];
+      let lastIndex=-1;
+      for(let i=closes.length-1;i>=0;i--){if(num(closes[i])!==null){lastIndex=i;break}}
+      const barPrice=lastIndex>=0?num(closes[lastIndex]):null;
+      const barTime=lastIndex>=0?num(ts[lastIndex]):null;
+      const marketPrice=num(meta.regularMarketPrice);
+      const regularTime=num(meta.regularMarketTime);
+      const rawPrice=marketPrice??barPrice;
+      const lastTimestamp=Math.max(regularTime||0,barTime||0);
+      const previous=num(meta.chartPreviousClose??meta.previousClose);
+      if(rawPrice===null||rawPrice<=0||!lastTimestamp)throw new Error('No valid price/provider timestamp');
+      const observedAge=Math.max(0,Date.now()/1000-lastTimestamp);
+      const marketState=String(meta.marketState||'UNKNOWN').toUpperCase();
+      const isOpen=['REGULAR','PRE','POST','PREPRE','POSTPOST'].includes(marketState);
+      const status=observedAge>48*3600?'STALE_OBSERVATION':(!isOpen||observedAge>20*60?'LAST_AVAILABLE_CLOSE':'DELAYED_PROVIDER');
+      return {
+        symbol:item.symbol,name:item.name,short:item.short,group:item.group,
+        price:rawPrice,previousClose:previous,currency:meta.currency||'',
+        exchange:meta.exchangeName||meta.fullExchangeName||'',
+        marketState,observedAt:lastTimestamp,observedAge,status,
+        intervalUsed:plan.interval,source:'Yahoo Finance chart via cors.dev',
+        sourceUrl:`https://finance.yahoo.com/quote/${encoded}/`,
+        retrievedAt:Date.now(),proxy:'proxy.cors.dev'
+      };
+    }catch(e){
+      errors.push(`${plan.host.split('.')[0]} ${plan.interval}: ${e?.name==='AbortError'?'timeout':String(e?.message||e).slice(0,90)}`);
+    }finally{clearTimeout(timeout)}
   }
-  throw new Error(errors.join(' | ')||'Yahoo chart unavailable');
+  throw new Error(errors.slice(0,4).join(' | ')||'Yahoo intraday chart unavailable');
 }
 async function fetchQuoteBatch(){
   if(APP.yahooState==='loading')return;
@@ -311,11 +379,11 @@ async function fetchQuoteBatch(){
   setText('lastRefresh','Fetching '+WATCHLIST.length+' instruments…');
   let cursor=0,successes=0,failures=0;const queue=WATCHLIST.slice();
   const workers=Array.from({length:8},async()=>{while(cursor<queue.length){const item=queue[cursor++];try{const q=await fetchYahooQuote(item);QUOTES.set(item.symbol,q);APP.failures.delete(item.symbol);successes++}
-    catch(e){failures++;APP.failures.set(item.symbol,String(e?.message||'Provider request failed'));const old=QUOTES.get(item.symbol);if(old){const age=Date.now()/1000-old.observedAt;old.status=age>48*3600?'STALE_OBSERVATION':'STALE_CACHE';old.lastError=String(e?.message||'Refresh failed').slice(0,180);old.cacheRestored=true;QUOTES.set(item.symbol,old)}}
+    catch(e){failures++;APP.failures.set(item.symbol,String(e?.message||'Provider request failed'));const old=QUOTES.get(item.symbol);if(old){const age=Date.now()/1000-old.observedAt;old.status=age>48*3600?'STALE_OBSERVATION':'STALE_CACHE';old.activeRunId=0;old.lastError=String(e?.message||'Refresh failed').slice(0,180);old.cacheRestored=true;QUOTES.set(item.symbol,old)}}
     APP.successCount=successes;setText('lastRefresh',`Fetching ${successes+failures}/${WATCHLIST.length} · ${successes} updated · ${failures} failed`);renderQuoteViews();renderQuality();updateFeedState();
   }});
   try{
-    await Promise.all(workers);APP.lastRefresh=Date.now();APP.successCount=successes;APP.yahooState=successes===WATCHLIST.length?'ready':(successes?'partial':'unavailable');
+    await Promise.all(workers);APP.lastRefresh=Date.now();APP.nextRefreshAt=Date.now()+60000;APP.successCount=successes;APP.yahooState=successes===WATCHLIST.length?'ready':(successes?'partial':'unavailable');
     const all=[...QUOTES.values()].filter(q=>num(q.price)!==null&&num(q.observedAt)!==null);
     saveJSON('apis_browser_quotes',all.slice(-WATCHLIST.length));
     const checked=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date());
@@ -325,12 +393,28 @@ async function fetchQuoteBatch(){
       const firstFailure=APP.failures.values().next().value||'No provider response';
       setText('feedState','Yahoo unavailable · '+firstFailure.slice(0,72));
     }
-  }finally{buttons.forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=false})}
+  }finally{buttons.forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=false});if(!APP.nextRefreshAt)APP.nextRefreshAt=Date.now()+60000;}
 }
 function btcIsFresh(){if(!APP.btc)return false;const age=Date.now()-APP.btc.receivedAt;if(APP.btc.transport==='WEBSOCKET')return !!(typeof WebSocket!=='undefined'&&APP.ws&&APP.ws.readyState===WebSocket.OPEN&&age<=15000&&(Date.now()-APP.btc.observedAt)<=15000);return APP.btc.transport==='REST'&&age<=90000&&(Date.now()-APP.btc.observedAt)<=90000;}
-function updateFeedState(){const dot=document.getElementById('feedDot'),label=document.getElementById('feedState'),cryptoLive=!!(APP.btc&&APP.btc.transport==='WEBSOCKET'&&btcIsFresh()),available=QUOTES.size;dot.className='dot'+(cryptoLive?' live':available?' warn':'');const suffix=APP.yahooState==='loading'?' · updating':APP.yahooState==='partial'?' · partial':APP.yahooState==='unavailable'?' · unavailable':'';label.textContent=(cryptoLive?'BTC live stream · ':'')+'Yahoo '+(APP.successCount||0)+'/19'+suffix;}
+function quoteStatusClass(status){
+  if(['STALE_OBSERVATION','STALE_CACHE','UNAVAILABLE'].includes(status))return 'bad';
+  if(['LAST_AVAILABLE_CLOSE','DELAYED_PROVIDER'].includes(status))return 'warn';
+  return 'ok';
+}
+function quoteStatusLabel(status){
+  return ({DELAYED_PROVIDER:'DELAYED',LAST_AVAILABLE_CLOSE:'LAST CLOSE',STALE_OBSERVATION:'STALE',STALE_CACHE:'CACHED / STALE',PROVIDER_QUOTE:'PROVIDER UPDATE'})[status]||String(status||'UNAVAILABLE').replaceAll('_',' ');
+}
+function updateFeedState(){
+  const dot=document.getElementById('feedDot'),label=document.getElementById('feedState');
+  const cryptoLive=!!(APP.btc&&APP.btc.transport==='WEBSOCKET'&&btcIsFresh());
+  const freshProvider=[...QUOTES.values()].filter(q=>q.activeRunId===APP.currentRunId&&q.status==='DELAYED_PROVIDER').length;
+  const closed=[...QUOTES.values()].filter(q=>q.activeRunId===APP.currentRunId&&q.status==='LAST_AVAILABLE_CLOSE').length;
+  dot.className='dot'+(cryptoLive?' live':freshProvider?' warn':'');
+  const suffix=APP.yahooState==='loading'?' · updating':APP.yahooState==='partial'?' · partial':APP.yahooState==='unavailable'?' · unavailable':'';
+  label.textContent=(cryptoLive?'BTC LIVE · ':'')+`Yahoo ${APP.successCount||0}/19`+(freshProvider?' · delayed '+freshProvider:'')+(closed?' · close '+closed:'')+suffix;
+}
 
-function createQuoteCard(item,quote){const card=document.createElement('article');card.className='card quote-card'+(quote?'':' empty');const top=document.createElement('div');top.className='quote-top';const name=document.createElement('div');name.className='quote-name';name.textContent=item.name;const sym=document.createElement('span');sym.className='symbol';sym.textContent=item.short;top.append(name,sym);card.append(top);const value=document.createElement('div');value.className='quote-value';value.textContent=quote?fmtPrice(quote):'Unavailable';card.append(value);const bottom=document.createElement('div');bottom.className='quote-bottom';const ch=document.createElement('span');ch.className='change '+(quote?changeClass((quote.price-(quote.previousClose??quote.price))):'flat');ch.textContent=quote&&num(quote.previousClose)!==null?`${fmt(quote.price-quote.previousClose,2)} (${pct((quote.price/quote.previousClose-1)*100)})`:'No verified observation';const status=document.createElement('span');status.className='status-label '+(quote?((quote.status==='STALE_OBSERVATION'||quote.status==='STALE_CACHE')?'bad':quote.status==='LAST_AVAILABLE_CLOSE'?'warn':'ok'):'bad');status.textContent=quote?quote.status.replaceAll('_',' '):'UNAVAILABLE';bottom.append(ch,status);card.append(bottom);const asof=document.createElement('div');asof.className='quote-asof';asof.textContent=quote?`Observed ${fmtTime(quote.observedAt)} · ${quote.exchange||'provider quote'}`:'No price shown because a valid provider observation was not received';card.append(asof);return card;}
+function createQuoteCard(item,quote){const card=document.createElement('article');card.className='card quote-card'+(quote?'':' empty');const top=document.createElement('div');top.className='quote-top';const name=document.createElement('div');name.className='quote-name';name.textContent=item.name;const sym=document.createElement('span');sym.className='symbol';sym.textContent=item.short;top.append(name,sym);card.append(top);const value=document.createElement('div');value.className='quote-value';value.textContent=quote?fmtPrice(quote):'Unavailable';card.append(value);const bottom=document.createElement('div');bottom.className='quote-bottom';const ch=document.createElement('span');ch.className='change '+(quote?changeClass((quote.price-(quote.previousClose??quote.price))):'flat');ch.textContent=quote&&num(quote.previousClose)!==null?`${fmt(quote.price-quote.previousClose,2)} (${pct((quote.price/quote.previousClose-1)*100)})`:'No verified observation';const status=document.createElement('span');status.className='status-label '+(quote?quoteStatusClass(quote.status):'bad':'bad');status.textContent=quote?quoteStatusLabel(quote.status):'UNAVAILABLE';bottom.append(ch,status);card.append(bottom);const asof=document.createElement('div');asof.className='quote-asof';asof.textContent=quote?`Observed ${fmtTime(quote.observedAt)} · ${quote.exchange||'provider quote'}`:'No price shown because a valid provider observation was not received';card.append(asof);return card;}
 function renderQuoteViews(){
   const featured=['^JKSE','^GSPC','^IXIC','^DJI','^VIX','IDR=X','BZ=F','GC=F'];const grid=document.getElementById('featuredQuotes');grid.replaceChildren();featured.forEach(sym=>{const item=WATCHLIST.find(x=>x.symbol===sym);grid.append(createQuoteCard(item,QUOTES.get(sym))) });
   const body=document.getElementById('watchlistBody');body.replaceChildren();let usable=0;
@@ -338,7 +422,7 @@ function renderQuoteViews(){
     const p=document.createElement('td');p.textContent=q?fmtPrice(q):'—';cells.push(p);
     const d=document.createElement('td');d.textContent=q&&num(q.previousClose)!==null?fmt(q.price-q.previousClose,2):'—';if(q)d.className='change '+changeClass(q.price-q.previousClose);cells.push(d);
     const pc=document.createElement('td');pc.textContent=q&&q.previousClose?pct((q.price/q.previousClose-1)*100):'—';if(q)pc.className='change '+changeClass(q.price-q.previousClose);cells.push(pc);
-    const st=document.createElement('td');st.textContent=q?q.status.replaceAll('_',' '):'UNAVAILABLE';st.className='status-label '+(q?((q.status==='STALE_OBSERVATION'||q.status==='STALE_CACHE')?'bad':q.status==='LAST_AVAILABLE_CLOSE'?'warn':'ok'):'bad');cells.push(st);
+    const st=document.createElement('td');st.textContent=q?quoteStatusLabel(q.status):'UNAVAILABLE';st.className='status-label '+(q?quoteStatusClass(q.status):'bad');cells.push(st);
     const t=document.createElement('td');t.textContent=q?fmtTime(q.observedAt):'—';cells.push(t);
     const src=document.createElement('td');if(q){const a=document.createElement('a');a.href=q.sourceUrl;a.target='_blank';a.rel='noopener';a.textContent='Yahoo Finance ↗';src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
     cells.forEach(c=>tr.append(c));body.append(tr);
@@ -462,10 +546,16 @@ function exportEvidence(){if(!APP.ledger.length){toast('Buku bukti is empty.');r
 ['exportSnapshotTop','exportWatchlist','exportDataQuality'].forEach(id=>document.getElementById(id).onclick=exportQuotes);document.getElementById('exportEvidence').onclick=exportEvidence;
 
 /* Navigation, clock and bootstrap. */
-function tickClock(){setText('clock',new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date())+' WIB')}
+function tickClock(){setText('clock',new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date())+' WIB');const hint=document.getElementById('autoRefreshLabel');if(hint){const left=APP.nextRefreshAt?Math.max(0,Math.ceil((APP.nextRefreshAt-Date.now())/1000)):60;hint.textContent=document.hidden?'AUTO · PAUSED':('AUTO · '+left+'s')}}
 const navLinks=[...document.querySelectorAll('.nav a')];const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){navLinks.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+entry.target.id))}})},{rootMargin:'-25% 0px -65% 0px'});['overview','markets','research','workbench','sources'].forEach(id=>{const e=document.getElementById(id);if(e)observer.observe(e)});
 document.getElementById('refreshBtn').onclick=()=>fetchQuoteBatch();document.getElementById('refreshTop').onclick=()=>fetchQuoteBatch();document.getElementById('reloadChart').onclick=loadChart;document.getElementById('chartSymbol').onchange=loadChart;
-function bootstrap(){restoreQuoteCache();restoreAuxCache();addAlertOptions();renderLedger();renderAlerts();tickClock();setInterval(tickClock,1000);renderQuoteViews();renderQuality();if(QUOTES.size){setText('lastRefresh','Restored '+QUOTES.size+' cached observations · stale until refreshed');}APP.staleTimer=setInterval(()=>{if(APP.btc&&!btcIsFresh()){setText('btcStatus','STALE · last provider observation retained');updateFeedState();renderQuality()}},3000);APP.btcRestTimer=setInterval(()=>{if(!btcIsFresh()||APP.btc?.transport!=='WEBSOCKET')fetchBitcoinRest()},30000);loadWidgets();connectBitcoinStream();fetchBitcoinRest();loadFxReference();fetchQuoteBatch();APP.timer=setInterval(fetchQuoteBatch,120000);}
+function bootstrap(){restoreQuoteCache();restoreAuxCache();addAlertOptions();renderLedger();renderAlerts();tickClock();setInterval(tickClock,1000);renderQuoteViews();renderQuality();if(QUOTES.size){setText('lastRefresh','Restored '+QUOTES.size+' cached observations · stale until refreshed');}APP.staleTimer=setInterval(()=>{if(APP.btc&&!btcIsFresh()){setText('btcStatus','STALE · last provider observation retained');updateFeedState();renderQuality()}},3000);APP.btcRestTimer=setInterval(()=>{if(!btcIsFresh()||APP.btc?.transport!=='WEBSOCKET')fetchBitcoinRest()},30000);loadWidgets();connectBitcoinStream();fetchBitcoinRest();loadFxReference();fetchQuoteBatch();APP.nextRefreshAt=Date.now()+60000;
+  APP.timer=setInterval(()=>{if(!document.hidden&&navigator.onLine&&APP.yahooState!=='loading')fetchQuoteBatch()},60000);
+  APP.fxTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadFxReference()},60*60*1000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(!btcIsFresh())connectBitcoinStream();if(navigator.onLine&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>30000))fetchQuoteBatch();if(APP.fxState==='unavailable'||APP.fxState==='cached')loadFxReference()}});
+  window.addEventListener('online',()=>{fetchQuoteBatch();loadFxReference();if(!btcIsFresh())connectBitcoinStream()});
+  window.addEventListener('focus',()=>{if(navigator.onLine&&!document.hidden&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>45000))fetchQuoteBatch()});
+}
 bootstrap();
 </script>
 </body>

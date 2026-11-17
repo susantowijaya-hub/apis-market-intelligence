@@ -1564,33 +1564,28 @@ function googleFinancePageNumber(value){
 }
 function parseGoogleFinanceQuotePage(html,item,now=Date.now()){
  if(typeof html!=='string'||html.length<500)throw new Error('Google Finance page is empty or incomplete');
- const attr=name=>{
-  const match=html.match(new RegExp(name+'=["\\\\']([^"\\\\']+)["\\\\']','i'));
-  return match?match[1]:null;
- };
+ const attr=name=>{const match=html.match(new RegExp(name+'="([^"]+)"','i'));return match?match[1]:null};
  const price=googleFinancePageNumber(attr('data-last-price'));
  const change=googleFinancePageNumber(attr('data-last-price-change'));
  const pct=googleFinancePageNumber(attr('data-last-percentage-change'));
  if(price===null||price<=0)throw new Error('Google Finance price attribute not found');
  let changePct=pct;
- if(changePct===null&&change!==null){
-  const previous=price-change;if(previous>0)changePct=(price/previous-1)*100;
- }
+ if(changePct===null&&change!==null){const previous=price-change;if(previous>0)changePct=(price/previous-1)*100}
  if(changePct===null||changePct<=-100||changePct>100)throw new Error('Google Finance daily percentage is missing or invalid');
  const previousClose=price/(1+changePct/100);
  if(!Number.isFinite(previousClose)||previousClose<=0)throw new Error('Google Finance previous close cannot be derived');
- const timeMatch=html.match(/([A-Z][a-z]{2}\\s+\\d{1,2},\\s+\\d{1,2}:\\d{2}:\\d{2}\\s+[AP]M\\s+GMT[+-]\\d{1,2})/);
+ const timeMatch=html.match(/([A-Z][a-z]{2}\s+\d{1,2},\s+\d{1,2}:\d{2}:\d{2}\s+[AP]M\s+GMT[+-]\d{1,2})/);
  if(!timeMatch)throw new Error('Google Finance source timestamp is missing');
- const stamped=Date.parse(timeMatch[1]+' '+new Date(now).getUTCFullYear());
- if(!Number.isFinite(stamped)||stamped>now+5*60*1000||now-stamped>36*3600*1000)throw new Error('Google Finance source timestamp is invalid or stale');
- const age=Math.max(0,(now-stamped)/1000);
- const session=exchangeSession(item,new Date(stamped));
- const status=age>30*60?'LAST_AVAILABLE_CLOSE':'DELAYED_PROVIDER';
+ const timeZoneFixed=timeMatch[1].replace(/GMT([+-])(\d{1,2})$/,(_,sign,hours)=>'GMT'+sign+String(hours).padStart(2,'0')+'00');
+ const stamped=Date.parse(timeZoneFixed+' '+new Date(now).getUTCFullYear());
+ if(!Number.isFinite(stamped)||stamped>now+5*60*1000||now-stamped>96*3600*1000)throw new Error('Google Finance source timestamp is invalid or stale');
+ const age=Math.max(0,(now-stamped)/1000),session=exchangeSession(item,new Date(stamped));
  return {
   symbol:item.symbol,name:item.name,short:item.short,group:item.group,region:item.region||'',
   price,previousClose,changePct,currency:item.currency||'',exchange:'Google Finance',
   marketState:'GOOGLE FINANCE PUBLIC QUOTE',observedAt:stamped/1000,observedAge:age,
-  retrievedAt:now,status,source:'Google Finance · public quote page',sourceUrl:'https://www.google.com/finance/quote/'+encodeURIComponent(item.googleFinanceSymbol),
+  retrievedAt:now,status:age>30*60?'LAST_AVAILABLE_CLOSE':'DELAYED_PROVIDER',
+  source:'Google Finance · public quote page',sourceUrl:'https://www.google.com/finance/quote/'+encodeURIComponent(item.googleFinanceSymbol),
   observationDate:session?exchangeDateKey(stamped/1000,session.zone):new Date(stamped).toISOString().slice(0,10),
   googleFinanceSymbol:item.googleFinanceSymbol,providerQuoteVerified:true,sparkline:[],providerFallbacks:[]
  };

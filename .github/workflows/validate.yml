@@ -1,0 +1,56 @@
+name: APIS static validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate inline JavaScript and free-data wiring
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)]
+            .map(match => match[1]).filter(script => script.trim());
+          if (!scripts.length) throw new Error('No inline scripts found');
+          scripts.forEach((script, index) => {
+            try { new Function(script); }
+            catch (error) { throw new Error('Inline script ' + (index + 1) + ': ' + error.message); }
+          });
+          const checks = {
+            version: /build-version" content="2\.4\.1"/.test(html),
+            freeMode: html.includes('Free-data mode · no paid API key'),
+            stooqAdapter: html.includes('async function fetchStooqQuote'),
+            yahooFallback: html.includes('async function fetchYahooQuote'),
+            publicWaterfall: html.includes('async function fetchMarketQuote'),
+            bitcoin: html.includes('function connectBitcoinStream'),
+            fx: html.includes('function loadFxReference'),
+            treasury: html.includes('function loadTreasuryCurve'),
+            macro: html.includes('async function loadMacroCalendar'),
+            news: html.includes('const feeds=['),
+            responsiveWatchlist: html.includes('.watchlist-panel tbody tr{display:grid'),
+            noTwelveData: !html.includes('fetchTwelveDataQuote') && !html.includes('twelveDataKey'),
+            noFmp: !html.includes('fetchFmpQuote') && !html.includes('fmpKey'),
+            noPaidSettings: !html.includes('initProviderSettings') && !html.includes('marketProviderKeys')
+          };
+          const failed = Object.entries(checks).filter(([, value]) => !value);
+          console.log('Inline scripts compiled:', scripts.length);
+          console.log(checks);
+          if (failed.length) throw new Error('Failed checks: ' + failed.map(([key]) => key).join(', '));
+          console.log('APIS static validation passed.');
+          NODE

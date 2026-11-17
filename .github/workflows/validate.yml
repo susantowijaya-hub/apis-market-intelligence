@@ -52,6 +52,7 @@ jobs:
             sparkline: html.includes('sparkline:closes.filter'),
             noBrokenChartEmbed: !html.includes('function loadChart()') && !html.includes('function loadWidgets()') && !html.includes('function mountWidget(') && !html.includes('id="mainChart"'),
             animatedControls: html.includes('.news-alert-control input[type=checkbox]:checked:before') && html.includes('@keyframes ios-page-in'),
+            sourceHealthRowsValid: html.includes("['Price mini-charts','Sparkline is shown only when a provider returns historical price observations. Snapshot-only rows do not get a fabricated chart.','PROVIDER HISTORY','good'],") && html.includes("['Binance WebSocket'"),
             noWideTable: !html.includes('id="watchlistPanel"') && !html.includes('id="watchlistBody"'),
             noTwelveData: !html.includes('fetchTwelveDataQuote') && !html.includes('twelveDataKey'),
             noFmp: !html.includes('fetchFmpQuote') && !html.includes('fmpKey'),

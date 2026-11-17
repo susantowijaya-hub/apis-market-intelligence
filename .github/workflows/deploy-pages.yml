@@ -298,7 +298,9 @@ jobs:
                 await page.locator('[data-page="macro"]').click();
                 if (!(await page.locator('#macroView').evaluate(el=>el.classList.contains('active'))))
                   throw new Error(engine.name+' Macro navigation failed');
-                await page.waitForFunction(()=>document.querySelectorAll('#calendarEvents .calendar-event-card').length>=3,{timeout:15000});
+                await page.waitForFunction(()=>document.querySelectorAll('#calendarEvents .calendar-event-card').length>=3 || APP.calendarState==='error' || APP.calendarState==='unavailable',null,{timeout:15000});
+                const calendarDiag=await page.evaluate(()=>({state:APP.calendarState,count:APP.calendarEvents?.length||0,visible:document.querySelectorAll('#calendarEvents .calendar-event-card').length,errors:APP.calendarErrors||[],error:APP.calendarError||'',sources:APP.calendarSourceCounts||{}}));
+                if(calendarDiag.visible<3)throw new Error(engine.name+' economic calendar failed to render: '+JSON.stringify(calendarDiag));
                 await page.evaluate(()=>loadTreasuryCurve());
                 await page.waitForFunction(()=>document.getElementById('tsy30')?.textContent==='5.47%',{timeout:10000});
                 if (!((await page.locator('#tsy30Date').innerText()).includes('13 Nov 2026')))

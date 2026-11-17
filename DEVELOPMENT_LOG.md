@@ -305,3 +305,19 @@
 ### Verification
 - Static JS compilation and wiring checks are defined in `.github/workflows/validate.yml` for v2.9.0. The final run must pass before release is called complete.
 - GitHub Pages deployment is tied to the final main-branch commit; public runtime feed quality still depends on provider / proxy availability, exchange holidays and quote latency.
+
+
+## 2026-11-17 — v2.9.1 Index Baseline and Session Refinement
+
+### Additional fixes
+- Daily index percentage calculations now use the last two valid daily closes from Yahoo's 1-month / 1-day chart series for IHSG, S&P 500, Nasdaq, Dow, Shanghai, Taiwan (during live session), KOSPI, Nikkei and Hang Seng. This avoids depending on potentially inconsistent provider percentage metadata for the index close calculation; the displayed percentage is recomputed from the selected current quote and the previous daily close.
+- Yahoo index requests prioritize the daily chart interval, while retaining intraday fallback requests if daily history is unavailable.
+- Hong Kong session schedule now explicitly models the 12:00–13:00 HKT lunch break, then the 13:00–16:00 afternoon session and 16:00–16:10 closing auction.
+- Closed-session one-shot refresh guard is restored from browser storage at startup, preventing repeated close refresh attempts after a reload.
+- Calendar low-impact events now receive their own visual impact style rather than inheriting the medium style.
+
+### Validation
+- Compiled both inline JavaScript blocks successfully using the JavaScript parser.
+- Confirmed required v2.9.1 markers for daily index baseline, Hong Kong lunch break, Taiwan official report parser, Indonesia calendar source wiring, movers universe and smooth quote transitions.
+- Updated GitHub Actions static validation to v2.9.1 and added checks for the new daily-close, Hong Kong session and persisted close-refresh guard.
+- Provider availability and live market correctness still require runtime observation in the deployed GitHub Pages browser; no static check can guarantee third-party feed availability or exchange holiday exceptions.

@@ -718,6 +718,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
 .ios-stock-item .ios-stock-price,.ios-stock-item .ios-stock-change,.mover-row .mover-value,.mover-row .mover-change{transition:color .28s ease,opacity .28s ease,transform .28s ease}.ios-stock-item.is-updating{animation:apis-quote-refresh .52s cubic-bezier(.2,.75,.25,1)}.mover-row{animation:apis-mover-in .32s ease both}@keyframes apis-quote-refresh{0%{background-color:rgba(74,144,226,.12)}100%{background-color:transparent}}@keyframes apis-mover-in{from{opacity:.55;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 .impact-swatch.low{background:#94a3b8}.calendar-event-card.impact-low{border-left-color:#94a3b8}
 .ios-detail-schedule{display:block;color:var(--secondary);font-size:10px;line-height:1.4;font-variant-numeric:tabular-nums}
+.ios-detail-comparison{display:block;color:var(--blue);font-size:9px;line-height:1.4;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 
 /* APIS v2.10.0 — mobile header, semantic calendar colors and consistent theme tokens */
 .calendar-event-metric.actual.good strong{color:var(--green)}
@@ -1559,7 +1560,7 @@ async function fetchXauSpotQuote(item){
 const GOOGLE_FINANCE_CACHE=new Map();
 function googleFinancePageNumber(value){
  if(value===null||value===undefined)return null;
- const normalized=String(value).replace(/[,\s]/g,'').replace(/−/g,'-').replace(/^\+/,'');
+ const normalized=String(value).replace(/[,%\s]/g,'').replace(/−/g,'-').replace(/^\+/,'');
  const n=Number(normalized);return Number.isFinite(n)?n:null;
 }
 function parseGoogleFinanceQuotePage(html,item,now=Date.now()){
@@ -2004,9 +2005,15 @@ function createStockRow(item,quote,opts={}){
  observed.textContent=quote&&Number.isFinite(observedSeconds)?'Observed '+fmtTime(observedSeconds):'No validated observation';
  const source=document.createElement('a');source.className='ios-detail-source';source.href=quote?.sourceUrl||'#';source.target='_blank';source.rel='noopener';source.textContent=quote?.source||'Public provider unavailable';
  if(!quote){source.removeAttribute('target');source.addEventListener('click',event=>event.preventDefault())}
+ const comparison=document.createElement('small');comparison.className='ios-detail-comparison';
+ if(quote?.providerComparison){
+  const check=quote.providerComparison,delta=Number.isFinite(Number(check.differencePct))?(check.differencePct>0?'+':'')+Number(check.differencePct).toFixed(2)+'%':'—';
+  const backupPrice=Number.isFinite(Number(check.price))?new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(check.price):'—';
+  comparison.textContent='Backup comparison · '+check.source+' · '+backupPrice+' · Δ '+delta+' · '+check.status;
+ }else comparison.textContent='';
  const providerError=document.createElement('small');providerError.className='ios-detail-error';
  providerError.textContent=quote?.lastError||APP.failures.get(item.symbol)||'';
- extra.append(status,observed);if(schedule.textContent)extra.append(schedule);extra.append(source,providerError);
+ extra.append(status,observed);if(schedule.textContent)extra.append(schedule);extra.append(source);if(comparison.textContent)extra.append(comparison);extra.append(providerError);
  detail.append(summary,extra);
  return detail;
 }

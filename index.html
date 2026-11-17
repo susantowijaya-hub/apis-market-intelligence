@@ -349,8 +349,9 @@ async function fetchYahooQuote(item){
       const barTime=lastIndex>=0?num(ts[lastIndex]):null;
       const marketPrice=num(meta.regularMarketPrice);
       const regularTime=num(meta.regularMarketTime);
-      const rawPrice=marketPrice??barPrice;
-      const lastTimestamp=Math.max(regularTime||0,barTime||0);
+      const useMeta=marketPrice!==null&&(regularTime||0)>=(barTime||0);
+      const rawPrice=useMeta?marketPrice:barPrice;
+      const lastTimestamp=useMeta?regularTime:barTime;
       const previous=num(meta.chartPreviousClose??meta.previousClose);
       if(rawPrice===null||rawPrice<=0||!lastTimestamp)throw new Error('No valid price/provider timestamp');
       const observedAge=Math.max(0,Date.now()/1000-lastTimestamp);
@@ -378,7 +379,7 @@ async function fetchQuoteBatch(){
   const buttons=['refreshBtn','refreshTop'];buttons.forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true});
   setText('lastRefresh','Fetching '+WATCHLIST.length+' instruments…');
   let cursor=0,successes=0,failures=0;const queue=WATCHLIST.slice();
-  const workers=Array.from({length:8},async()=>{while(cursor<queue.length){const item=queue[cursor++];try{const q=await fetchYahooQuote(item);QUOTES.set(item.symbol,q);APP.failures.delete(item.symbol);successes++}
+  const workers=Array.from({length:8},async()=>{while(cursor<queue.length){const item=queue[cursor++];try{const q=await fetchYahooQuote(item);q.activeRunId=runId;QUOTES.set(item.symbol,q);APP.failures.delete(item.symbol);successes++}
     catch(e){failures++;APP.failures.set(item.symbol,String(e?.message||'Provider request failed'));const old=QUOTES.get(item.symbol);if(old){const age=Date.now()/1000-old.observedAt;old.status=age>48*3600?'STALE_OBSERVATION':'STALE_CACHE';old.activeRunId=0;old.lastError=String(e?.message||'Refresh failed').slice(0,180);old.cacheRestored=true;QUOTES.set(item.symbol,old)}}
     APP.successCount=successes;setText('lastRefresh',`Fetching ${successes+failures}/${WATCHLIST.length} · ${successes} updated · ${failures} failed`);renderQuoteViews();renderQuality();updateFeedState();
   }});
@@ -414,7 +415,7 @@ function updateFeedState(){
   label.textContent=(cryptoLive?'BTC LIVE · ':'')+`Yahoo ${APP.successCount||0}/19`+(freshProvider?' · delayed '+freshProvider:'')+(closed?' · close '+closed:'')+suffix;
 }
 
-function createQuoteCard(item,quote){const card=document.createElement('article');card.className='card quote-card'+(quote?'':' empty');const top=document.createElement('div');top.className='quote-top';const name=document.createElement('div');name.className='quote-name';name.textContent=item.name;const sym=document.createElement('span');sym.className='symbol';sym.textContent=item.short;top.append(name,sym);card.append(top);const value=document.createElement('div');value.className='quote-value';value.textContent=quote?fmtPrice(quote):'Unavailable';card.append(value);const bottom=document.createElement('div');bottom.className='quote-bottom';const ch=document.createElement('span');ch.className='change '+(quote?changeClass((quote.price-(quote.previousClose??quote.price))):'flat');ch.textContent=quote&&num(quote.previousClose)!==null?`${fmt(quote.price-quote.previousClose,2)} (${pct((quote.price/quote.previousClose-1)*100)})`:'No verified observation';const status=document.createElement('span');status.className='status-label '+(quote?quoteStatusClass(quote.status):'bad':'bad');status.textContent=quote?quoteStatusLabel(quote.status):'UNAVAILABLE';bottom.append(ch,status);card.append(bottom);const asof=document.createElement('div');asof.className='quote-asof';asof.textContent=quote?`Observed ${fmtTime(quote.observedAt)} · ${quote.exchange||'provider quote'}`:'No price shown because a valid provider observation was not received';card.append(asof);return card;}
+function createQuoteCard(item,quote){const card=document.createElement('article');card.className='card quote-card'+(quote?'':' empty');const top=document.createElement('div');top.className='quote-top';const name=document.createElement('div');name.className='quote-name';name.textContent=item.name;const sym=document.createElement('span');sym.className='symbol';sym.textContent=item.short;top.append(name,sym);card.append(top);const value=document.createElement('div');value.className='quote-value';value.textContent=quote?fmtPrice(quote):'Unavailable';card.append(value);const bottom=document.createElement('div');bottom.className='quote-bottom';const ch=document.createElement('span');ch.className='change '+(quote?changeClass((quote.price-(quote.previousClose??quote.price))):'flat');ch.textContent=quote&&num(quote.previousClose)!==null?`${fmt(quote.price-quote.previousClose,2)} (${pct((quote.price/quote.previousClose-1)*100)})`:'No verified observation';const status=document.createElement('span');status.className='status-label '+(quote?quoteStatusClass(quote.status):'bad');status.textContent=quote?quoteStatusLabel(quote.status):'UNAVAILABLE';bottom.append(ch,status);card.append(bottom);const asof=document.createElement('div');asof.className='quote-asof';asof.textContent=quote?`Observed ${fmtTime(quote.observedAt)} · ${quote.exchange||'provider quote'}`:'No price shown because a valid provider observation was not received';card.append(asof);return card;}
 function renderQuoteViews(){
   const featured=['^JKSE','^GSPC','^IXIC','^DJI','^VIX','IDR=X','BZ=F','GC=F'];const grid=document.getElementById('featuredQuotes');grid.replaceChildren();featured.forEach(sym=>{const item=WATCHLIST.find(x=>x.symbol===sym);grid.append(createQuoteCard(item,QUOTES.get(sym))) });
   const body=document.getElementById('watchlistBody');body.replaceChildren();let usable=0;

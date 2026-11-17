@@ -238,7 +238,7 @@ jobs:
                 const googleFinanceFixture=await page.evaluate(()=>{
                 const item=WATCHLIST.find(row=>row.symbol==='^TWII');
                 const now=Date.parse('2026-11-17T05:33:20Z');
-                const html='<div data-last-price="40092.11" data-last-price-change="-947.97" data-last-percentage-change="-2.31"></div> Nov 17, 1:33:15 PM GMT+8';
+                const html='<div data-last-price="40092.11" data-last-price-change="-947.97" data-last-percentage-change="-2.31"></div> Nov 17, 1:33:15 PM GMT+8 '+('fixture '.repeat(80));
                 const quote=parseGoogleFinanceQuotePage(html,item,now);
                 return {price:quote.price,previousClose:quote.previousClose,pct:quote.changePct,source:quote.source,observedAt:quote.observedAt};
               });

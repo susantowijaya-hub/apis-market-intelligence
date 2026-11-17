@@ -1320,35 +1320,99 @@ function parseTwseDate(value){
  const match=String(value||'').match(/(20\d{2})[/-](\d{1,2})[/-](\d{1,2})/);
  return match?{year:Number(match[1]),month:Number(match[2]),day:Number(match[3])}:null;
 }
+function parseTwseIndexReport(payload){
+ const tables=Array.isArray(payload?.tables)?payload.tables:[payload];
+ for(const table of tables){
+  const fields=table?.fields||table?.columns||[];
+  const rows=table?.data||table?.data1||[];
+  if(!Array.isArray(fields)||!Array.isArray(rows))continue;
+  const fieldIndex=pattern=>fields.findIndex(field=>pattern.test(String(field||'')));
+  const nameIndex=fieldIndex(/^(指數|Index)$/i);
+  const priceIndex=fieldIndex(/收盤指數|Closing Index|ClosingIndex/i);
+  const changeIndex=fieldIndex(/漲跌百分比|Change Percent|Change%/i);
+  const signIndex=fieldIndex(/漲跌\(\+\/-\)|漲跌$|Change Sign/i);
+  const pointIndex=fieldIndex(/漲跌點數|Change Points/i);
+  const dateIndex=fieldIndex(/^日期$|^Date$/i);
+  if(nameIndex<0||priceIndex<0)continue;
+  for(const row of rows){
+   if(!Array.isArray(row))continue;
+   const title=String(row[nameIndex]||'');
+   if(!/發行量加權股價指數|TAIEX|Taiwan Weighted|Capitalization Weighted Stock Index/i.test(title))continue;
+   const date=parseTwseDate(dateIndex>=0?row[dateIndex]:payload.date||payload.dateString);
+   const price=Number(String(row[priceIndex]||'').replace(/,/g,''));
+   if(!date||!Number.isFinite(price)||price<=0)continue;
+   let changePct=changeIndex>=0?Number(String(row[changeIndex]||'').replace(/[,％%]/g,'')):NaN;
+   const sign=signIndex>=0?String(row[signIndex]||'').trim():'';
+   if(Number.isFinite(changePct)&&!String(row[changeIndex]).includes('-')&&/^-/.test(sign))changePct=-Math.abs(changePct);
+   if(Number.isFinite(changePct)&&!String(row[changeIndex]).includes('+')&&/^\+/.test(sign))changePct=Math.abs(changePct);
+   let previousClose=null;
+   if(pointIndex>=0){
+    const delta=Math.abs(Number(String(row[pointIndex]||'').replace(/,/g,'')));
+    if(Number.isFinite(delta))previousClose=/^-/.test(sign)?price+delta:/^\+/.test(sign)?price-delta:null;
+   }
+   if(!Number.isFinite(changePct))changePct=Number.isFinite(previousClose)?(price/previousClose-1)*100:null;
+   if(!Number.isFinite(previousClose)&&Number.isFinite(changePct)&&changePct!==-100)previousClose=price/(1+changePct/100);
+   if(!Number.isFinite(changePct)||!Number.isFinite(previousClose)||previousClose<=0)continue;
+   const dayKey=[date.year,String(date.month).padStart(2,'0'),String(date.day).padStart(2,'0')].join('-');
+   return {price,previousClose,changePct,date,dayKey};
+  }
+ }
+ return null;
+}
+function twseObservationQuote(item,observation,sourceName,sourceUrl){
+ const observedAt=Date.UTC(observation.date.year,observation.date.month-1,observation.date.day,7,0,0)/1000;
+ return {
+  symbol:item.symbol,name:item.name,short:item.short,group:item.group,region:item.region,
+  price:observation.price,previousClose:observation.previousClose,changePct:observation.changePct,
+  currency:'',exchange:'Taiwan Stock Exchange',marketState:'CLOSED',
+  observedAt,status:'LAST_AVAILABLE_CLOSE',observationDate:observation.dayKey,
+  source:sourceName,sourceUrl,retrievedAt:Date.now(),sparkline:[],providerFallbacks:[]
+ };
+}
 async function fetchTaiwanOfficialQuote(item){
+ const taipei=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const part=type=>taipei.find(value=>value.type===type)?.value||'';
+ const tradeDate=part('year')+part('month')+part('day');
+ const dailyTarget='https://www.twse.com.tw/exchangeReport/MI_INDEX?response=json&date='+tradeDate+'&type=IND';
+ const dailyRoutes=[
+  dailyTarget,
+  'https://corsproxy.io/?url='+encodeURIComponent(dailyTarget),
+  'https://api.allorigins.win/raw?url='+encodeURIComponent(dailyTarget),
+  'https://proxy.cors.dev/'+dailyTarget
+ ];
+ let lastError='TWSE dated daily index report unavailable';
+ for(const route of dailyRoutes){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8500);
+  try{
+   const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
+   if(!response.ok)throw new Error('HTTP '+response.status);
+   const payload=await response.json();
+   const observation=parseTwseIndexReport(payload);
+   if(!observation)throw new Error(payload?.stat||'No dated TAIEX row in official report');
+   if(observation.dayKey!==tradeDate.slice(0,4)+'-'+tradeDate.slice(4,6)+'-'+tradeDate.slice(6,8))throw new Error('TWSE report date did not match the requested Taiwan session');
+   return twseObservationQuote(item,observation,'Taiwan Stock Exchange · official dated daily close','https://www.twse.com.tw/en/exchangeReport/MI_INDEX');
+  }catch(error){lastError=error?.name==='AbortError'?'TWSE daily report timed out':String(error?.message||error).slice(0,120)}
+  finally{clearTimeout(timer)}
+ }
+ // Last-available-session fallback: the official OpenAPI monthly history can lag a newly published close.
  const target='https://openapi.twse.com.tw/v1/indicesReport/MI_5MINS_HIST';
- const routes=[target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
- let lastError='TWSE official history unavailable';
- for(const route of routes){
+ const historyRoutes=[target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
+ for(const route of historyRoutes){
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
   try{
    const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
    if(!response.ok)throw new Error('HTTP '+response.status);
-   const payload=await response.json();if(!Array.isArray(payload)||payload.length<2)throw new Error('TWSE response has fewer than two sessions');
+   const payload=await response.json();if(!Array.isArray(payload)||payload.length<2)throw new Error('TWSE history has fewer than two sessions');
    const records=payload.map(row=>{
     const date=parseTwseDate(row.Date||row.date||row.TradingDate);
     const price=Number(String(row.ClosingIndex||row.Closing_Index||row.close||'').replace(/,/g,''));
     if(!date||!Number.isFinite(price)||price<=0)return null;
     return {...date,price,dayKey:[date.year,String(date.month).padStart(2,'0'),String(date.day).padStart(2,'0')].join('-')};
-   }).filter(Boolean).sort((a,b)=>a.dayKey.localeCompare(b.dayKey));
-   if(records.length<2)throw new Error('TWSE official records could not be normalized');
-   const latest=records[records.length-1],previous=records[records.length-2];
-   const observedAt=Date.UTC(latest.year,latest.month-1,latest.day,7,0,0)/1000;
-   return {
-    symbol:item.symbol,name:item.name,short:item.short,group:item.group,region:item.region,
-    price:latest.price,previousClose:previous.price,changePct:(latest.price/previous.price-1)*100,
-    currency:'',exchange:'Taiwan Stock Exchange',marketState:'CLOSED',
-    observedAt,status:'LAST_AVAILABLE_CLOSE',observationDate:latest.dayKey,
-    source:'Taiwan Stock Exchange · official TAIEX history',sourceUrl:'https://www.twse.com.tw/en/indicesReport/MI_5MINS_HIST',
-    retrievedAt:Date.now(),sparkline:records.slice(-36).map(row=>row.price),
-    providerFallbacks:[]
-   };
-  }catch(error){lastError=error?.name==='AbortError'?'TWSE request timed out':String(error?.message||error).slice(0,120)}
+   }).filter(Boolean).sort((x,y)=>x.dayKey.localeCompare(y.dayKey));
+   if(records.length<2)throw new Error('TWSE history records could not be normalized');
+   const latest=records.at(-1),previous=records.at(-2);
+   return twseObservationQuote(item,{...latest,previousClose:previous.price,changePct:(latest.price/previous.price-1)*100},'Taiwan Stock Exchange · official history (last available session)','https://www.twse.com.tw/en/indicesReport/MI_5MINS_HIST');
+  }catch(error){lastError=error?.name==='AbortError'?'TWSE history request timed out':String(error?.message||error).slice(0,120)}
   finally{clearTimeout(timer)}
  }
  throw new Error(lastError);

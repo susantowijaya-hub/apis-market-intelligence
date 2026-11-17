@@ -47,6 +47,8 @@ jobs:
             regionalGroups: html.includes('function renderGroupedStockRows') && html.includes("region:'Greater China'"),
             homeExcludesStocks: html.includes("!['Indonesia equity','US equity'].includes(item.group)"),
             exchangeSessionSchedule: html.includes('function exchangeSession(') && html.includes("zone='Asia/Jakarta'") && html.includes('15*60+50'),
+            deterministicSessionLabel: html.includes('function marketSessionLabel(quote,item,now=new Date())'),
+            inPlaceQuoteUpdates: html.includes('function updateQuoteRowsInPlace()') && html.includes('updateQuoteRowsInPlace();renderTape();renderMovers();'),
             liveTimestamp: html.includes('function marketFeedTimestampLabel(') && html.includes('ios-stock-updated'),
             fiveSecondQuotePoll: html.includes('fetchQuoteSlice()},5000'),
             threeQuoteSlice: html.includes('const sliceSize=3') && html.includes('APP.sliceBusy'),

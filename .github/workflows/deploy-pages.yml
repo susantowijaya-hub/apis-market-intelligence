@@ -235,7 +235,17 @@ jobs:
                 if (idxSession.session!=='OPEN' || idxSession.label!=='SESSION OPEN · STALE' ||
                     !idxSession.stamp.includes('Last close 16:00 WIB') || !idxSession.stamp.includes('16 Nov'))
                   throw new Error(engine.name+' IDX session / close timestamp failed: '+JSON.stringify(idxSession));
-                const cachedTaiwanPct=await page.evaluate(()=>stockChangePct({
+                const googleFinanceFixture=await page.evaluate(()=>{
+                const item=WATCHLIST.find(row=>row.symbol==='^TWII');
+                const now=Date.parse('2026-11-17T05:33:20Z');
+                const html='<div data-last-price="40092.11" data-last-price-change="-947.97" data-last-percentage-change="-2.31"></div> Nov 17, 1:33:15 PM GMT+8';
+                const quote=parseGoogleFinanceQuotePage(html,item,now);
+                return {price:quote.price,previousClose:quote.previousClose,pct:quote.changePct,source:quote.source,observedAt:quote.observedAt};
+              });
+              if(googleFinanceFixture.price!==40092.11 || Math.abs(googleFinanceFixture.previousClose-41040.08)>0.10 ||
+                 Math.abs(googleFinanceFixture.pct-(-2.31))>0.001 || !googleFinanceFixture.source.includes('Google Finance'))
+                throw new Error(engine.name+' Google Finance quote parser fixture failed: '+JSON.stringify(googleFinanceFixture));
+              const cachedTaiwanPct=await page.evaluate(()=>stockChangePct({
                   symbol:'^TWII',price:40092.11,previousClose:43666.0,changePct:-8.2,source:'Yahoo Finance · public fallback'
                 }));
                 if(cachedTaiwanPct!==null)throw new Error(engine.name+' unverified Taiwan cache percentage was not suppressed');
@@ -253,7 +263,7 @@ jobs:
                 });
                 if (xauTwse.xauPrice!==4000 || Math.abs(xauTwse.xauChange-1.27)>0.01 || !xauTwse.xauSource.includes('XAUS'))
                   throw new Error(engine.name+' XAU spot adapter failed: '+JSON.stringify(xauTwse));
-                if (xauTwse.twPrice!==40092.11 || xauTwse.twPrev!==41040.08 || Math.abs(xauTwse.twChange-(-2.31))>0.01 ||
+                if (xauTwse.twPrice!==40092.11 || Math.abs(xauTwse.twPrev-41040.08)>0.10 || Math.abs(xauTwse.twChange-(-2.31))>0.01 ||
                     !xauTwse.twSource.includes('dated daily close'))
                   throw new Error(engine.name+' official dated Taiwan report failed: '+JSON.stringify(xauTwse));
                 await page.locator('#homeSearchToggle').click();

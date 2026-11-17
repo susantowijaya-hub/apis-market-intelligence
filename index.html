@@ -1353,12 +1353,14 @@ function renderMarketOverview(){
  });
  host.replaceChildren();
  current.items.forEach(item=>host.append(createStockRow(item,QUOTES.get(item.symbol))));
- if(selected==='fx-crypto'&&APP.btc&&num(APP.btc.price)!==null){
-  host.prepend(createStockRow({symbol:'BTCUSDT',short:'BTC / USD',name:'Bitcoin',group:'Crypto'},
-   {...APP.btc,changePct:APP.btc.changePct,source:APP.btc.source,status:APP.btc.transport==='WEBSOCKET'?'LIVE TICK':'REST SNAPSHOT'}));
+ if(selected==='fx-crypto'){
+  const bitcoinItem={symbol:'BTCUSDT',short:'BTC / USD',name:'Bitcoin',group:'Crypto'};
+  const bitcoinQuote=APP.btc&&num(APP.btc.price)!==null?
+   {...APP.btc,changePct:APP.btc.changePct,source:APP.btc.source,status:APP.btc.transport==='WEBSOCKET'?'LIVE TICK':'REST SNAPSHOT'}:null;
+  host.prepend(createStockRow(bitcoinItem,bitcoinQuote));
  }
  if(!host.children.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='No verified public observations for this segment yet.';host.append(empty)}
- setText('snapshotStamp',current.items.length+(selected==='fx-crypto'&&APP.btc?1:0)+' instruments · public feed');
+ setText('snapshotStamp',current.items.length+(selected==='fx-crypto'?1:0)+' instruments · public feed');
  setText('quoteCountMarkets',QUOTES.size+' / '+WATCHLIST.length);
  setText('lastRefreshMarkets',document.getElementById('lastRefresh')?.textContent||'Not refreshed');
 }

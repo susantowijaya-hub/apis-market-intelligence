@@ -69,7 +69,7 @@ const results = await Promise.all(instruments.map(async ([symbol, googleSymbol])
     const parsed = parsePage(html,symbol,now);
     return {googleSymbol,record:{...parsed,source:'Google Finance public quote page',sourceUrl:url,retrievedAt:now}};
   } catch (error) {
-    return {googleSymbol,error:String(error?.message || error).slice(0,180)};
+    return {googleSymbol,error:String(error?.message || error).slice(0,1400)};
   }
 }));
 for (const result of results) {

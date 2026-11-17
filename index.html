@@ -1301,6 +1301,7 @@ async function fetchStooqQuote(item){
    const row=Object.fromEntries(headers.map((key,index)=>[key,values[index]||'']));
    const price=num(Number(row.close)),previous=num(Number(row.prev));
    if(price===null||price<=0||!row.date||row.date==='N/D')throw new Error('No valid Stooq observation for '+symbol);
+   if(session?.state==='CLOSED'&&row.date!==sessionDay)throw new Error('Stooq observation date does not match the current exchange session');
    const dateMatch=row.date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
    if(!dateMatch)throw new Error('Invalid Stooq observation date');
    const observedAt=Date.UTC(Number(dateMatch[1]),Number(dateMatch[2])-1,Number(dateMatch[3]))/1000;
@@ -1377,6 +1378,12 @@ async function fetchYahooQuote(item){
     // A closed index must use a daily candle dated to the current exchange session.
     // Never relabel an old intraday/provider metadata snapshot as today's official close.
     if(isDailyIndex&&session?.state==='CLOSED'&&(!useDailyClose||selectedDailyBarDay!==sessionDay))throw new Error('No verified daily close for the current exchange session; refusing stale intraday/metadata value');
+    if(isDailyIndex&&session?.state==='CLOSED'){
+     const metaClock=marketTime?exchangeWallClock(new Date(marketTime*1000),session.zone):null;
+     const metaDay=metaClock?[metaClock.year,String(metaClock.month).padStart(2,'0'),String(metaClock.day).padStart(2,'0')].join('-'):'';
+     const metaMinute=metaClock?metaClock.hour*60+metaClock.minute:-1;
+     if(metaDay!==sessionDay||metaMinute<session.finalCloseMinute-10)throw new Error('Provider observation predates the official close window; withholding unfinalized index close');
+    }
     if(useDailyClose&&selectedDailyBarDay!==sessionDay&&session?.state==='CLOSED')throw new Error('Daily close date does not match the exchange session date');
     const baselineCutoff=useDailyClose?selectedDailyBarDay:sessionDay;
     const dailyPreviousClose=baselineCutoff?selectDailyIndexPreviousClose(dailyBars,baselineCutoff,session.zone):(dailyBars.length>1?dailyBars[dailyBars.length-2].price:null);

@@ -345,9 +345,9 @@ html[data-theme="dark"] .treasury-links a{color:#a9e8c9}
   <div class="section-head"><div><div class="eyebrow">04 / Tata kelola</div><h2>Sumber data & catatan operasional</h2><p>Asal-usul data, batasan penyedia, dan batas kemampuan edisi browser.</p></div></div>
   <div class="grid two-col">
     <div class="card card-pad"><div class="card-title"><div><h3>Registri sumber</h3><p>Dependensi data dan visualisasi</p></div></div><div class="source-list">
-      <div class="source-row"><div><strong>Yahoo Finance Chart endpoint</strong><small>Index / equity / ETF / futures / FX observations; unofficial Yahoo endpoint through a third-party public CORS proxy. Exchange delays and update intervals can vary.</small></div><span class="badge warn">BEST EFFORT</span></div>
+      <div class="source-row"><div><strong>Yahoo Finance public quote relay</strong><small>Index / equity / ETF / futures / FX observations; unofficial Yahoo endpoint through a third-party public CORS proxy. Exchange delays and update intervals can vary.</small></div><span class="badge warn">BEST EFFORT</span></div>
       <div class="source-row"><div><strong>TradingView chart embed (optional)</strong><small>Optional chart only. APIS market snapshot, news feed and macro calendar are rendered internally from their respective sources.</small></div><span class="badge warn">EXTERNAL EMBED</span></div>
-      <div class="source-row"><div><strong>Binance public market-data stream</strong><small>BTC/USDT 24-hour ticker WebSocket; no authentication for market-data-only access.</small></div><span class="badge good">PUBLIC STREAM</span></div>
+      <div class="source-row"><div><strong>Binance / Coinbase / Kraken public streams</strong><small>BTC spot WebSocket tickers with REST snapshot fallback. Tick-by-tick label only while a provider WebSocket message is fresh.</small></div><span class="badge good">PUBLIC STREAM</span></div>
       <div class="source-row"><div><strong>U.S. Treasury / FRED H.15</strong><small>Daily par yield curve 2Y/5Y/10Y/30Y; official Treasury table first, free FRED CSV fallback; not intraday.</small></div><span class="badge good">DAILY</span></div>
       <div class="source-row"><div><strong>Publisher RSS feeds</strong><small>CNBC, BBC Business, Guardian Business, Federal Reserve, BIS. Publication timestamps preserved.</small></div><span class="badge good">PUBLIC RSS</span></div>
       <div class="source-row"><div><strong>BLS / BEA / Federal Reserve calendars</strong><small>Official release schedules filtered to major macro releases.</small></div><span class="badge good">OFFICIAL SCHEDULE</span></div>
@@ -373,7 +373,7 @@ html[data-theme="dark"] .treasury-links a{color:#a9e8c9}
 
 <script>
 'use strict';
-/* APIS Browser Edition 1.8.0 · Intraday quote polling + terminal UI
+/* APIS The Market Terminal 2.1.1 · Modular mobile terminal
    - No synthetic market data or fabricated news.
    - Yahoo Finance chart endpoint is unofficial and accessed through the public CORS.dev proxy.
    - TradingView widgets are visual embeds; their data is not read back into calculations.
@@ -570,7 +570,7 @@ function renderMarketOverview(){
   group.symbols.forEach(symbol=>{
    const item=WATCHLIST.find(x=>x.symbol===symbol),raw=symbol==='BTCUSDT'?APP.btc:QUOTES.get(symbol);
    if(!item&&!raw)return;
-   const q=raw?{...raw,short:item?.short||'BTC',name:item?.name||'Bitcoin',group:item?.group||'Crypto'}:null;
+   const q=raw?{...raw,short:item?.short||'BTC',name:item?.name||'Bitcoin',group:item?.group||'Crypto',currency:item?.currency||(symbol==='BTCUSDT'?'USD':'')}:null;
    const card=document.createElement('div');card.className='snapshot-item';
    const head=document.createElement('div');head.className='snapshot-item-head';
    const name=document.createElement('span');name.className='snapshot-item-name';name.textContent=q?q.name:(item?.name||symbol);

@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f5">
-<meta name="build-version" content="2.0.0">
+<meta name="build-version" content="2.1.0">
 <meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — The Market Terminal v2.0.0</title>
+<title>APIS — The Market Terminal v2.1.0</title>
 <style>
 :root{
   color-scheme:light;
@@ -105,56 +105,151 @@ body{background:var(--bg);color:var(--ink);font-size:13px}.topbar{background:rgb
 @media(max-width:360px){.brand small{display:none}.feed-state{max-width:112px}.movers-grid{grid-template-columns:1fr}.quote-value{font-size:17px}}
 
 .filings-feed{display:grid;gap:0;margin:6px 0 12px}.filing-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 2px;border-bottom:1px solid #edf0ed}.filing-row a{font-size:10px;font-weight:700;color:#245d49}.filing-row small{display:block;font-size:8px;color:#7d8781;margin-top:3px}
+
+/* APIS v2.1 — market-terminal information hierarchy and responsive themes */
+.page-view{display:none!important}.page-view.active{display:block!important}
+.page-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:8px 0 14px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+.page-heading h1{font-size:clamp(25px,3.5vw,34px);line-height:1.08;letter-spacing:-.035em;margin:0;font-weight:760}
+.page-heading p{font-size:13px;line-height:1.45;color:var(--secondary);margin:6px 0 0;max-width:780px}
+.nav-more{position:relative;flex:0 0 auto}.nav-more summary{list-style:none;cursor:pointer;font-size:11px;color:var(--secondary);padding:7px 10px;border-radius:7px;white-space:nowrap}.nav-more summary::-webkit-details-marker{display:none}.nav-more[open] summary{background:#eaf2ed;color:#145b43}.nav-more-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:150;min-width:190px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 35px rgba(10,20,15,.14);display:grid;gap:3px}.nav-more-menu a{display:block;padding:10px 12px;border-radius:7px;color:var(--ink);font-size:12px}.nav-more-menu a:hover{background:var(--blue-soft)}
+.theme-menu{position:relative}.theme-menu summary{list-style:none;cursor:pointer;width:32px;height:32px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center;background:var(--surface);font-size:16px;color:var(--ink)}.theme-menu summary::-webkit-details-marker{display:none}.theme-menu-items{position:absolute;right:0;top:calc(100% + 7px);z-index:160;min-width:120px;padding:5px;background:var(--surface);border:1px solid var(--line);border-radius:9px;box-shadow:0 12px 35px rgba(10,20,15,.14);display:grid}.theme-menu-items button{border:0;background:transparent;padding:9px 10px;text-align:left;color:var(--ink);font-size:12px;border-radius:6px}.theme-menu-items button:hover{background:var(--blue-soft)}
+.market-snapshot-card{min-width:0}.snapshot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.snapshot-item{border:1px solid var(--line);background:var(--surface-2);border-radius:9px;padding:10px;min-width:0}.snapshot-item-head{display:flex;justify-content:space-between;align-items:center;gap:7px}.snapshot-item-name{font-size:11px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.snapshot-item-symbol{font-size:9px;color:var(--secondary)}.snapshot-item-price{font-size:clamp(17px,2vw,21px);font-weight:760;font-variant-numeric:tabular-nums;letter-spacing:-.025em;margin:7px 0 2px;white-space:nowrap}.snapshot-item-change{font-size:11px;font-weight:750;font-variant-numeric:tabular-nums}.snapshot-item-change.up{color:var(--green)}.snapshot-item-change.down{color:var(--red)}.snapshot-item-change.flat{color:var(--secondary)}.snapshot-item-status{font-size:8px;color:var(--secondary);text-transform:uppercase;letter-spacing:.04em}.snapshot-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;color:var(--secondary);font-size:9px}.snapshot-legend span{display:flex;align-items:center;gap:5px}.legend-dot{width:7px;height:7px;border-radius:50%;display:inline-block}.legend-dot.good{background:var(--green)}.legend-dot.bad{background:var(--red)}.legend-dot.neutral{background:var(--amber)}
+.news-reader{padding:0 14px}.news-controls{display:flex;align-items:center;gap:10px;padding:13px 0 10px}.news-search{display:flex;align-items:center;gap:8px;flex:1;min-width:0;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:0 10px}.news-search span{font-size:18px;color:var(--secondary)}.news-search input{width:100%;height:40px;min-width:0;border:0;outline:0;background:transparent;color:var(--ink);font-size:13px}.news-alert-control{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:11px;font-weight:650;color:var(--secondary)}.news-alert-control input{accent-color:var(--blue);width:17px;height:17px}.news-filters{display:flex;gap:6px;overflow-x:auto;padding:2px 0 11px;scrollbar-width:thin}.news-filter{white-space:nowrap;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--secondary);padding:7px 10px;font-size:10px;font-weight:650}.news-filter.active{background:var(--blue-soft);border-color:transparent;color:var(--blue)}.news-feed-meta{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:9px 0;color:var(--secondary);font-size:10px}.news-feed-list{display:grid;gap:0}.news-item{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;padding:13px 2px;border-bottom:1px solid var(--line)}.news-item:last-child{border-bottom:0}.news-time{font-size:9px;line-height:1.35;color:var(--secondary);font-variant-numeric:tabular-nums}.news-item-main{min-width:0}.news-item a{font-size:14px;line-height:1.38;font-weight:700;color:var(--ink);text-decoration:none}.news-item a:hover{color:var(--blue)}.news-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:6px;color:var(--secondary);font-size:10px}.news-tag{display:inline-flex;background:var(--blue-soft);color:var(--blue);border-radius:4px;padding:3px 6px;font-size:8px;font-weight:750;text-transform:uppercase;letter-spacing:.04em}.news-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line);color:var(--secondary);font-size:10px}.news-publishers{font-size:10px;color:var(--secondary);padding:10px 1px}
+.treasury-terminal,.calendar-terminal{padding:15px;margin-bottom:12px}.treasury-grid-wide{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:10px}.treasury-grid-wide>div{padding:12px 10px;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;min-width:0}.treasury-grid-wide small{display:block;font-size:9px;letter-spacing:.06em;color:var(--secondary);font-weight:750}.treasury-grid-wide strong{display:block;font-size:clamp(19px,3vw,26px);font-weight:780;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:6px;white-space:nowrap}.spread-box strong{color:var(--blue)}.treasury-foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:11px;font-size:10px;color:var(--secondary)}.treasury-error{margin-top:8px;padding:9px 10px;border-radius:7px;background:var(--red-soft);color:var(--red);font-size:10px}.calendar-tools{display:flex;align-items:center;gap:6px}.calendar-tools select{border:1px solid var(--line);border-radius:7px;padding:8px 9px;background:var(--surface);color:var(--ink);font-size:10px}.calendar-summary{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:9px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:10px;color:var(--secondary)}.calendar-events{display:grid}.event-row{display:grid;grid-template-columns:84px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 2px;border-bottom:1px solid var(--line)}.event-date{font-size:11px;font-weight:750;font-variant-numeric:tabular-nums}.event-date small{display:block;font-size:9px;color:var(--secondary);font-weight:500;margin-top:3px}.event-title{font-size:12px;font-weight:720;line-height:1.35}.event-meta{font-size:9px;color:var(--secondary);margin-top:4px}.impact-pill{font-size:8px;font-weight:800;letter-spacing:.04em;border-radius:5px;padding:5px 7px;background:var(--red-soft);color:var(--red);white-space:nowrap}.impact-pill.medium{background:var(--amber-soft);color:var(--amber)}.calendar-foot{font-size:10px;color:var(--secondary);padding-top:10px;line-height:1.45}
+.tool-subnav{display:flex;gap:6px;overflow-x:auto;padding:8px 0 12px;border-bottom:1px solid var(--line);margin-bottom:12px}.tool-subnav a{white-space:nowrap;border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:8px 10px;font-size:10px;font-weight:650;color:var(--secondary)}.tool-subnav a:hover{background:var(--blue-soft);color:var(--blue)}
+/* Type scale: protect mobile readability and numeric scan speed. */
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:14px;font-variant-numeric:tabular-nums}.quote-value,.snapshot-item-price,td,th,.treasury-grid-wide strong{font-variant-numeric:tabular-nums lining-nums}.section-head p,.hero p,.note{font-size:12px;line-height:1.5}.quote-value{font-size:22px}.quote-name{font-size:11px}.quote-asof{font-size:9px}.status-label{font-size:9px}.asset-name{font-size:12px}.asset-sub{font-size:10px}td{font-size:12px}th{font-size:9px}
+html[data-theme="dark"]{color-scheme:dark;--bg:#0c1110;--surface:#141b18;--surface-2:#19221e;--ink:#edf3ef;--secondary:#a3afa8;--muted:#77857c;--line:#2a3730;--blue:#73d2aa;--blue-soft:#1c342a;--green:#45d49a;--green-soft:#18372b;--red:#ff8279;--red-soft:#3b2221;--amber:#e6c46e;--amber-soft:#39311c;--shadow:0 2px 10px rgba(0,0,0,.22)}
+html[data-theme="dark"] .topbar{background:rgba(14,20,17,.96);border-bottom-color:var(--line)}
+html[data-theme="dark"] .topbar-inner,html[data-theme="dark"] .terminal-tape,html[data-theme="dark"] .terminal-tape .tape{background:var(--surface)}
+html[data-theme="dark"] .nav a,html[data-theme="dark"] .nav-more summary{color:var(--secondary)}
+html[data-theme="dark"] .nav a.active,html[data-theme="dark"] .nav-more[open] summary{background:#20382d;color:#a8ebc9}
+html[data-theme="dark"] .nav-more-menu,html[data-theme="dark"] .theme-menu-items{background:var(--surface);border-color:var(--line)}
+html[data-theme="dark"] .nav-more-menu a,html[data-theme="dark"] .theme-menu-items button{color:var(--ink)}
+html[data-theme="dark"] .feed-state,html[data-theme="dark"] .icon-button,html[data-theme="dark"] .theme-menu summary,html[data-theme="dark"] .button.secondary,html[data-theme="dark"] .source-pill,html[data-theme="dark"] .news-filter,html[data-theme="dark"] .calendar-tools select{background:var(--surface);border-color:var(--line);color:var(--ink)}
+html[data-theme="dark"] .terminal-tape .tape-item{border-color:var(--line)}
+html[data-theme="dark"] .table-wrap,html[data-theme="dark"] table,html[data-theme="dark"] th,html[data-theme="dark"] td{background:var(--surface);border-color:var(--line);color:var(--ink)}
+html[data-theme="dark"] th{background:#1a241f;color:#b4c0b8}
+html[data-theme="dark"] .field input,html[data-theme="dark"] .field textarea,html[data-theme="dark"] .field select,html[data-theme="dark"] .news-search{background:var(--surface-2);border-color:var(--line);color:var(--ink)}
+html[data-theme="dark"] .note,html[data-theme="dark"] .result-box,html[data-theme="dark"] .empty-state,html[data-theme="dark"] .widget-box,html[data-theme="dark"] .widget-fallback{background:var(--surface-2);border-color:var(--line);color:var(--secondary)}
+html[data-theme="dark"] .widget-fallback strong,html[data-theme="dark"] .note strong{color:var(--ink)}
+html[data-theme="dark"] .snapshot-item,html[data-theme="dark"] .treasury-grid-wide>div,html[data-theme="dark"] .filing-links a,html[data-theme="dark"] .mover-row,html[data-theme="dark"] .news-item,html[data-theme="dark"] .event-row{background:var(--surface-2);border-color:var(--line)}
+html[data-theme="dark"] .news-item a,html[data-theme="dark"] .filing-row a{color:var(--ink)}
+html[data-theme="dark"] .apis-banner{background:#17251e;border-color:var(--line)}
+html[data-theme="dark"] .footer{border-color:var(--line);background:var(--surface)}
+@media(max-width:700px){
+ .page-heading{align-items:flex-start;margin-top:6px}.page-heading h1{font-size:25px}.page-heading p{font-size:12px}
+ .topbar-inner{height:auto;gap:5px}.nav{gap:3px}.nav a,.nav-more summary{font-size:10px;padding:8px 9px}
+ .nav-more-menu{right:-2px}.feed-state{max-width:118px;font-size:9px}.refresh-hint{display:none}
+ .snapshot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.snapshot-item-price{font-size:20px}
+ .treasury-grid-wide{grid-template-columns:repeat(2,minmax(0,1fr))}.treasury-grid-wide .spread-box{grid-column:1/-1}
+ .event-row{grid-template-columns:72px minmax(0,1fr) auto;gap:7px}.event-title{font-size:12px}.event-date{font-size:10px}
+ .news-controls{align-items:stretch;flex-direction:column}.news-search input{font-size:14px}.news-alert-control{justify-content:flex-end}
+ .news-item{grid-template-columns:50px minmax(0,1fr);gap:8px;padding:12px 1px}.news-item a{font-size:14px}.news-meta{font-size:10px}.news-filter{font-size:10px;padding:8px 10px}
+ td{font-size:12px}th{font-size:9px}.quote-value{font-size:21px}
+}
+
 </style>
 </head>
 <body>
 <div class="topbar"><div class="topbar-inner">
   <a class="brand" href="#overview" aria-label="APIS home"><span class="brand-mark">A</span><span>APIS <small>MARKET INTELLIGENCE</small></span></a>
   <nav class="nav" aria-label="Main navigation">
-    <a href="#research" class="active">News</a><a href="#macroPanel">Macro</a><a href="#moversPanel">Movers</a><a href="#filingsPanel">Filings</a><a href="#workbench">Tools</a><a href="#sources">Research</a>
-  </nav>
-  <div class="top-right"><span class="clock" id="clock">--:--:-- WIB</span><span class="feed-state"><i class="dot" id="feedDot"></i><span id="feedState">Connecting feeds</span></span><span class="refresh-hint" id="autoRefreshLabel">AUTO · 60s</span><span class="after-hours" id="marketSession">SESSION CHECK</span><button class="icon-button" id="refreshBtn" title="Refresh data" aria-label="Refresh data">↻</button></div>
+ <a href="#overview" class="active" data-page="home">Home</a>
+ <a href="#markets" data-page="markets">Markets</a>
+ <a href="#research" data-page="news">News</a>
+ <a href="#macroView" data-page="macro">Macro</a>
+ <a href="#moversView" data-page="movers">Movers</a>
+ <details class="nav-more"><summary>More</summary><div class="nav-more-menu">
+  <a href="#filingsView" data-page="filings">Filings</a>
+  <a href="#workbench" data-page="tools">Tools</a>
+  <a href="#sources" data-page="research">Research & Sources</a>
+ </div></details>
+</nav>
+  <div class="top-right"><span class="clock" id="clock">--:--:-- WIB</span><span class="feed-state"><i class="dot" id="feedDot"></i><span id="feedState">Connecting feeds</span></span><span class="refresh-hint" id="autoRefreshLabel">AUTO · 60s</span><span class="after-hours" id="marketSession">SESSION CHECK</span><details class="theme-menu"><summary title="Appearance" aria-label="Appearance">◐</summary><div class="theme-menu-items"><button type="button" data-theme-choice="light">Light</button><button type="button" data-theme-choice="dark">Dark</button><button type="button" data-theme-choice="system">System</button></div></details><button class="icon-button" id="refreshBtn" title="Refresh data" aria-label="Refresh data">↻</button></div>
 </div></div>
 <div class="tape-wrap terminal-tape"><div class="tape" id="tickerTape"><div class="tape-item"><strong>APIS</strong><span class="minor">Waiting for verified provider observations…</span></div></div></div>
 <main class="container">
-<section id="overview">
+<section id="overview" class="section page-view active" data-page-view="home">
   <div class="hero"><div><div class="eyebrow">APIS · GLOBAL MARKET INTELLIGENCE · ASIA/JAKARTA</div><h1>The Market Terminal</h1><p>Cross-asset market monitor · provider timestamps · source transparency. Crypto streams update per tick when connected; free public equity feeds may be delayed or snapshot-based.</p></div><div class="hero-tools"><button class="button secondary" id="exportSnapshotTop">Ekspor data pasar</button><button class="button" id="refreshTop">Perbarui data pasar</button></div></div>
   <div class="grid quote-grid" id="featuredQuotes" aria-live="polite"></div>
   
 </section>
 
-<section class="section" id="markets">
+<section class="section page-view" id="markets" data-page-view="markets">
   <div class="section-head"><div><div class="eyebrow">01 / Pemantauan pasar</div><h2>Pasar global</h2><p>Hanya harga dari penyedia data. Kutipan yang tidak tersedia atau terblokir tetap ditandai unavailable.</p></div><div class="section-tools"><span class="source-pill" id="quoteCount">0 / 19 observations</span><span class="source-pill" id="lastRefresh">Not refreshed</span></div></div>
   <div class="grid two-col" id="macroPanel">
     <div class="card chart-card"><div class="card-title"><div><h3>Grafik pasar</h3><p id="chartSubtitle">Grafik interaktif dari TradingView</p></div><div class="chart-controls"><select class="symbol-select" id="chartSymbol" aria-label="Select chart symbol"><option value="IDX:COMPOSITE">IHSG · IDX Composite</option><option value="SP:SPX">S&P 500</option><option value="NASDAQ:IXIC">Nasdaq Composite</option><option value="DJ:DJI">Dow Jones</option><option value="SSE:000001">Shanghai Composite</option><option value="TWSE:IX0001">Taiwan Weighted</option><option value="KRX:KOSPI">KOSPI</option><option value="TVC:VIX">CBOE VIX</option><option value="AMEX:EIDO">EIDO</option><option value="FX_IDC:USDIDR">USD/IDR</option><option value="NYMEX:BZ1!">Brent Crude</option><option value="COMEX:GC1!">Gold</option><option value="BINANCE:BTCUSDT">Bitcoin</option></select><button class="button secondary" id="reloadChart">Reload chart</button></div></div><div class="widget-box" id="mainChart"><div class="widget-fallback"><div><strong>Loading TradingView chart</strong>Requires an internet connection and access to TradingView widgets.</div></div></div></div>
-    <div class="card card-pad"><div class="card-title"><div><h3>Ikhtisar pasar</h3><p>Daftar pantauan pilihan · global + Asia + Indonesia</p></div><span class="source-pill">TradingView · external</span></div><div class="widget-box compact" id="marketOverviewWidget"><div class="widget-fallback"><div><strong>Loading market overview</strong>Market data availability and delay depend on the exchange and TradingView's data agreements.</div></div></div><div class="divider"></div><div class="note"><strong>Reading the data:</strong> TradingView widgets do not expose quote values to this page for calculations. Their equity-market data may be delayed. Foreign exchange and crypto data are shown as real-time by TradingView; exchange-specific real-time stock data requires the relevant exchange agreements. <a href="https://www.tradingview.com/widget-docs/faq/data/" target="_blank" rel="noopener">Data policy ↗</a></div></div>
+    <div class="card card-pad market-snapshot-card">
+ <div class="card-title"><div><h3>Ikhtisar pasar</h3><p>Live provider snapshot · source time and status per instrument</p></div><span class="source-pill" id="snapshotStamp">Waiting for quotes</span></div>
+ <div class="snapshot-grid" id="marketSnapshotGrid"><div class="empty-state">Waiting for validated market quotes.</div></div>
+ <div class="snapshot-legend"><span><i class="legend-dot good"></i>Positive</span><span><i class="legend-dot bad"></i>Negative</span><span><i class="legend-dot neutral"></i>Delayed / last close</span></div>
+ </div>
   </div>
   <div class="section watchlist-panel" id="watchlistPanel" style="margin-top:18px">
     <div class="section-head"><div><h2>Daftar pantauan</h2><p>Observasi dari Yahoo Finance bila endpoint publik dapat diakses; timestamp mengikuti waktu observasi penyedia.</p></div><div class="section-tools"><button class="button secondary" id="exportWatchlist">Unduh CSV</button></div></div>
     <div class="table-wrap"><table><thead><tr><th>Instrumen</th><th>Terakhir</th><th>Perubahan</th><th>Perubahan %</th><th>Status penyedia</th><th>Waktu observasi (WIB)</th><th>Sumber</th></tr></thead><tbody id="watchlistBody"><tr><td colspan="7" class="empty-row">Waiting for provider response. No sample or simulated quotes are displayed.</td></tr></tbody></table></div>
     <div class="note" style="margin-top:10px"><strong>Cross-reference instrumen:</strong> kode Yahoo Finance dan TradingView dipasangkan per simbol. Kontrak komoditas diselaraskan: <strong>BZ=F ↔ NYMEX:BZ1!</strong> untuk Brent Last Day Financial Futures dan <strong>GC=F ↔ COMEX:GC1!</strong> untuk COMEX Gold Futures. Keduanya adalah kontrak futures, bukan harga spot.</div>
   </div>
-  <div class="section" id="moversPanel" style="margin-top:14px">
- <div class="section-head"><div><div class="eyebrow">MARKET BREADTH</div><h2>Today's flow · winners & losers</h2><p>Sorted from latest validated provider observations; unavailable instruments are excluded.</p></div><span class="source-pill" id="moversStamp">Awaiting quotes</span></div>
- <div class="grid two-col movers-grid">
-  <div class="card card-pad"><div class="card-title"><h3>Top gainers</h3><span class="badge good">UP</span></div><div class="mover-list" id="gainersList"><div class="empty-state">Waiting for provider quotes.</div></div></div>
-  <div class="card card-pad"><div class="card-title"><h3>Top decliners</h3><span class="badge bad">DOWN</span></div><div class="mover-list" id="losersList"><div class="empty-state">Waiting for provider quotes.</div></div></div>
- </div>
-</div>
-<div class="grid three-col" style="margin-top:14px"><div class="card card-pad" id="treasuryCard"><div class="card-title"><div><h3>U.S. Treasury yield curve</h3><p>Official daily par yield · not intraday</p></div><span class="source-pill" id="tsyStatus">Loading</span></div><div class="treasury-grid"><div><small>2Y</small><strong id="tsy2">—</strong></div><div><small>10Y</small><strong id="tsy10">—</strong></div><div><small>30Y</small><strong id="tsy30">—</strong></div></div><div class="footnote" id="tsyDate">Waiting for Treasury observation.</div></div>
+  
+<div class="grid three-col" style="margin-top:14px">
     <div class="card card-pad"><div class="card-title"><div><h3>Bitcoin · streaming real-time</h3><p>Binance public market-data WebSocket</p></div><span class="source-pill" id="btcStatus">Connecting</span></div><div class="quote-value" id="btcPrice">—</div><div class="quote-bottom"><span id="btcChange">No stream observation yet</span><span class="status-label" id="btcAsOf">—</span></div><div class="footnote">Ticker transaksi publik BTC/USDT. Streaming live memerlukan koneksi internet dan akses ke endpoint data pasar Binance. <a href="https://github.com/binance/binance-spot-api-docs/blob/master/faqs/market_data_only.md" target="_blank" rel="noopener">Endpoint documentation ↗</a></div></div>
     <div class="card card-pad"><div class="card-title"><div><h3>Referensi USD / IDR</h3><p>Referensi harian dari sumber bank sentral</p></div><span class="source-pill" id="fxStatus">Loading</span></div><div class="quote-value" id="fxValue">—</div><div class="quote-bottom"><span id="fxPair">USD / IDR</span><span class="status-label" id="fxDate">—</span></div><div class="footnote">Kurs Frankfurter adalah kurs referensi dari bank sentral dan sumber resmi, bukan kuotasi intraday atau kurs transaksi yang dapat dieksekusi. <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Source documentation ↗</a></div></div>
     <div class="card card-pad"><div class="card-title"><div><h3>Kualitas data</h3><p>Cakupan instrumen pada watchlist APIS browser</p></div><span class="source-pill" id="coverageStatus">Awaiting data</span></div><div class="coverage"><strong id="coveragePct">0%</strong><div class="coverage-bar"><div class="coverage-fill" id="coverageFill"></div></div></div><div class="quote-bottom"><span id="coverageDetails">0 usable · 19 requested</span><span class="status-label" id="coverageAsOf">—</span></div><div class="footnote">Persentase menghitung respons penyedia yang berhasil pada refresh ini saja. Cache lama ditampilkan terpisah dan tidak masuk cakupan baru.</div></div>
   </div>
 </section>
 
-<section class="section" id="research">
-  <div class="section-head"><div><div class="eyebrow">02 / Alur intelijen</div><h2>Berita & kalender makro</h2><p>Widget berita dan agenda ekonomi dari penyedia eksternal. Headline dan waktu acara berasal dari penyedia masing-masing.</p></div><span class="source-pill">TradingView widgets</span></div>
-  <div class="grid two-col">
-    <div class="card card-pad"><div class="card-title"><div><h3>Market news</h3><p>Google News RSS · source & publication timestamps</p></div><a href="https://news.google.com/" target="_blank" rel="noopener" class="button tertiary">News source ↗</a></div><div class="news-feed-list" id="newsFeedList"><div class="empty-state">Loading public news feed…</div></div><div class="divider"></div><div class="card-title"><div><h3>Provider headlines</h3><p>TradingView external timeline</p></div><a href="https://www.tradingview.com/news/" target="_blank" rel="noopener" class="button tertiary">Buka berita ↗</a></div><div class="widget-box timeline" id="newsWidget"><div class="widget-fallback"><div><strong>Memuat headline pasar</strong>Berita tidak dibuat oleh APIS. Bila widget penyedia terblokir, buka tautan sumber di atas.</div></div></div></div>
-    <div class="card card-pad"><div class="card-title"><div><h3>Kalender ekonomi</h3><p>Rilis makro · filter negara dan tingkat kepentingan acara</p></div><a href="https://www.tradingview.com/economic-calendar/" target="_blank" rel="noopener" class="button tertiary">Buka kalender ↗</a></div><div class="widget-box calendar" id="calendarWidget"><div class="widget-fallback"><div><strong>Memuat kalender ekonomi</strong>Data kalender dan jadwal acara disediakan oleh TradingView.</div></div></div></div>
+<section class="section page-view" id="research" data-page-view="news">
+ <div class="page-heading"><div><div class="eyebrow">APIS · NEWS INTELLIGENCE</div><h1>News Feed</h1><p>Publisher headlines sorted by publication time. Filter by market theme, search titles, and open the original source.</p></div><span class="source-pill" id="newsFeedStatus">Connecting to publishers</span></div>
+ <div class="card news-reader">
+  <div class="news-controls">
+   <div class="news-search"><span>⌕</span><input id="newsSearch" type="search" placeholder="Search headlines, companies, central banks…" aria-label="Search news headlines"></div>
+   <label class="news-alert-control"><input id="newsAlertsToggle" type="checkbox"><span>News alerts</span></label>
   </div>
-<div class="card filings-panel" id="filingsPanel" style="margin-top:14px">
+  <div class="news-filters" id="newsFilters">
+   <button class="news-filter active" data-news-filter="All">All</button>
+   <button class="news-filter" data-news-filter="Breaking">Breaking · 3h</button>
+   <button class="news-filter" data-news-filter="Forex">Forex</button>
+   <button class="news-filter" data-news-filter="Economy">Economy</button>
+   <button class="news-filter" data-news-filter="Central Banks">Central Banks</button>
+   <button class="news-filter" data-news-filter="Commodities">Commodities</button>
+   <button class="news-filter" data-news-filter="Geopolitical">Geopolitical</button>
+  </div>
+  <div class="news-feed-meta"><span id="newsResultsCount">0 headlines</span><span id="newsUpdatedAt">Awaiting publisher responses</span></div>
+  <div class="news-feed-list" id="newsFeedList"><div class="empty-state">Loading publisher RSS feeds…</div></div>
+  <div class="news-bottom"><span>Headlines and timestamps remain linked to the publisher.</span><button class="button secondary" id="refreshNewsBtn">Refresh news</button></div>
+ </div>
+ <div class="news-publishers">Sources: CNBC · BBC Business · The Guardian Business · Federal Reserve · BIS</div>
+</section>
+
+<section class="section page-view" id="macroView" data-page-view="macro">
+ <div class="page-heading"><div><div class="eyebrow">APIS · MACRO INTELLIGENCE</div><h1>Macro Dashboard</h1><p>Official yield observations and a curated list of major economic releases. All event times are displayed in WIB.</p></div><span class="source-pill">Official data sources</span></div>
+ <div class="card treasury-terminal">
+  <div class="card-title"><div><h2>U.S. Treasury par yield curve</h2><p>Daily closing market observations · not intraday</p></div><span class="source-pill" id="tsyStatus">CONNECTING</span></div>
+  <div class="treasury-grid treasury-grid-wide">
+   <div><small>2 YEAR</small><strong id="tsy2">—</strong></div><div><small>5 YEAR</small><strong id="tsy5">—</strong></div><div><small>10 YEAR</small><strong id="tsy10">—</strong></div><div><small>30 YEAR</small><strong id="tsy30">—</strong></div><div class="spread-box"><small>10Y − 2Y</small><strong id="tsySpread">—</strong></div>
+  </div>
+  <div class="treasury-foot"><span id="tsyDate">Waiting for official Treasury observation.</span><a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve" target="_blank" rel="noopener">Official Treasury data ↗</a></div>
+  <div class="treasury-error" id="tsyError" hidden></div>
+ </div>
+ <div class="card calendar-terminal">
+  <div class="card-title"><div><h2>Economic calendar · high impact</h2><p>CPI, employment, GDP, PCE, PPI, JOLTS, and FOMC policy decisions.</p></div><div class="calendar-tools"><select id="calendarImpact" aria-label="Calendar impact filter"><option value="high">High impact only</option><option value="all">High + medium</option></select><button class="button secondary" id="refreshCalendarBtn">Refresh</button></div></div>
+  <div class="calendar-summary"><span id="calendarCount">Loading major releases…</span><span id="calendarUpdatedAt">Official schedules · BLS, BEA, Federal Reserve</span></div>
+  <div id="calendarEvents" class="calendar-events"><div class="empty-state">Loading official release schedules…</div></div>
+  <div class="calendar-foot">The calendar filters out routine and low-impact releases. Event schedules can be revised by the publishing agency; verify the source before trading.</div>
+ </div>
+</section><section class="section page-view" id="moversView" data-page-view="movers">
+ <div class="page-heading"><div><div class="eyebrow">APIS · MARKET BREADTH</div><h1>Market Movers</h1><p>Winners and decliners calculated from the latest valid provider observations. Stale and unavailable instruments are excluded.</p></div><span class="source-pill" id="moversStamp">Waiting for quotes</span></div>
+ <div class="section" id="moversPanel" style="margin-top:14px">
+ <div class="section-head"><div><div class="eyebrow">MARKET BREADTH</div><h2>Today's flow · winners & losers</h2><p>Sorted from latest validated provider observations; unavailable instruments are excluded.</p></div><span class="source-pill" id="moversStamp">Awaiting quotes</span></div>
+ <div class="grid two-col movers-grid">
+  <div class="card card-pad"><div class="card-title"><h3>Top gainers</h3><span class="badge good">UP</span></div><div class="mover-list" id="gainersList"><div class="empty-state">Waiting for provider quotes.</div></div></div>
+  <div class="card card-pad"><div class="card-title"><h3>Top decliners</h3><span class="badge bad">DOWN</span></div><div class="mover-list" id="losersList"><div class="empty-state">Waiting for provider quotes.</div></div></div>
+ </div>
+</div>
+</section><section class="section page-view" id="filingsView" data-page-view="filings">
+ <div class="page-heading"><div><div class="eyebrow">APIS · REGULATORY INTELLIGENCE</div><h1>Filings & Corporate Actions</h1><p>Public SEC EDGAR submissions for selected U.S. issuers, with direct filing links and publication dates.</p></div><span class="source-pill" id="filingsStatus">PUBLIC SOURCES</span></div>
+ <div class="card filings-panel" id="filingsPanel" style="margin-top:14px">
  <div class="card-title"><div><div class="eyebrow">REGULATORY DISCLOSURES</div><h3>Filings & corporate actions</h3><p>Public filing sources · no fabricated insider trades or issuer disclosures.</p></div><span class="source-pill" id="filingsStatus">PUBLIC SOURCES</span></div>
  <div class="filings-feed" id="filingsFeedList"><div class="empty-state">Loading SEC EDGAR company filings…</div></div><div class="filing-links">
   <a href="https://www.sec.gov/edgar/search/" target="_blank" rel="noopener"><strong>SEC EDGAR</strong><span>U.S. company filings · 10-K, 10-Q, 8-K</span></a>
@@ -162,10 +257,7 @@ body{background:var(--bg);color:var(--ink);font-size:13px}.topbar{background:rgb
   <a href="https://www.sec.gov/Archives/edgar/daily-index/" target="_blank" rel="noopener"><strong>SEC daily index</strong><span>Daily filing index and submissions</span></a>
  </div>
 </div>
-  <div class="note" style="margin-top:14px"><strong>Aturan editorial:</strong> the original file generated fictional headlines and source labels such as “Reuters-style” and “Bloomberg-style”. These have been removed. APIS does not invent market catalysts, analyst consensus, or event schedules.</div>
-</section>
-
-<section class="section" id="workbench">
+</section><section class="section page-view" id="workbench" data-page-view="tools">
   <div class="section-head"><div><div class="eyebrow">03 / APIS v1.0.0 · edisi browser</div><h2>Workbench institusional</h2><p>Subset APIS untuk browser: perangkat deterministik yang berjalan lokal tanpa API key privat atau backend.</p></div><span class="source-pill">Eksekusi lokal · tanpa koneksi LLM</span></div>
   <div class="apis-banner"><div><h3>Master Control · routing lokal</h3><p>Mengarahkan tugas ke modul APIS terkecil yang relevan berdasarkan aturan kata kunci yang transparan. Ini routing deterministik, bukan AI generatif dan bukan pengganti penuh runtime APIS Python.</p></div><span class="module-status">BROWSER CORE READY</span></div>
   <div class="field-grid" style="margin-top:13px">
@@ -173,25 +265,18 @@ body{background:var(--bg);color:var(--ink);font-size:13px}.topbar{background:rgb
     <div class="field" style="justify-content:end"><button class="button" id="routeTask">Tentukan rute tugas</button></div>
   </div>
   <div class="result-box" id="routeResult" aria-live="polite"></div>
-  <div class="grid module-grid" style="margin-top:14px">
-    <div class="card module-card"><div class="module-top"><span class="module-id">M01 · LYRA</span><span class="module-status">LOCAL TOOL</span></div><h3>Rekayasa prompt</h3><p>Prompt structure scoring, output contract, and heuristic injection-pattern review.</p></div>
-    <div class="card module-card"><div class="module-top"><span class="module-id">M02 · INVESTMENT</span><span class="module-status partial">PARTIAL PORT</span></div><h3>Analis investasi institusional</h3><p>Browser valuation tools and input validation. Full issuer ingestion and thesis engine remain in Python runtime.</p></div>
-    <div class="card module-card"><div class="module-top"><span class="module-id">M03 · MARKETS</span><span class="module-status">FEED EMBED</span></div><h3>Intelijen pasar global</h3><p>Public market quotes, TradingView widgets, timestamps, and explicit source status.</p></div>
-    <div class="card module-card"><div class="module-top"><span class="module-id">M04 · MODELING</span><span class="module-status">LOCAL TOOL</span></div><h3>Pemodelan keuangan</h3><p>DCF valuation, fixed-income pricing, and historical portfolio risk metrics with visible assumptions.</p></div>
-    <div class="card module-card"><div class="module-top"><span class="module-id">M05 · RESEARCH</span><span class="module-status">LOCAL TOOL</span></div><h3>Buku bukti</h3><p>Source-tier screening, provenance capture, and conflict checks stored in this browser.</p></div>
-    <div class="card module-card"><div class="module-top"><span class="module-id">M06 · ANALYTICS</span><span class="module-status">LOCAL TOOL</span></div><h3>Dashboard data</h3><p>Quote coverage, source-status summary, and CSV snapshot export.</p></div>
-    <div class="card module-card"><div class="module-top"><span class="module-id">M07 · AUTOMATION</span><span class="module-status partial">TAB ACTIVE</span></div><h3>Evaluasi alert</h3><p>Threshold monitoring while this browser tab is open. No background scheduler is included.</p></div>
-    <div class="card module-card"><div class="module-top"><span class="module-id">GOVERNANCE</span><span class="module-status">ENFORCED</span></div><h3>Data & keamanan</h3><p>Missing values remain missing; user inputs stay local; no transaction or external action is executed.</p></div>
-  </div>
+  <div class="tool-subnav" aria-label="Tools submenu">
+ <a href="#toolPrompt" data-tool-anchor="toolPrompt">Prompt Lab</a><a href="#toolDcf" data-tool-anchor="toolDcf">Valuation</a><a href="#toolBond" data-tool-anchor="toolBond">Fixed Income</a><a href="#toolRisk" data-tool-anchor="toolRisk">Portfolio Risk</a><a href="#toolEvidence" data-tool-anchor="toolEvidence">Evidence Book</a><a href="#toolAlerts" data-tool-anchor="toolAlerts">Alerts</a><a href="#toolData" data-tool-anchor="toolData">Data Quality</a>
+</div>
 
   <div class="grid workbench-grid" style="margin-top:14px">
-    <div class="card tool-card"><div class="card-title"><div><div class="small-caps">M01 / LYRA</div><h3>Prompt quality audit</h3><p>Checklist-based heuristic review; not a safety guarantee.</p></div></div>
+    <div class="card tool-card" id="toolPrompt"><div class="card-title"><div><div class="small-caps">M01 / LYRA</div><h3>Prompt quality audit</h3><p>Checklist-based heuristic review; not a safety guarantee.</p></div></div>
       <div class="field"><label for="promptText">Prompt to review</label><textarea id="promptText" placeholder="Tempel prompt yang ingin dievaluasi..."></textarea></div>
       <div class="form-actions"><button class="button" id="auditPrompt">Audit prompt</button><button class="button secondary" id="buildPrompt">Build APIS template</button></div>
       <div class="result-box" id="promptResult"></div><div class="field hidden" id="builtPromptWrap" style="margin-top:12px"><label for="builtPrompt">Structured prompt</label><textarea id="builtPrompt" readonly></textarea><button class="button secondary" id="copyPrompt">Copy prompt</button></div>
     </div>
 
-    <div class="card tool-card"><div class="card-title"><div><div class="small-caps">M02 + M04</div><h3>DCF valuation model</h3><p>FCFF discounted cash flow · input units must be consistent.</p></div></div>
+    <div class="card tool-card" id="toolDcf"><div class="card-title"><div><div class="small-caps">M02 + M04</div><h3>DCF valuation model</h3><p>FCFF discounted cash flow · input units must be consistent.</p></div></div>
       <div class="field-grid">
         <div class="field full"><label for="fcfs">Forecast FCFF (comma-separated)</label><input id="fcfs" value="100,110,120,130,140" inputmode="decimal"></div>
         <div class="field"><label for="wacc">WACC (%)</label><input id="wacc" type="number" value="11" step="0.1"></div>
@@ -203,7 +288,7 @@ body{background:var(--bg);color:var(--ink);font-size:13px}.topbar{background:rgb
       <div class="footnote">Gordon Growth terminal value. No company data is preloaded. This calculator does not determine a fair value without validated inputs, forecast period, currency, capital structure and valuation date.</div>
     </div>
 
-    <div class="card tool-card"><div class="card-title"><div><div class="small-caps">M04 / FIXED INCOME</div><h3>Bond price calculator</h3><p>Periodic fixed coupon; clean price approximation, excluding accrued interest.</p></div></div>
+    <div class="card tool-card" id="toolBond"><div class="card-title"><div><div class="small-caps">M04 / FIXED INCOME</div><h3>Bond price calculator</h3><p>Periodic fixed coupon; clean price approximation, excluding accrued interest.</p></div></div>
       <div class="field-grid">
         <div class="field"><label for="bondFace">Face value</label><input id="bondFace" type="number" value="100"></div>
         <div class="field"><label for="bondCoupon">Coupon (%)</label><input id="bondCoupon" type="number" value="6" step="0.01"></div>
@@ -214,7 +299,7 @@ body{background:var(--bg);color:var(--ink);font-size:13px}.topbar{background:rgb
       <div class="footnote">Calculation does not include tax, transaction costs, day-count convention, accrued coupon or issuer default risk.</div>
     </div>
 
-    <div class="card tool-card"><div class="card-title"><div><div class="small-caps">M04 / PORTFOLIO RISK</div><h3>Portfolio risk calculator</h3><p>Historical returns entered by the user; no sample market data is loaded.</p></div></div>
+    <div class="card tool-card" id="toolRisk"><div class="card-title"><div><div class="small-caps">M04 / PORTFOLIO RISK</div><h3>Portfolio risk calculator</h3><p>Historical returns entered by the user; no sample market data is loaded.</p></div></div>
       <div class="field-grid">
         <div class="field full"><label for="portfolioReturns">Periodic portfolio returns (%) · chronological</label><textarea id="portfolioReturns" placeholder="e.g. 1.2, -0.8, 2.1, -1.4, 0.6"></textarea></div>
         <div class="field"><label for="riskFreeRate">Annual risk-free rate (%)</label><input id="riskFreeRate" type="number" value="0" step="0.01"></div>
@@ -223,7 +308,7 @@ body{background:var(--bg);color:var(--ink);font-size:13px}.topbar{background:rgb
       <div class="footnote">Metrik sampel historis, bukan proyeksi. VaR / ES are one-period historical estimates at 95%; returns must be ordered oldest to newest and expressed in percent.</div>
     </div>
 
-    <div class="card tool-card"><div class="card-title"><div><div class="small-caps">M05 / DEEP RESEARCH</div><h3>Buku bukti</h3><p>Capture claims and provenance. Data is saved in this browser only.</p></div><span class="source-pill" id="ledgerCount">0 records</span></div>
+    <div class="card tool-card" id="toolEvidence"><div class="card-title"><div><div class="small-caps">M05 / DEEP RESEARCH</div><h3>Buku bukti</h3><p>Capture claims and provenance. Data is saved in this browser only.</p></div><span class="source-pill" id="ledgerCount">0 records</span></div>
       <div class="field-grid">
         <div class="field full"><label for="claimText">Claim / evidence statement</label><input id="claimText" placeholder="What statement are you validating?"></div>
         <div class="field"><label for="claimTopic">Topic</label><input id="claimTopic" placeholder="e.g. BI rate decision"></div>
@@ -238,13 +323,13 @@ body{background:var(--bg);color:var(--ink);font-size:13px}.topbar{background:rgb
       <div class="footnote">The source score is a screening heuristic, not proof that a claim is true. Different values for the same topic are flagged for review, not automatically reconciled.</div>
     </div>
 
-    <div class="card tool-card"><div class="card-title"><div><div class="small-caps">M06 / DATA ANALYTICS</div><h3>Data quality & export</h3><p>Coverage and provenance for this browser's quote set.</p></div></div>
+    <div class="card tool-card" id="toolData"><div class="card-title"><div><div class="small-caps">M06 / DATA ANALYTICS</div><h3>Data quality & export</h3><p>Coverage and provenance for this browser's quote set.</p></div></div>
       <div class="result-grid"><div class="result-metric"><small>Requested</small><strong id="dqRequested">19</strong></div><div class="result-metric"><small>Timestamped observations</small><strong id="dqUsable">0</strong></div><div class="result-metric"><small>Unavailable</small><strong id="dqUnavailable">19</strong></div><div class="result-metric"><small>Timestamp pass</small><strong id="dqTimestamp">0</strong></div></div>
       <div class="divider"></div><div class="source-list" id="sourceHealth"></div><div class="form-actions"><button class="button" id="exportDataQuality">Export quote CSV</button><button class="button secondary" id="exportEvidence">Export evidence CSV</button></div>
       <div class="footnote">The APIS Python engine includes additional ingestion and analysis functions. They are not assumed to execute inside this standalone HTML; this section reports only the data actually loaded by this page.</div>
     </div>
 
-    <div class="card tool-card"><div class="card-title"><div><div class="small-caps">M07 / AUTOMATION</div><h3>Browser threshold monitor</h3><p>Alerts evaluate only when this file is open and a valid quote updates.</p></div></div>
+    <div class="card tool-card" id="toolAlerts"><div class="card-title"><div><div class="small-caps">M07 / AUTOMATION</div><h3>Browser threshold monitor</h3><p>Alerts evaluate only when this file is open and a valid quote updates.</p></div></div>
       <div class="field-grid"><div class="field"><label for="alertSymbol">Symbol</label><select id="alertSymbol"></select></div><div class="field"><label for="alertOperator">Condition</label><select id="alertOperator"><option value=">=">Greater / equal</option><option value="<=">Less / equal</option><option value=">">Greater than</option><option value="<">Less than</option></select></div><div class="field full"><label for="alertThreshold">Threshold (same unit as symbol quote)</label><input id="alertThreshold" type="number" step="any" placeholder="Enter threshold"></div></div>
       <div class="form-actions"><button class="button" id="addAlert">Add alert rule</button><button class="button secondary" id="requestNotify">Enable browser notifications</button></div>
       <div class="alert-list" id="alertList"><div class="empty-state">No threshold rules created.</div></div>
@@ -253,12 +338,12 @@ body{background:var(--bg);color:var(--ink);font-size:13px}.topbar{background:rgb
   </div>
 </section>
 
-<section class="section" id="sources">
+<section class="section page-view" id="sources" data-page-view="research">
   <div class="section-head"><div><div class="eyebrow">04 / Tata kelola</div><h2>Sumber data & catatan operasional</h2><p>Asal-usul data, batasan penyedia, dan batas kemampuan edisi browser.</p></div></div>
   <div class="grid two-col">
     <div class="card card-pad"><div class="card-title"><div><h3>Registri sumber</h3><p>Dependensi data dan visualisasi</p></div></div><div class="source-list">
       <div class="source-row"><div><strong>Yahoo Finance Chart endpoint</strong><small>Index / equity / ETF / futures / FX observations; unofficial Yahoo endpoint through a third-party public CORS proxy. Exchange delays and update intervals can vary.</small></div><span class="badge warn">BEST EFFORT</span></div>
-      <div class="source-row"><div><strong>TradingView financial widgets</strong><small>Embedded charts, market overview, news and economic calendar; stock feeds may be delayed.</small></div><span class="badge warn">EXTERNAL EMBED</span></div>
+      <div class="source-row"><div><strong>TradingView chart embed (optional)</strong><small>Optional chart only. APIS market snapshot, news feed and macro calendar are rendered internally from their respective sources.</small></div><span class="badge warn">EXTERNAL EMBED</span></div>
       <div class="source-row"><div><strong>Binance public market-data stream</strong><small>BTC/USDT 24-hour ticker WebSocket; no authentication for market-data-only access.</small></div><span class="badge good">PUBLIC STREAM</span></div>
       <div class="source-row"><div><strong>Frankfurter reference-rate API</strong><small>USD/IDR central-bank reference rate; not a live executable FX quote.</small></div><span class="badge warn">REFERENCE</span></div>
     </div></div>
@@ -268,7 +353,7 @@ body{background:var(--bg);color:var(--ink);font-size:13px}.topbar{background:rgb
         <li><span class="check-mark">✓</span><span>Only provider responses with a valid price and observation timestamp enter the quote table and CSV export.</span></li>
         <li><span class="check-mark">✓</span><span>Binance BTC/USDT is labelled live only when a timestamped WebSocket message is received.</span></li>
         <li><span class="check-miss">!</span><span>Yahoo chart endpoint is unofficial and accessed through a third-party CORS proxy; availability, usage terms and latency can change. It is not a licensed exchange feed.</span></li>
-        <li><span class="check-miss">!</span><span>TradingView widgets do not provide data export/API access to this page. Exchange real-time equity access may require paid exchange agreements.</span></li>
+        <li><span class="check-miss">!</span><span>Yahoo Finance public quote relay is unofficial and may be delayed; no free licensed tick-by-tick BEI feed is claimed.</span></li>
         <li><span class="check-miss">!</span><span>No guaranteed live IDX equities feed is included. IDX real-time market data requires the appropriate licensed source.</span></li>
         <li><span class="check-miss">!</span><span>Full APIS Python orchestration, database, background automation, LLM features, issuer ingestion and persistent cloud storage are not ported into this single HTML file.</span></li>
       </ul>
@@ -277,7 +362,7 @@ body{background:var(--bg);color:var(--ink);font-size:13px}.topbar{background:rgb
   <div class="note" style="margin-top:14px"><strong>Cara menjalankan:</strong> simpan file ini di komputer lalu buka dengan Chrome, Edge, Safari, atau Firefox yang terhubung ke internet. Sebagian jaringan memblokir penyedia data pasar publik atau widget eksternal; dashboard akan menandainya unavailable dan tidak mengganti data dengan simulasi. Untuk akses provider yang lebih konsisten, file dapat dijalankan melalui web server statis lokal (opsional)—tanpa backend API.</div>
 </section>
 </main>
-<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.0.0</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
+<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.1.0</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>

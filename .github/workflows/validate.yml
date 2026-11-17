@@ -33,7 +33,7 @@ jobs:
             catch (error) { throw new Error('Inline script ' + (index + 1) + ': ' + error.message); }
           });
           const checks = {
-            version: html.includes('build-version" content="2.10.0"'),
+            version: html.includes('build-version" content="2.10.1"'),
             dailyIndexCloseOnly: html.includes("const hasDailyBars=isDailyIndex&&plan.interval==='1d'") && html.includes('useDailyClose=hasDailyBars&&barPrice!==null') && html.includes('const dailyBars=hasDailyBars?closes.map'),
             dailyIndexCloseBaseline: html.includes('const baselineCutoff=useDailyClose?selectedDailyBarDay:sessionDay') && html.includes('selectDailyIndexPreviousClose(dailyBars,baselineCutoff,session.zone)'),
             finalCloseTimeGuard: html.includes('Provider observation predates the official close window') && html.includes('session.finalCloseMinute-10'),
@@ -43,6 +43,10 @@ jobs:
             closedRefreshGuardRestore: html.includes("closedRefreshDone:loadJSON('apis_market_closed_refresh_done',{})"),
             freeMode: html.includes('Stooq public CSV snapshots') && html.includes('Yahoo Finance public chart fallback'),
             stooqAdapter: html.includes('async function fetchStooqQuote'),
+            googleFinanceAdapter: html.includes('async function fetchGoogleFinanceQuote') && html.includes('function parseGoogleFinanceQuotePage'),
+            googleFinanceIndexCoverage: ['COMPOSITE:IDX','IX0001:TPE','000001:SHA','KOSPI:KRX','NI225:INDEXNIKKEI','HSI:INDEXHANGSENG','.INX:INDEXSP','.IXIC:INDEXNASDAQ','.DJI:INDEXDJX'].every(symbol => html.includes("googleFinanceSymbol:'"+symbol+"'")),
+            googleFinanceComparison: html.includes('async function fetchIndexProviderComparison') && html.includes('providerComparison'),
+            googleFinanceTimestampGuard: html.includes('Google Finance source timestamp is missing') && html.includes('Google Finance source timestamp is invalid or stale'),
             yahooFallback: html.includes('async function fetchYahooQuote'),
             publicWaterfall: html.includes('async function fetchMarketQuote'),
             xauSpotAdapter: html.includes('async function fetchXauSpotQuote') && html.includes('https://xaus.com/api/v1/spot?compact=1'),

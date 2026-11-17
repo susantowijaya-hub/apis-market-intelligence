@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f5">
-<meta name="build-version" content="2.4.3">
+<meta name="build-version" content="2.5.0">
 <meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — The Market Terminal v2.4.3</title>
+<title>APIS — The Market Terminal v2.5.0</title>
 <style>
 :root{
   color-scheme:light;
@@ -460,6 +460,165 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
  #watchlistPanel tbody tr:active{background:var(--surface-2)!important}
 }
 
+
+/* APIS v2.5.0 — iOS Stocks-inspired watchlist and market screens */
+:root{--ios-green:#32d26b;--ios-red:#ff453a;--ios-black:#000;--ios-panel:#171719;--ios-line:rgba(255,255,255,.14)}
+html[data-theme="dark"]{--bg:#000;--surface:#151517;--surface-2:#1c1c1e;--ink:#f5f5f7;--secondary:#98989f;--muted:#76767c;--line:rgba(255,255,255,.12);--shadow:none;--green:#32d26b;--red:#ff453a;--green-soft:rgba(50,210,107,.12);--red-soft:rgba(255,69,58,.12)}
+html[data-theme="light"]{--bg:#f5f5f7;--surface:#fff;--surface-2:#f2f2f7;--ink:#1c1c1e;--secondary:#6e6e73;--line:rgba(60,60,67,.14);--shadow:0 4px 18px rgba(0,0,0,.045)}
+html,body,.topbar,.card,.button,.nav a,.ios-stock-item,.ios-aux-card,.ios-data-health,.theme-menu-items button{transition:background-color .24s ease,color .2s ease,border-color .24s ease,box-shadow .24s ease}
+.topbar{background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px)}
+.topbar-inner{height:66px;padding:0 22px;gap:16px}
+.brand{font-size:19px}
+.brand-mark{background:linear-gradient(145deg,#35c978,#16865d);box-shadow:none}
+.nav a{transition:background .2s ease,color .2s ease,transform .2s cubic-bezier(.2,.8,.2,1)}
+.nav a:active,.icon-button:active,.ios-circle-button:active,.button:active{transform:scale(.94)}
+.nav a.active{background:rgba(50,210,107,.12);color:var(--green)}
+.container{max-width:1050px;padding:20px 24px 72px}
+.terminal-tape{display:none!important}
+.ios-home{margin-top:0!important;padding-top:2px}
+.ios-home-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:16px 0 18px}
+.ios-home-title .eyebrow{margin-bottom:3px;font-size:10px;letter-spacing:.13em}
+.ios-home-title h1{font-size:clamp(36px,6vw,54px);line-height:.98;letter-spacing:-.055em;margin:0;font-weight:780}
+.ios-home-date{font-size:clamp(25px,4.5vw,36px);font-weight:760;line-height:1.05;letter-spacing:-.04em;color:var(--secondary);margin-top:2px}
+.ios-home-actions{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.ios-circle-button{width:46px;height:46px;border:1px solid var(--line);border-radius:50%;background:var(--surface-2);color:var(--ink);font-size:22px;display:grid;place-items:center;transition:transform .22s cubic-bezier(.2,.8,.2,1),background .2s ease,box-shadow .2s ease}
+.ios-circle-button:hover{box-shadow:0 4px 16px rgba(0,0,0,.14)}
+.ios-search-wrap{display:flex;align-items:center;gap:8px;max-height:0;opacity:0;overflow:hidden;transform:translateY(-5px);transition:max-height .28s ease,opacity .22s ease,transform .25s ease,margin .25s ease}
+.ios-search-wrap.is-open{max-height:60px;opacity:1;transform:translateY(0);margin:0 0 12px}
+.ios-search-wrap input{width:100%;height:42px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);color:var(--ink);padding:0 13px}
+.ios-search-wrap button{width:38px;height:38px;border:0;border-radius:50%;background:var(--surface-2);color:var(--secondary);font-size:22px}
+.ios-list-heading,.ios-aux-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:5px 0 6px}
+.ios-list-heading h2,.ios-aux-heading h2{font-size:19px;letter-spacing:-.035em;margin:0;font-weight:740}
+.ios-list-heading p,.ios-aux-heading p{font-size:11px;color:var(--secondary);margin:2px 0 0}
+.ios-list-meta{display:grid;justify-items:end;gap:2px;color:var(--secondary);font-size:9px;text-align:right;font-variant-numeric:tabular-nums}
+.ios-stock-list{display:flex;flex-direction:column;width:100%;min-width:0}
+.ios-stock-item{display:block;border-bottom:1px solid var(--line);min-width:0}
+.ios-stock-item:last-child{border-bottom:0}
+.ios-stock-row{list-style:none;display:grid;grid-template-columns:minmax(0,1fr) minmax(82px,112px) minmax(108px,145px) 10px;align-items:center;gap:12px;min-height:78px;padding:10px 1px;cursor:pointer;min-width:0}
+.ios-stock-row::-webkit-details-marker{display:none}
+.ios-stock-identity{display:flex;flex-direction:column;align-items:flex-start;min-width:0;gap:1px}
+.ios-stock-symbol{font-size:16px;font-weight:740;line-height:1.2;letter-spacing:-.025em;white-space:normal;overflow-wrap:anywhere}
+.ios-stock-name{font-size:11px;line-height:1.35;color:var(--secondary);white-space:normal;overflow-wrap:anywhere}
+.ios-stock-group{font-size:8px;line-height:1.2;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.ios-stock-spark{width:100%;height:36px;display:flex;align-items:center;justify-content:center;min-width:0}
+.ios-sparkline{width:100%;height:34px;overflow:visible}
+.ios-sparkline.positive{color:var(--ios-green)}.ios-sparkline.negative{color:var(--ios-red)}.ios-sparkline.neutral{color:var(--secondary)}
+.ios-sparkline polyline{stroke-dasharray:180;stroke-dashoffset:180;animation:ios-spark-draw .72s ease forwards}
+.ios-sparkline-empty{width:100%;height:1px;border-top:1px dashed var(--line);display:block}
+.ios-stock-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;min-width:0}
+.ios-stock-price{font-size:17px;line-height:1.2;font-weight:670;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
+.ios-stock-change{padding:4px 8px;border-radius:7px;font-size:12px;line-height:1.25;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ios-stock-change.up{background:var(--ios-green);color:#fff}
+.ios-stock-change.down{background:var(--ios-red);color:#fff}
+.ios-stock-change.flat,.ios-stock-change.unavailable{background:var(--surface-2);color:var(--secondary)}
+.ios-stock-chevron{color:var(--muted);font-size:20px;transition:transform .22s ease,color .22s ease}
+.ios-stock-item[open] .ios-stock-chevron{transform:rotate(90deg);color:var(--green)}
+.ios-stock-detail{display:grid;grid-template-columns:auto 1fr;gap:7px 12px;padding:0 10px 12px 1px;color:var(--secondary);font-size:10px;animation:ios-detail-in .2s ease both}
+.ios-detail-chip{justify-self:start;border:1px solid var(--line);border-radius:99px;padding:3px 7px;font-size:9px;letter-spacing:.04em}
+.ios-detail-time{text-align:right}
+.ios-detail-source{grid-column:1/-1;color:var(--green);overflow-wrap:anywhere}
+.ios-detail-error{grid-column:1/-1;color:var(--ios-red);overflow-wrap:anywhere}
+.ios-home-aux{margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}
+.ios-aux-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.ios-aux-card,.ios-data-health{background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:13px;min-width:0}
+.ios-aux-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.ios-aux-card-head strong{display:block;font-size:13px}
+.ios-aux-card-head small{display:block;color:var(--secondary);font-size:9px}
+.ios-feed-badge{border:1px solid var(--line);border-radius:99px;padding:3px 6px;font-size:8px;color:var(--secondary);white-space:nowrap}
+.ios-aux-value{font-size:clamp(19px,3.5vw,26px);font-weight:760;letter-spacing:-.04em;font-variant-numeric:tabular-nums;margin-top:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ios-aux-foot{display:flex;justify-content:space-between;align-items:flex-start;gap:7px;margin-top:5px;font-size:9px;color:var(--secondary)}
+.ios-aux-foot span{min-width:0;overflow-wrap:anywhere}
+.ios-aux-foot time{text-align:right;white-space:nowrap}
+.ios-data-health{margin-top:10px}
+.ios-health-top,.ios-health-progress,.ios-health-foot{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.ios-health-top{font-size:11px}.ios-health-top span,.ios-health-foot{color:var(--secondary);font-size:9px}
+.ios-health-progress{margin-top:9px}.ios-health-progress>strong{font-size:17px}
+.ios-health-progress .coverage-bar{flex:1}
+.ios-health-foot{margin-top:4px}
+.ios-data-note{font-size:10px;color:var(--secondary);line-height:1.45;margin:9px 2px 0}
+.ios-home-tools{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.ios-home-tools .button{font-size:10px;padding:8px 12px}
+.ios-page-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:5px 0 15px}
+.ios-page-heading h1{font-size:clamp(28px,5vw,40px);margin:0;letter-spacing:-.05em}
+.ios-page-heading p{font-size:11px;color:var(--secondary);margin:5px 0 0;max-width:660px}
+.ios-market-status{display:grid;gap:4px;justify-items:end;font-size:9px;color:var(--secondary);white-space:nowrap;text-align:right}
+.ios-market-tabs{display:flex;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;padding:3px 0 10px;margin:0 0 5px;scrollbar-width:none}
+.ios-market-tabs::-webkit-scrollbar{display:none}
+.ios-market-tabs button{flex:0 0 auto;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--secondary);font-size:11px;font-weight:650;padding:8px 14px;transition:background .2s ease,color .2s ease,transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease}
+.ios-market-tabs button:active{transform:scale(.95)}
+.ios-market-tabs button.active{background:rgba(50,210,107,.14);border-color:rgba(50,210,107,.22);color:var(--green);box-shadow:inset 0 0 0 1px rgba(50,210,107,.04)}
+.ios-market-panel{background:var(--surface);border:1px solid var(--line);border-radius:17px;padding:15px;min-width:0}
+.ios-market-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
+.ios-market-panel-head h2{font-size:16px;margin:0;letter-spacing:-.03em}
+.ios-market-panel-head p{font-size:10px;color:var(--secondary);margin:4px 0 0}
+.ios-market-panel .ios-stock-row{grid-template-columns:minmax(0,1fr) minmax(90px,120px) minmax(108px,145px) 10px}
+.ios-market-foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:5px;margin:9px 2px;color:var(--secondary);font-size:9px}
+.ios-markets .section{margin-top:0}
+.page-view{display:none}
+.page-view.active{display:block;animation:ios-page-in .28s cubic-bezier(.2,.8,.2,1) both}
+button:disabled{opacity:.45;cursor:progress}
+button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+.theme-menu summary{transition:transform .22s cubic-bezier(.2,.8,.2,1),background .2s ease}
+.theme-menu[open] summary{transform:rotate(35deg);background:rgba(50,210,107,.13)}
+.theme-menu-items button{transition:background .2s ease,color .2s ease,transform .2s ease}
+.theme-menu-items button:active{transform:scale(.96)}
+.theme-menu-items button.selected{background:rgba(50,210,107,.14);color:var(--green)}
+.news-alert-control input[type=checkbox]{appearance:none;-webkit-appearance:none;width:42px;height:25px;border-radius:99px;background:#777;position:relative;border:0;vertical-align:middle;transition:background .22s ease;cursor:pointer}
+.news-alert-control input[type=checkbox]:before{content:"";position:absolute;left:3px;top:3px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.24);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+.news-alert-control input[type=checkbox]:checked{background:#30c765}
+.news-alert-control input[type=checkbox]:checked:before{transform:translateX(17px)}
+@keyframes ios-page-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ios-detail-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ios-spark-draw{to{stroke-dashoffset:0}}
+@media(max-width:760px),(hover:none) and (pointer:coarse){
+ .topbar-inner{height:auto;min-height:62px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 8px;padding:8px 13px}
+ .brand{font-size:17px;grid-column:1;grid-row:1}
+ .top-right{grid-column:2;grid-row:1;gap:6px}
+ .top-right .clock,.top-right .refresh-hint,.top-right .after-hours{display:none}
+ .top-right .feed-state{font-size:0;padding:7px;border:0;background:transparent}
+ .top-right .feed-state .dot{width:8px;height:8px}
+ .top-right .icon-button{width:34px;height:34px}
+ .nav{grid-column:1/-1;grid-row:2;display:flex;overflow-x:auto;gap:3px;width:100%;padding:3px 0;scrollbar-width:none}
+ .nav::-webkit-scrollbar{display:none}
+ .nav a,.nav-more>summary{font-size:11px;padding:7px 10px}
+ .container{padding:14px 16px 56px}
+ .ios-home-heading{padding:9px 0 14px}
+ .ios-home-title h1{font-size:38px}
+ .ios-home-date{font-size:28px}
+ .ios-circle-button{width:40px;height:40px}
+ .ios-stock-row{grid-template-columns:minmax(0,1fr) minmax(66px,92px) minmax(92px,120px) 8px;gap:8px;min-height:73px;padding:9px 0}
+ .ios-stock-symbol{font-size:14px}
+ .ios-stock-name{font-size:10px}
+ .ios-stock-price{font-size:14px}
+ .ios-stock-change{font-size:10px;padding:4px 6px}
+ .ios-stock-spark{height:31px}
+ .ios-sparkline{height:31px}
+ .ios-stock-detail{font-size:9px}
+ .ios-aux-grid{grid-template-columns:1fr}
+ .ios-aux-card{padding:12px}
+ .ios-page-heading{align-items:flex-start;flex-direction:column}
+ .ios-market-status{display:flex;justify-content:flex-start;text-align:left;flex-wrap:wrap}
+ .ios-market-panel{padding:12px}
+ .ios-market-panel .ios-stock-row{grid-template-columns:minmax(0,1fr) minmax(65px,88px) minmax(90px,118px) 8px;gap:8px}
+ .ios-market-panel .ios-stock-price{font-size:13px}
+ .ios-market-panel .ios-stock-change{font-size:9px}
+ .ios-market-panel-head{flex-direction:column}
+ .ios-market-foot{flex-direction:column}
+ .ios-home-tools{justify-content:stretch}
+ .ios-home-tools .button{flex:1}
+}
+@media(max-width:390px),(hover:none) and (pointer:coarse){
+ .ios-stock-row{grid-template-columns:minmax(0,1fr) minmax(52px,74px) minmax(84px,108px) 7px;gap:6px}
+ .ios-stock-symbol{font-size:13px}
+ .ios-stock-name{font-size:9px}
+ .ios-stock-price{font-size:13px}
+ .ios-stock-change{font-size:9px}
+ .ios-market-panel .ios-stock-row{grid-template-columns:minmax(0,1fr) minmax(50px,68px) minmax(80px,104px) 7px;gap:6px}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+
 </style>
 </head>
 <body>
@@ -481,37 +640,76 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 </div></div>
 <div class="tape-wrap terminal-tape"><div class="tape" id="tickerTape"><div class="tape-item"><strong>APIS</strong><span class="minor">Waiting for verified provider observations…</span></div></div></div>
 <main class="container">
-<section id="overview" class="section page-view active" data-page-view="home">
-  <div class="hero"><div><div class="eyebrow">APIS · GLOBAL MARKET INTELLIGENCE · ASIA/JAKARTA</div><h1>The Market Terminal</h1><p>Cross-asset market monitor · provider timestamps · source transparency. Crypto streams update per tick when connected; free public equity feeds may be delayed or snapshot-based.</p></div><div class="hero-tools"><button class="button secondary" id="exportSnapshotTop">Ekspor data pasar</button><button class="button" id="refreshTop">Perbarui data pasar</button></div></div>
-  <div class="grid quote-grid" id="featuredQuotes" aria-live="polite"></div>
-  
-</section>
-
-<section class="section page-view" id="markets" data-page-view="markets">
-  <div class="section-head"><div><div class="eyebrow">01 / Pemantauan pasar</div><h2>Pasar global</h2><p>Hanya harga dari penyedia data. Kutipan yang tidak tersedia atau terblokir tetap ditandai unavailable.</p></div><div class="section-tools"><span class="source-pill" id="quoteCount">0 / 22 observations</span><span class="source-pill" id="lastRefresh">Not refreshed</span></div></div>
-  <div class="grid two-col" id="macroPanel">
-    <div class="card chart-card"><div class="card-title"><div><h3>Grafik pasar</h3><p id="chartSubtitle">Grafik interaktif dari TradingView</p></div><div class="chart-controls"><select class="symbol-select" id="chartSymbol" aria-label="Select chart symbol"><option value="IDX:COMPOSITE">IHSG · IDX Composite</option><option value="SP:SPX">S&P 500</option><option value="NASDAQ:IXIC">Nasdaq Composite</option><option value="DJ:DJI">Dow Jones</option><option value="SSE:000001">Shanghai Composite</option><option value="TWSE:IX0001">Taiwan Weighted</option><option value="KRX:KOSPI">KOSPI</option><option value="NSE:NIFTY">NIFTY 50</option><option value="CME_MINI:NQ1!">Nasdaq-100 Futures</option><option value="TVC:NI225">Nikkei 225</option><option value="TVC:VIX">CBOE VIX</option><option value="AMEX:EIDO">EIDO</option><option value="FX_IDC:USDIDR">USD/IDR</option><option value="NYMEX:BZ1!">Brent Crude</option><option value="COMEX:GC1!">Gold</option><option value="BINANCE:BTCUSDT">Bitcoin</option></select><button class="button secondary" id="reloadChart">Reload chart</button></div></div><div class="widget-box" id="mainChart"><div class="widget-fallback"><div><strong>Loading TradingView chart</strong>Requires an internet connection and access to TradingView widgets.</div></div></div></div>
-    <div class="card card-pad market-snapshot-card">
- <div class="card-title"><div><h3>Ikhtisar pasar</h3><p>Free public-data snapshot · source time and status per instrument</p></div><span class="source-pill" id="snapshotStamp">Waiting for quotes</span></div>
- <div class="snapshot-grid" id="marketSnapshotGrid"><div class="empty-state">Waiting for validated market quotes.</div></div>
- <div class="snapshot-legend"><span><i class="legend-dot good"></i>Positive</span><span><i class="legend-dot bad"></i>Negative</span><span><i class="legend-dot neutral"></i>Delayed / last close</span></div>
- </div>
-  </div>
-  <div class="section watchlist-panel" id="watchlistPanel" style="margin-top:18px">
-    <div class="section-head"><div><h2>Daftar pantauan</h2><p>Snapshot dari Stooq atau Yahoo public feed; tanggal observasi dan status sumber ditampilkan per instrumen.</p></div><div class="section-tools"><button class="button secondary" id="exportWatchlist">Unduh CSV</button></div></div>
-    <div class="table-wrap"><table><thead><tr><th>Instrumen</th><th>Terakhir</th><th>Perubahan</th><th>Perubahan %</th><th>Status penyedia</th><th>Waktu observasi (WIB)</th><th>Sumber</th></tr></thead><tbody id="watchlistBody"><tr><td colspan="7" class="empty-row">Waiting for provider response. No sample or simulated quotes are displayed.</td></tr></tbody></table></div>
-    <div class="note" style="margin-top:10px"><strong>Cross-reference instrumen:</strong> simbol provider dipetakan terpisah dari simbol chart. Kontrak komoditas: <strong>BZ=F ↔ NYMEX:BZ1!</strong> untuk Brent futures dan <strong>GC=F ↔ COMEX:GC1!</strong> untuk Gold futures; bukan harga spot.</div>
-    <div class="provider-free-note" id="providerSettings">
-      <strong>Free-data mode · no paid API key</strong>
-      <p>APIS uses public Stooq CSV snapshots where available, Yahoo public fallback, Binance public BTC streams, Frankfurter reference FX, and official macro/news feeds. Coverage and update frequency vary by provider. No paid subscription or API key is required.</p>
-      <span class="source-pill" id="providerConfigStatus">STOOQ → YAHOO · PUBLIC FALLBACK</span>
+<section id="overview" class="section page-view active ios-home" data-page-view="home">
+  <div class="ios-home-heading">
+    <div class="ios-home-title">
+      <div class="eyebrow">APIS · MARKET WATCH</div>
+      <h1>Stocks</h1>
+      <div class="ios-home-date" id="homeDate">—</div>
+    </div>
+    <div class="ios-home-actions">
+      <button class="ios-circle-button" id="homeSearchToggle" type="button" aria-label="Search watchlist" aria-expanded="false">⌕</button>
+      <button class="ios-circle-button" id="refreshTop" type="button" aria-label="Refresh market data" title="Refresh market data">↻</button>
     </div>
   </div>
-  
-<div class="grid three-col" style="margin-top:14px">
-    <div class="card card-pad"><div class="card-title"><div><h3>Bitcoin · streaming real-time</h3><p>Binance public market-data WebSocket</p></div><span class="source-pill" id="btcStatus">Connecting</span></div><div class="quote-value" id="btcPrice">—</div><div class="quote-bottom"><span id="btcChange">No stream observation yet</span><span class="status-label" id="btcAsOf">—</span></div><div class="footnote">Ticker transaksi publik BTC/USDT. Streaming live memerlukan koneksi internet dan akses ke endpoint data pasar Binance. <a href="https://github.com/binance/binance-spot-api-docs/blob/master/faqs/market_data_only.md" target="_blank" rel="noopener">Endpoint documentation ↗</a></div></div>
-    <div class="card card-pad"><div class="card-title"><div><h3>Referensi USD / IDR</h3><p>Referensi harian dari sumber bank sentral</p></div><span class="source-pill" id="fxStatus">Loading</span></div><div class="quote-value" id="fxValue">—</div><div class="quote-bottom"><span id="fxPair">USD / IDR</span><span class="status-label" id="fxDate">—</span></div><div class="footnote">Kurs Frankfurter adalah kurs referensi dari bank sentral dan sumber resmi, bukan kuotasi intraday atau kurs transaksi yang dapat dieksekusi. <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Source documentation ↗</a></div></div>
-    <div class="card card-pad"><div class="card-title"><div><h3>Kualitas data</h3><p>Cakupan instrumen pada watchlist APIS browser</p></div><span class="source-pill" id="coverageStatus">Awaiting data</span></div><div class="coverage"><strong id="coveragePct">0%</strong><div class="coverage-bar"><div class="coverage-fill" id="coverageFill"></div></div></div><div class="quote-bottom"><span id="coverageDetails">0 usable · 22 requested</span><span class="status-label" id="coverageAsOf">—</span></div><div class="footnote">Persentase menghitung respons penyedia yang berhasil pada refresh ini saja. Cache lama ditampilkan terpisah dan tidak masuk cakupan baru.</div></div>
+  <div class="ios-search-wrap" id="homeSearchWrap" aria-hidden="true">
+    <input id="homeSearch" type="search" placeholder="Search symbol or company…" aria-label="Search watchlist">
+    <button type="button" id="homeSearchClear" aria-label="Clear search">×</button>
+  </div>
+  <div class="ios-list-heading">
+    <div><h2>My Watchlist</h2><p id="homeWatchCount">Waiting for provider observations</p></div>
+    <div class="ios-list-meta"><span id="quoteCount">0 / 27</span><span id="lastRefresh">Not refreshed</span></div>
+  </div>
+  <div class="ios-stock-list" id="featuredQuotes" aria-live="polite">
+    <div class="empty-state">Loading verified public market observations…</div>
+  </div>
+  <section class="ios-home-aux">
+    <div class="ios-aux-heading"><div><h2>Cross-asset pulse</h2><p>Streaming and official reference data</p></div><span class="source-pill" id="snapshotStamp">Awaiting feeds</span></div>
+    <div class="ios-aux-grid">
+      <article class="ios-aux-card">
+        <div class="ios-aux-card-head"><div><strong>Bitcoin</strong><small>BTC / USD · public exchange ticker</small></div><span class="ios-feed-badge" id="btcStatus">CONNECTING</span></div>
+        <div class="ios-aux-value" id="btcPrice">—</div>
+        <div class="ios-aux-foot"><span id="btcChange">Waiting for public BTC observation</span><time id="btcAsOf">—</time></div>
+      </article>
+      <article class="ios-aux-card">
+        <div class="ios-aux-card-head"><div><strong>USD / IDR</strong><small>Daily reference rate · not intraday</small></div><span class="ios-feed-badge" id="fxStatus">LOADING</span></div>
+        <div class="ios-aux-value" id="fxValue">—</div>
+        <div class="ios-aux-foot"><span id="fxPair">USD / IDR</span><time id="fxDate">—</time></div>
+      </article>
+    </div>
+    <div class="ios-data-health">
+      <div class="ios-health-top"><strong>Data coverage</strong><span id="coverageStatus">Awaiting data</span></div>
+      <div class="ios-health-progress"><strong id="coveragePct">0%</strong><div class="coverage-bar"><div class="coverage-fill" id="coverageFill"></div></div></div>
+      <div class="ios-health-foot"><span id="coverageDetails">0 updated · 27 requested</span><span id="coverageAsOf">—</span></div>
+    </div>
+    <p class="ios-data-note">Free public feeds can be delayed, snapshot-based, rate-limited or unavailable. Each row expands to show source, observation time and feed status.</p>
+  </section>
+  <div class="ios-home-tools">
+    <button class="button secondary" id="exportSnapshotTop" type="button">Export watchlist CSV</button>
+    <button class="button" id="refreshBtn" type="button">Refresh data</button>
+  </div>
+</section>
+
+<section class="section page-view ios-markets" id="markets" data-page-view="markets">
+  <div class="ios-page-heading">
+    <div><div class="eyebrow">APIS · GLOBAL MARKETS</div><h1>Markets</h1><p>Public market observations, organized by asset class. Delayed and last-close data are labelled.</p></div>
+    <div class="ios-market-status"><span id="quoteCountMarkets">0 / 27</span><span id="lastRefreshMarkets">Not refreshed</span></div>
+  </div>
+  <div class="ios-market-tabs" id="marketFilters" role="tablist" aria-label="Market categories">
+    <button type="button" role="tab" aria-selected="true" class="active" data-market-filter="indices">Indices</button>
+    <button type="button" role="tab" aria-selected="false" data-market-filter="commodities">Commodities</button>
+    <button type="button" role="tab" aria-selected="false" data-market-filter="fx-crypto">FX & Crypto</button>
+    <button type="button" role="tab" aria-selected="false" data-market-filter="equities">Equities</button>
+  </div>
+  <div class="ios-market-panel">
+    <div class="ios-market-panel-head"><div><h2 id="marketSegmentTitle">Global indices</h2><p id="marketSegmentDescription">Major equity benchmarks across the US, India, Japan and Asia.</p></div><span class="source-pill" id="snapshotStamp">Waiting for quotes</span></div>
+    <div class="ios-stock-list ios-market-stock-list" id="marketSnapshotGrid" aria-live="polite">
+      <div class="empty-state">Waiting for validated public market quotes.</div>
+    </div>
+  </div>
+  <div class="ios-market-foot">
+    <span>Source order: Stooq public snapshot → Yahoo Finance public fallback.</span>
+    <span>Unavailable instruments are never replaced with estimates.</span>
   </div>
 </section>
 
@@ -771,7 +969,7 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 </script>
 <script>
 'use strict';
-/* APIS The Market Terminal 2.4.3 · Mobile-first free public-data terminal
+/* APIS The Market Terminal 2.5.0 · Mobile-first free public-data terminal
    - No synthetic market data or fabricated news.
    - Yahoo Finance is an unofficial public fallback accessed through third-party CORS relays.
    - TradingView widgets are visual embeds; their data is not read back into calculations.
@@ -780,7 +978,8 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 */
 const TZ='Asia/Jakarta';
 const WATCHLIST=[
-  {symbol:'^JKSE',name:'IDX Composite',short:'IHSG',group:'Index',tv:'IDX:COMPOSITE',tdSymbol:'JKSE'},
+  {symbol:'^JKSE',name:'IDX Composite',short:'IHSG',group:'Index',tv:'IDX:COMPOSITE'},
+  {symbol:'^JKLQ45',name:'IDX LQ45',short:'LQ45',group:'Index',tv:'IDX:LQ45'},
   {symbol:'^GSPC',name:'S&P 500',short:'S&P 500',group:'Index',tv:'SP:SPX',tdSymbol:'SPX',stooqSymbol:'^spx'},
   {symbol:'^IXIC',name:'Nasdaq Composite',short:'Nasdaq',group:'Index',tv:'NASDAQ:IXIC',tdSymbol:'IXIC',stooqSymbol:'^ndq'},
   {symbol:'^DJI',name:'Dow Jones Industrial Average',short:'Dow Jones',group:'Index',tv:'DJ:DJI',tdSymbol:'DJI',stooqSymbol:'^dji'},
@@ -789,12 +988,16 @@ const WATCHLIST=[
   {symbol:'^KS11',name:'KOSPI Composite',short:'KOSPI',group:'Index',tv:'KRX:KOSPI',tdSymbol:'KS11',stooqSymbol:'^kospi'},
   {symbol:'^NSEI',name:'NIFTY 50',short:'NIFTY 50',group:'Index',tv:'NSE:NIFTY',tdSymbol:'NIFTY'},
   {symbol:'NQ=F',name:'Nasdaq-100 E-mini Futures',short:'NQ Futures',group:'Index',tv:'CME_MINI:NQ1!'},
-  {symbol:'^N225',name:'Nikkei 225',short:'Nikkei 225',group:'Index',tv:'TVC:NI225',tdSymbol:'N225',stooqSymbol:'^nkx'},
+  {symbol:'^N225',name:'Nikkei 225',short:'Nikkei 225',group:'Index',tv:'TVC:NI225',stooqSymbol:'^nkx'},
+  {symbol:'^HSI',name:'Hang Seng Index',short:'HSI',group:'Index',tv:'HKEX:HSI'},
   {symbol:'^VIX',name:'CBOE Volatility Index',short:'VIX',group:'Risk',tv:'TVC:VIX',tdSymbol:'VIX',stooqSymbol:'^vix'},
   {symbol:'EIDO',name:'iShares MSCI Indonesia ETF',short:'EIDO',group:'ETF',tv:'AMEX:EIDO',stooqSymbol:'eido.us'},
   {symbol:'IDR=X',name:'USD / IDR',short:'USD/IDR',group:'FX',tv:'FX_IDC:USDIDR',stooqSymbol:'usdidr'},
-  {symbol:'BZ=F',name:'Brent Crude Futures',short:'Brent',group:'Commodity',tv:'NYMEX:BZ1!',stooqSymbol:'brent.f'},
-  {symbol:'GC=F',name:'Gold Futures',short:'Gold',group:'Commodity',tv:'COMEX:GC1!',stooqSymbol:'gc.f'},
+  {symbol:'BZ=F',name:'Brent Crude Futures',short:'Brent',group:'Commodity',tv:'NYMEX:BZ1!',stooqSymbol:'brent.f',currency:'USD'},
+  {symbol:'GC=F',name:'Gold Futures',short:'Gold Futures',group:'Commodity',tv:'COMEX:GC1!',stooqSymbol:'gc.f',currency:'USD'},
+  {symbol:'XAUUSD=X',name:'Gold Spot · XAU/USD',short:'XAU/USD',group:'Commodity',tv:'OANDA:XAUUSD',currency:'USD'},
+  {symbol:'CL=F',name:'WTI Crude Oil Futures',short:'WTI Crude',group:'Commodity',tv:'NYMEX:CL1!',currency:'USD'},
+  {symbol:'HG=F',name:'Copper Futures',short:'Copper',group:'Commodity',tv:'COMEX:HG1!',currency:'USD'},
   {symbol:'BBCA.JK',name:'Bank Central Asia',short:'BBCA',group:'Indonesia equity',tv:'IDX:BBCA'},
   {symbol:'BMRI.JK',name:'Bank Mandiri',short:'BMRI',group:'Indonesia equity',tv:'IDX:BMRI'},
   {symbol:'BBRI.JK',name:'Bank Rakyat Indonesia',short:'BBRI',group:'Indonesia equity',tv:'IDX:BBRI'},
@@ -958,7 +1161,9 @@ async function fetchYahooQuote(item){
      currency:meta.currency||item.currency||'',exchange:meta.exchangeName||meta.fullExchangeName||'',
      marketState:state,observedAt,observedAge:age,status,intervalUsed:plan.interval,
      source:'Yahoo Finance · public fallback (unofficial)',sourceUrl:'https://finance.yahoo.com/quote/'+encoded+'/',
-     retrievedAt:Date.now(),proxy:new URL(route).host,providerFallbacks:[]
+     retrievedAt:Date.now(),proxy:new URL(route).host,
+     sparkline:closes.filter(value=>num(value)!==null).slice(-36).map(Number),
+     providerFallbacks:[]
     };
    }catch(error){errors.push(new URL(route).host+': '+(error?.name==='AbortError'?'timeout':String(error?.message||error).slice(0,75)))}
    finally{clearTimeout(timer)}
@@ -1048,87 +1253,114 @@ function renderMovers(){
  draw('losersList',rows.filter(q=>q.changePct<0).slice(-5).reverse(),'down');
  setText('moversStamp',rows.length+' instruments · '+(APP.lastRefresh?'latest snapshot':'provider pending'));
 }
+function stockChangePct(quote){
+ if(!quote)return null;
+ if(num(quote.previousClose)!==null&&quote.previousClose!==0)return (quote.price/quote.previousClose-1)*100;
+ return num(quote.changePct);
+}
+function stockPriceText(quote,item){
+ if(!quote||num(quote.price)===null)return '—';
+ const value=new Intl.NumberFormat('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}).format(quote.price);
+ return item&&item.group==='Commodity'?value+' USD':value;
+}
+function buildStockSparkline(values,changePct){
+ const series=(Array.isArray(values)?values:[]).map(Number).filter(Number.isFinite).slice(-36);
+ if(series.length<3){const empty=document.createElement('span');empty.className='ios-sparkline-empty';empty.textContent='';empty.setAttribute('aria-label','Historical line unavailable for snapshot-only source');return empty}
+ const width=112,height=34,pad=3,min=Math.min(...series),max=Math.max(...series),range=max-min||1;
+ const coords=series.map((value,index)=>{
+  const x=pad+(index/(series.length-1))*(width-pad*2);
+  const y=height-pad-((value-min)/range)*(height-pad*2);
+  return [x,y];
+ });
+ const points=coords.map(point=>point[0].toFixed(1)+','+point[1].toFixed(1)).join(' ');
+ const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+ svg.setAttribute('viewBox','0 0 112 34');svg.setAttribute('preserveAspectRatio','none');
+ svg.setAttribute('class','ios-sparkline '+(changePct>0?'positive':changePct<0?'negative':'neutral'));
+ svg.setAttribute('role','img');svg.setAttribute('aria-label','Provider price history');
+ const line=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+ line.setAttribute('points',points);line.setAttribute('fill','none');line.setAttribute('stroke','currentColor');
+ line.setAttribute('stroke-width','2.5');line.setAttribute('stroke-linecap','round');line.setAttribute('stroke-linejoin','round');
+ svg.append(line);
+ return svg;
+}
+function createStockRow(item,quote,opts={}){
+ const detail=document.createElement('details');detail.className='ios-stock-item';
+ const summary=document.createElement('summary');summary.className='ios-stock-row';
+ const identity=document.createElement('div');identity.className='ios-stock-identity';
+ const symbol=document.createElement('strong');symbol.className='ios-stock-symbol';symbol.textContent=item.short||item.symbol;
+ const name=document.createElement('span');name.className='ios-stock-name';name.textContent=item.name;
+ const group=document.createElement('small');group.className='ios-stock-group';group.textContent=item.group==='Commodity'?'COMMODITY':item.group==='FX'?'CURRENCY':item.group==='Index'||item.group==='Risk'?'INDEX':item.group.toUpperCase();
+ identity.append(symbol,name,group);
+ const sparkWrap=document.createElement('div');sparkWrap.className='ios-stock-spark';
+ const pctValue=stockChangePct(quote);
+ sparkWrap.append(buildStockSparkline(quote?.sparkline,pctValue));
+ const right=document.createElement('div');right.className='ios-stock-right';
+ const price=document.createElement('strong');price.className='ios-stock-price';price.textContent=stockPriceText(quote,item);
+ const badge=document.createElement('span');badge.className='ios-stock-change '+(pctValue===null?'unavailable':pctValue>0?'up':pctValue<0?'down':'flat');
+ badge.textContent=pctValue===null?'—':pct(pctValue);
+ right.append(price,badge);
+ const chevron=document.createElement('span');chevron.className='ios-stock-chevron';chevron.textContent='›';
+ summary.append(identity,sparkWrap,right,chevron);
+ const extra=document.createElement('div');extra.className='ios-stock-detail';
+ const status=document.createElement('span');status.className='ios-detail-chip';status.textContent=quote?(quote.transport==='WEBSOCKET'?'LIVE TICK':quoteStatusLabel(quote.status)):'UNAVAILABLE';
+ const observed=document.createElement('span');observed.className='ios-detail-time';
+ let observedSeconds=quote?Number(quote.observedAt):null;
+ if(quote&&(quote.transport==='WEBSOCKET'||quote.transport==='REST'||quote.transport==='CACHE'))observedSeconds=observedSeconds/1000;
+ observed.textContent=quote&&Number.isFinite(observedSeconds)?'Observed '+fmtTime(observedSeconds):'No validated observation';
+ const source=document.createElement('a');source.className='ios-detail-source';source.href=quote?.sourceUrl||'#';source.target='_blank';source.rel='noopener';source.textContent=quote?.source||'Public provider unavailable';
+ if(!quote){source.removeAttribute('target');source.addEventListener('click',event=>event.preventDefault())}
+ const providerError=document.createElement('small');providerError.className='ios-detail-error';
+ providerError.textContent=quote?.lastError||APP.failures.get(item.symbol)||'';
+ extra.append(status,observed,source,providerError);
+ detail.append(summary,extra);
+ return detail;
+}
+function homeWatchlistItems(){
+ const priority=['^JKSE','^JKLQ45','^IXIC','^DJI','^HSI','^GSPC','^NSEI','NQ=F','^N225','000001.SS','^TWII','^KS11','XAUUSD=X','CL=F','BZ=F','HG=F','GC=F'];
+ const ordered=priority.map(symbol=>WATCHLIST.find(item=>item.symbol===symbol)).filter(Boolean);
+ return ordered.concat(WATCHLIST.filter(item=>!priority.includes(item.symbol)));
+}
+function renderHomeStocks(){
+ const host=document.getElementById('featuredQuotes');if(!host)return;
+ const query=(document.getElementById('homeSearch')?.value||'').trim().toLowerCase();
+ const items=homeWatchlistItems().filter(item=>!query||(item.name+' '+item.short+' '+item.symbol+' '+item.group).toLowerCase().includes(query));
+ host.replaceChildren();
+ if(!items.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='No instruments match your search.';host.append(empty)}
+ items.forEach(item=>host.append(createStockRow(item,QUOTES.get(item.symbol))));
+ setText('homeWatchCount',items.length+' instruments · tap a row for source details');
+ setText('homeDate',new Intl.DateTimeFormat('en-GB',{timeZone:TZ,day:'numeric',month:'long'}).format(new Date()));
+ setText('quoteCount',QUOTES.size+' / '+WATCHLIST.length);
+}
 function renderMarketOverview(){
  const host=document.getElementById('marketSnapshotGrid');if(!host)return;
- host.replaceChildren();
- const groups=[
-  {title:'United States',symbols:['^GSPC','^IXIC','NQ=F','^DJI']},
-  {title:'Asia & Indonesia',symbols:['^NSEI','^N225','000001.SS','^TWII','^KS11','^JKSE','EIDO']},
-  {title:'Cross assets',symbols:['IDR=X','BZ=F','GC=F','^VIX','BTCUSDT']}
- ];
- let count=0;
- groups.forEach(group=>{
-  const section=document.createElement('section');section.className='snapshot-group';
-  const heading=document.createElement('h4');heading.textContent=group.title;section.append(heading);
-  const list=document.createElement('div');list.className='snapshot-grid';
-  group.symbols.forEach(symbol=>{
-   const item=WATCHLIST.find(x=>x.symbol===symbol);
-   const raw=symbol==='BTCUSDT'?APP.btc:QUOTES.get(symbol);
-   if(!item&&!raw)return;
-   const q=raw?{...raw,short:item?.short||'BTC',name:item?.name||'Bitcoin',group:item?.group||'Crypto',currency:item?.currency||(symbol==='BTCUSDT'?'USD':'')}:null;
-   const row=document.createElement('article');row.className='snapshot-item';
-   const head=document.createElement('div');head.className='snapshot-instrument';
-   const name=document.createElement('span');name.className='snapshot-item-name';name.textContent=item?.name||'Bitcoin';
-   const ticker=document.createElement('span');ticker.className='snapshot-item-symbol';ticker.textContent=item?.short||'BTC/USDT';
-   head.append(name,ticker);
-   const price=document.createElement('div');price.className='snapshot-item-price';price.textContent=q?fmtPrice(q):'—';
-   const details=document.createElement('div');details.className='snapshot-item-details';
-   const change=document.createElement('span');
-   const pctValue=q&&num(q.previousClose)!==null&&q.previousClose!==0?((q.price/q.previousClose)-1)*100:(q&&num(q.changePct)!==null?q.changePct:null);
-   change.className='snapshot-item-change '+(pctValue===null?'flat':changeClass(pctValue));
-   change.textContent=pctValue===null?'Change n/a':pct(pctValue);
-   const status=document.createElement('span');status.className='snapshot-item-status';
-   status.textContent=q?(q.transport==='WEBSOCKET'?'LIVE TICK':quoteStatusLabel(q.status||q.transport||'OBSERVED')):'UNAVAILABLE';
-   details.append(change,status);
-   const observed=document.createElement('div');observed.className='snapshot-item-time';
-   const timeSec=q?(symbol==='BTCUSDT'?q.observedAt/1000:q.observedAt):null;
-   observed.textContent=q&&num(timeSec)!==null?'As of '+formatQuoteObservation(q):'No validated observation';
-   row.append(head,price,details,observed);
-   list.append(row);count++;
-  });
-  section.append(heading,list);host.append(section);
+ const selected=APP.marketFilter||'indices';
+ const filters={
+  indices:{title:'Global indices',description:'Major equity benchmarks across the US, India, Japan and Asia.',items:WATCHLIST.filter(item=>['Index','Risk','ETF'].includes(item.group))},
+  commodities:{title:'Commodities',description:'Gold spot, crude oil, Brent crude and copper futures. Public quotes may be delayed or last close.',items:WATCHLIST.filter(item=>item.group==='Commodity')},
+  'fx-crypto':{title:'FX & Crypto',description:'Currency observations and public cryptocurrency exchange data.',items:WATCHLIST.filter(item=>item.group==='FX')},
+  equities:{title:'Equities',description:'Selected Indonesian and US listed companies.',items:WATCHLIST.filter(item=>item.group==='Indonesia equity'||item.group==='US equity')}
+ };
+ const current=filters[selected]||filters.indices;
+ setText('marketSegmentTitle',current.title);setText('marketSegmentDescription',current.description);
+ const controls=document.getElementById('marketFilters');
+ if(controls)controls.querySelectorAll('[data-market-filter]').forEach(button=>{
+  const active=button.dataset.marketFilter===selected;
+  button.classList.toggle('active',active);button.setAttribute('aria-selected',active?'true':'false');
  });
- setText('snapshotStamp',count+' instruments · provider-validated observations');
- if(!count){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='No verified provider observations yet.';host.append(empty)}
+ host.replaceChildren();
+ current.items.forEach(item=>host.append(createStockRow(item,QUOTES.get(item.symbol))));
+ if(selected==='fx-crypto'&&APP.btc&&num(APP.btc.price)!==null){
+  host.prepend(createStockRow({symbol:'BTCUSDT',short:'BTC / USD',name:'Bitcoin',group:'Crypto'},
+   {...APP.btc,changePct:APP.btc.changePct,source:APP.btc.source,status:APP.btc.transport==='WEBSOCKET'?'LIVE TICK':'REST SNAPSHOT'}));
+ }
+ if(!host.children.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='No verified public observations for this segment yet.';host.append(empty)}
+ setText('snapshotStamp',current.items.length+(selected==='fx-crypto'&&APP.btc?1:0)+' instruments · public feed');
+ setText('quoteCountMarkets',QUOTES.size+' / '+WATCHLIST.length);
+ setText('lastRefreshMarkets',document.getElementById('lastRefresh')?.textContent||'Not refreshed');
 }
 function renderQuoteViews(){
+ renderHomeStocks();
  renderMarketOverview();
- const featured=['^JKSE','^GSPC','^IXIC','NQ=F','^DJI','^NSEI','^N225','^VIX'];
- const grid=document.getElementById('featuredQuotes');
- if(grid){
-  grid.className='market-pulse-list';grid.replaceChildren();
-  const header=document.createElement('div');header.className='market-pulse-header';
-  ['Instrument','Last','Change','Feed status'].forEach(label=>{const cell=document.createElement('span');cell.textContent=label;header.append(cell)});grid.append(header);
-  featured.forEach(symbol=>{
-   const item=WATCHLIST.find(x=>x.symbol===symbol),q=QUOTES.get(symbol);if(!item)return;
-   const row=document.createElement('div');row.className='market-pulse-row';
-   const instrument=document.createElement('div');instrument.className='market-pulse-instrument';
-   const name=document.createElement('strong');name.textContent=item.name;
-   const ticker=document.createElement('small');ticker.textContent=item.short;instrument.append(name,ticker);
-   const price=document.createElement('strong');price.className='market-pulse-price';price.textContent=q?fmtPrice(q):'—';
-   const change=document.createElement('span');const pctValue=q&&num(q.previousClose)!==null&&q.previousClose!==0?(q.price/q.previousClose-1)*100:null;
-   change.className='market-pulse-change '+(pctValue===null?'flat':changeClass(pctValue));change.textContent=pctValue===null?'—':pct(pctValue);
-   const status=document.createElement('span');status.className='market-pulse-status';status.textContent=q?quoteStatusLabel(q.status):'UNAVAILABLE';
-   row.append(instrument,price,change,status);grid.append(row);
-  });
- }
- const body=document.getElementById('watchlistBody');if(body){
-  body.replaceChildren();let usable=0;
-  WATCHLIST.forEach(item=>{
-   const q=QUOTES.get(item.symbol);if(q)usable++;
-   const tr=document.createElement('tr'),cells=[];
-   const n=document.createElement('td'),strong=document.createElement('div'),sub=document.createElement('div');
-   strong.className='asset-name';strong.textContent=item.name;sub.className='asset-sub';sub.textContent=item.short+' · '+item.group;n.setAttribute('data-label','Instrumen');n.append(strong,sub);cells.push(n);
-   const p=document.createElement('td');p.setAttribute('data-label','Terakhir');p.textContent=q?fmtPrice(q):'—';cells.push(p);
-   const d=document.createElement('td');d.setAttribute('data-label','Perubahan');d.textContent=q&&num(q.previousClose)!==null?fmt(q.price-q.previousClose,2):'—';if(q)d.className='change '+changeClass(q.price-q.previousClose);cells.push(d);
-   const pc=document.createElement('td');pc.setAttribute('data-label','Perubahan %');pc.textContent=q&&q.previousClose?pct((q.price/q.previousClose-1)*100):'—';if(q)pc.className='change '+changeClass(q.price-q.previousClose);cells.push(pc);
-   const st=document.createElement('td');st.setAttribute('data-label','Status feed');st.textContent=q?quoteStatusLabel(q.status):'UNAVAILABLE';st.className='status-label '+(q?quoteStatusClass(q.status):'bad');cells.push(st);
-   const t=document.createElement('td');t.setAttribute('data-label','Waktu observasi');t.textContent=q?formatQuoteObservation(q):'—';cells.push(t);
-   const src=document.createElement('td');src.setAttribute('data-label','Sumber');if(q){const a=document.createElement('a');a.href=q.sourceUrl||'#';a.target='_blank';a.rel='noopener';a.textContent=q.source||'Provider';a.title=(q.providerFallbacks||[]).join(' → ');src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
-   cells.forEach(cell=>tr.append(cell));body.append(tr);
-  });
-  setText('quoteCount',usable+' / '+WATCHLIST.length+' observations');
- }
  renderTape();renderMovers();evaluateAlerts();updateFeedState();
 }
 function renderTape(){
@@ -1163,7 +1395,7 @@ function renderQuality(){
   const rows=[
     ['Browser network context',browserDetail,browserStatus,browserStatus==='ONLINE'?'good':'warn'],
     ['Multi-provider market quotes',updated+' of '+total+' validated observations; Stooq public CSV where mapped, Yahoo public chart fallback otherwise.',APP.yahooState==='ready'?'UPDATED':APP.yahooState==='partial'?'PARTIAL':APP.yahooState==='loading'?'FETCHING':'UNAVAILABLE',APP.yahooState==='ready'?'good':'warn'],
-    ['TradingView chart embed',APP.widgetError||'Optional chart only; quote snapshot is rendered by APIS and does not rely on this widget',APP.widgetError?'UNAVAILABLE':'OPTIONAL','warn'],
+    ['Price mini-charts','Sparkline is shown only when a provider returns historical price observations. Snapshot-only rows do not get a fabricated chart.','PROVIDER HISTORY','good']
     ['Binance WebSocket',cryptoLive?'Timestamped BTC/USDT trade stream is fresh':cryptoRest?'BTC/USDT REST observation is fresh; not a live stream':cryptoCached?'Only a previously saved BTC observation is available':APP.btcError||'BTC/USDT unavailable',cryptoLive?'LIVE STREAM':cryptoRest?'REST UPDATE':cryptoCached?'STALE CACHE':'NOT LIVE',cryptoLive?'good':'warn'],
     ['Frankfurter FX',APP.fxState==='loaded'?'Daily reference-rate response received':APP.fxState==='cached'?'Saved dated reference rate; refresh failed':APP.fxError||'Reference-rate response unavailable',APP.fxState==='loaded'?'DAILY':APP.fxState==='cached'?'STALE':'UNAVAILABLE',APP.fxState==='loaded'?'good':'warn'],
     ['U.S. Treasury yield curve',APP.tsyState==='loaded'?(APP.tsySource||'Official daily Treasury par-yield curve'):APP.tsyError||'No daily Treasury response',APP.tsyState==='loaded'?'DAILY':'UNAVAILABLE',APP.tsyState==='loaded'?'good':'warn'],
@@ -1517,21 +1749,6 @@ async function loadMacroCalendar(){
   renderQuality();
  }
 }
-/* TradingView widgets.
-/* TradingView widgets. Widget content remains provider-controlled and does not feed calculations. */
-function mountWidget(id,src,config){
- const host=document.getElementById(id);if(!host)return;host.replaceChildren();
- const wrap=document.createElement('div');wrap.className='tradingview-widget-container';
- const widget=document.createElement('div');widget.className='tradingview-widget-container__widget';wrap.append(widget);
- const copyright=document.createElement('div');copyright.className='tradingview-widget-copyright';
- const link=document.createElement('a');link.href='https://www.tradingview.com/';link.target='_blank';link.rel='noopener';link.textContent='TradingView';copyright.append(link);wrap.append(copyright);
- const script=document.createElement('script');script.type='text/javascript';script.src=src;script.async=true;script.text=JSON.stringify(config);
- let settled=false;
- const fallback=()=>{if(settled)return;settled=true;const box=document.createElement('div');box.className='widget-fallback';const inner=document.createElement('div');const strong=document.createElement('strong');strong.textContent='Widget unavailable';const p=document.createElement('p');p.textContent='External embed could not load on this network. APIS quote data is independent.';const a=document.createElement('a');a.href=id==='mainChart'?'https://www.tradingview.com/chart/':'https://www.tradingview.com/';a.target='_blank';a.rel='noopener';a.textContent='Open TradingView ↗';inner.append(strong,p,a);box.append(inner);host.replaceChildren(box);APP.widgetError=id+': external script or iframe unavailable';renderQuality()};
- script.onerror=fallback;
- script.onload=()=>{setTimeout(()=>{if(!host.querySelector('iframe'))fallback();else settled=true},10000)};
- wrap.append(script);host.append(wrap);setTimeout(()=>{if(!host.querySelector('iframe'))fallback()},18000);
-}
 function classifyNews(title,source){
  const t=(title+' '+source).toLowerCase();
  if(/federal reserve|fomc|ecb|european central bank|bank of japan|boj|bank of england|bank indonesia|pboc|central bank|monetary policy|interest rate decision/.test(t))return 'Central Banks';
@@ -1621,6 +1838,28 @@ async function loadPublicNews(){
   fresh.slice(0,2).forEach(item=>{new Notification('APIS · '+item.source,{body:item.title});APP.newsNotified.add(item.link)});
  }
  renderQuality();
+}
+function initHomeControls(){
+ const toggle=document.getElementById('homeSearchToggle'),wrap=document.getElementById('homeSearchWrap'),input=document.getElementById('homeSearch'),clear=document.getElementById('homeSearchClear');
+ if(!toggle||!wrap||!input)return;
+ const setOpen=open=>{
+  toggle.setAttribute('aria-expanded',open?'true':'false');
+  wrap.classList.toggle('is-open',open);wrap.setAttribute('aria-hidden',open?'false':'true');
+  if(open)requestAnimationFrame(()=>input.focus());
+  else{input.value='';renderHomeStocks()}
+ };
+ toggle.addEventListener('click',()=>setOpen(toggle.getAttribute('aria-expanded')!=='true'));
+ input.addEventListener('input',renderHomeStocks);
+ if(clear)clear.addEventListener('click',()=>{input.value='';renderHomeStocks();input.focus()});
+}
+function initMarketControls(){
+ const filters=document.getElementById('marketFilters');if(!filters)return;
+ filters.addEventListener('click',event=>{
+  const button=event.target.closest('[data-market-filter]');if(!button)return;
+  const next=button.dataset.marketFilter;if(APP.marketFilter===next)return;
+  APP.marketFilter=next;
+  renderMarketOverview();
+ });
 }
 function initNewsControls(){
  APP.newsFilter='All';APP.newsNotified=APP.newsNotified||new Set();
@@ -1740,7 +1979,7 @@ function downloadText(filename,text,type='text/csv;charset=utf-8'){const blob=ne
 function csvEscape(v){const s=String(v??'');return '"'+s.replaceAll('"','""')+'"'}
 function exportQuotes(){const headers=['symbol','name','price','currency','previous_close','change_pct','market_state','status','observed_at_utc','source','source_url'];const rows=[headers];WATCHLIST.forEach(i=>{const q=QUOTES.get(i.symbol);if(!q)return;rows.push([q.symbol,q.name,q.price,q.currency,q.previousClose,q.previousClose?(q.price/q.previousClose-1)*100:'',q.marketState,q.status,new Date(q.observedAt*1000).toISOString(),q.source,q.sourceUrl])});if(rows.length===1){toast('No verified quotes are available to export.');return}downloadText('apis_market_snapshot_'+new Date().toISOString().slice(0,10)+'.csv',rows.map(r=>r.map(csvEscape).join(',')).join('\r\n'))}
 function exportEvidence(){if(!APP.ledger.length){toast('Buku bukti is empty.');return}const keys=['id','claim','topic','value','publisher','tier','date','url','corroboration'];const rows=[keys,...APP.ledger.map(x=>keys.map(k=>x[k]??''))];downloadText('apis_evidence_ledger.csv',rows.map(r=>r.map(csvEscape).join(',')).join('\r\n'))}
-try{['exportSnapshotTop','exportWatchlist','exportDataQuality'].forEach(id=>document.getElementById(id).onclick=exportQuotes);document.getElementById('exportEvidence').onclick=exportEvidence;}catch(bindingError){console.error('[APIS event binding]',bindingError);if(window.__APIS_REPORT_ERROR__)window.__APIS_REPORT_ERROR__('Event binding',bindingError.message||bindingError);}
+try{['exportSnapshotTop','exportWatchlist','exportDataQuality'].forEach(id=>{const button=document.getElementById(id);if(button)button.onclick=exportQuotes});const evidenceButton=document.getElementById('exportEvidence');if(evidenceButton)evidenceButton.onclick=exportEvidence;}catch(bindingError){console.error('[APIS event binding]',bindingError);if(window.__APIS_REPORT_ERROR__)window.__APIS_REPORT_ERROR__('Event binding',bindingError.message||bindingError);}
 
 /* Navigation, clock and bootstrap. */
 function tickClock(){setText('clock',new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date())+' WIB');const hint=document.getElementById('autoRefreshLabel');if(hint){const left=APP.nextRefreshAt?Math.max(0,Math.ceil((APP.nextRefreshAt-Date.now())/1000)):60;hint.textContent=document.hidden?'AUTO · PAUSED':('AUTO · '+left+'s')}}
@@ -1754,7 +1993,8 @@ function initPageRouter(){
   document.querySelectorAll('.nav-more').forEach(node=>node.open=false);
   history.replaceState(null,'','#'+target);
   try{window.scrollTo(0,0)}catch(ignore){window.scrollTo(0,0)}
-  if(key==='markets')renderQuoteViews();
+  if(key==='markets')renderMarketOverview();
+  if(key==='home')renderHomeStocks();
   if(key==='macro'){
    if(APP.tsyState!=='loaded')loadTreasuryCurve();
    if(APP.calendarState!=='loaded')loadMacroCalendar();
@@ -1790,11 +2030,10 @@ function applyTheme(mode){
 function initThemeControls(){
  const menu=document.querySelector('.theme-menu');
  if(!menu)return;
- applyTheme(loadJSON('apis_theme_mode','light'));
+ applyTheme(loadJSON('apis_theme_mode','dark'));
  menu.querySelectorAll('[data-theme-choice]').forEach(button=>button.addEventListener('click',()=>{
   applyTheme(button.dataset.themeChoice);
   menu.open=false;
-  if(typeof loadChart==='function')loadChart();
  }));
  if(window.matchMedia){
   const media=window.matchMedia('(prefers-color-scheme: dark)');
@@ -1835,7 +2074,7 @@ function initCalendarControls(){
  const button=document.getElementById('refreshCalendarBtn');
  if(button)button.onclick=loadMacroCalendar;
 }
-['refreshBtn','refreshTop'].forEach(id=>{const e=document.getElementById(id);if(e)e.onclick=()=>fetchQuoteBatch()});const reload=document.getElementById('reloadChart');if(reload)reload.onclick=loadChart;const chartSelect=document.getElementById('chartSymbol');if(chartSelect)chartSelect.onchange=loadChart;
+['refreshBtn','refreshTop'].forEach(id=>{const e=document.getElementById(id);if(e)e.onclick=()=>fetchQuoteBatch()});
 function safeInit(label,fn){
  try{
   const result=fn();
@@ -1869,6 +2108,8 @@ function bootstrap(){
  safeInit('Auxiliary cache',restoreAuxCache);
  safeInit('Page navigation',initPageRouter);
  safeInit('Theme controls',initThemeControls);
+ safeInit('Home search',initHomeControls);
+ safeInit('Market segments',initMarketControls);
  safeInit('News controls',initNewsControls);
  safeInit('Calendar controls',initCalendarControls);
  try{localStorage.removeItem('apis_market_provider_keys')}catch(_){}

@@ -241,7 +241,7 @@ html[data-theme="dark"] .footer{border-color:var(--line);background:var(--surfac
 </section><section class="section page-view" id="moversView" data-page-view="movers">
  <div class="page-heading"><div><div class="eyebrow">APIS · MARKET BREADTH</div><h1>Market Movers</h1><p>Winners and decliners calculated from the latest valid provider observations. Stale and unavailable instruments are excluded.</p></div><span class="source-pill" id="moversStamp">Waiting for quotes</span></div>
  <div class="section" id="moversPanel" style="margin-top:14px">
- <div class="section-head"><div><div class="eyebrow">MARKET BREADTH</div><h2>Today's flow · winners & losers</h2><p>Sorted from latest validated provider observations; unavailable instruments are excluded.</p></div><span class="source-pill" id="moversStamp">Awaiting quotes</span></div>
+ <div class="section-head"><div><div class="eyebrow">MARKET BREADTH</div><h2>Today's flow · winners & losers</h2><p>Sorted from latest validated provider observations; unavailable instruments are excluded.</p></div><span class="source-pill" id="moversPageStatus">Provider snapshot</span></div>
  <div class="grid two-col movers-grid">
   <div class="card card-pad"><div class="card-title"><h3>Top gainers</h3><span class="badge good">UP</span></div><div class="mover-list" id="gainersList"><div class="empty-state">Waiting for provider quotes.</div></div></div>
   <div class="card card-pad"><div class="card-title"><h3>Top decliners</h3><span class="badge bad">DOWN</span></div><div class="mover-list" id="losersList"><div class="empty-state">Waiting for provider quotes.</div></div></div>
@@ -962,6 +962,7 @@ async function loadPublicNews(){
  const results=await Promise.allSettled(feeds.map(readFeed));let items=[],failures=[];
  results.forEach((result,i)=>{
   if(result.status==='fulfilled'&&Array.isArray(result.value))items.push(...result.value);
+  else if(result.status==='fulfilled'&&result.value?.error)failures.push(feeds[i].source+': '+result.value.error);
   else failures.push(feeds[i].source+': '+(result.reason?.message||'failed'));
  });
  const seen=new Set();
@@ -1037,7 +1038,7 @@ async function loadEdgarFilings(){
  }
  renderQuality();
 }
-function loadChart(){const symbol=document.getElementById('chartSymbol').value;const item=WATCHLIST.find(x=>x.tv===symbol);setText('chartSubtitle',item?`${item.name} · TradingView chart`:'TradingView interactive chart');mountWidget('mainChart','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{autosize:true,symbol,interval:'5',timezone:TZ,theme:'light',style:'1',locale:'en',allow_symbol_change:true,calendar:false,hide_side_toolbar:false,hide_top_toolbar:false,save_image:false,withdateranges:true,details:true,hotlist:false,studies:[],support_host:'https://www.tradingview.com'});}
+function loadChart(){const symbol=document.getElementById('chartSymbol').value;const item=WATCHLIST.find(x=>x.tv===symbol);setText('chartSubtitle',item?`${item.name} · TradingView chart`:'TradingView interactive chart');mountWidget('mainChart','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{autosize:true,symbol,interval:'5',timezone:TZ,theme:(document.documentElement.dataset.theme==='dark'?'dark':'light'),style:'1',locale:'en',allow_symbol_change:true,calendar:false,hide_side_toolbar:false,hide_top_toolbar:false,save_image:false,withdateranges:true,details:true,hotlist:false,studies:[],support_host:'https://www.tradingview.com'});}
 function loadWidgets(){loadChart();}
 
 /* M01 prompt audit: local heuristic only. */

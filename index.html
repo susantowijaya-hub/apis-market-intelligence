@@ -619,6 +619,91 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
 
+
+/* APIS 2.6.0 — regional markets, session badges and macro release calendar */
+.ios-stock-session{display:block;max-width:100%;font-size:8px;line-height:1.25;font-weight:650;letter-spacing:.045em;color:var(--secondary);text-align:right;white-space:nowrap;margin-top:-1px}
+.ios-market-region{margin:4px 0 18px;min-width:0}
+.ios-market-region:last-child{margin-bottom:0}
+.ios-market-region-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0 5px;border-bottom:1px solid var(--line);margin-bottom:1px}
+.ios-market-region-heading h3{margin:0;font-size:12px;letter-spacing:.07em;text-transform:uppercase;font-weight:800;color:var(--secondary)}
+.ios-market-region-heading span{font-size:9px;color:var(--muted);white-space:nowrap}
+.calendar-terminal{margin-top:14px;padding:17px;min-width:0}
+.calendar-title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.calendar-title-row h2{font-size:22px;letter-spacing:-.04em;margin:0}
+.calendar-title-row p{font-size:11px;color:var(--secondary);margin:5px 0 0;max-width:680px}
+.calendar-toolbar{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.calendar-range-switch{display:flex;gap:2px;padding:3px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px}
+.calendar-range-switch button{border:0;background:transparent;color:var(--secondary);padding:6px 11px;border-radius:7px;font-size:11px;font-weight:750;transition:background .18s ease,color .18s ease,transform .18s ease}
+.calendar-range-switch button:active{transform:scale(.95)}
+.calendar-range-switch button.active{background:var(--surface);color:var(--green);box-shadow:0 1px 4px rgba(0,0,0,.13)}
+.calendar-filter-drawer{margin:14px 0 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);overflow:hidden}
+.calendar-filter-drawer>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 13px;cursor:pointer}
+.calendar-filter-drawer>summary::-webkit-details-marker{display:none}
+.calendar-filter-drawer>summary span{font-size:12px;font-weight:750}
+.calendar-filter-drawer>summary small{font-size:9px;color:var(--secondary);text-align:right}
+.calendar-filter-drawer[open]>summary{border-bottom:1px solid var(--line);color:var(--green)}
+.calendar-filter-content{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;padding:13px}
+.calendar-filter-block{min-width:0}
+.calendar-filter-heading{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px}
+.calendar-filter-heading>strong{font-size:10px;text-transform:uppercase;letter-spacing:.065em}
+.calendar-filter-heading span{display:flex;gap:7px}
+.calendar-filter-heading button{border:0;background:transparent;padding:0;color:var(--green);font-size:9px;font-weight:700}
+.calendar-check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 9px}
+.calendar-check-grid label{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--secondary);cursor:pointer;min-width:0}
+.calendar-check-grid input{width:14px;height:14px;margin:0;accent-color:var(--green);flex:0 0 auto}
+.impact-filter-grid{grid-template-columns:1fr}
+.impact-swatch{display:inline-block;width:8px;height:8px;border-radius:2px;flex:0 0 auto}
+.impact-swatch.high{background:#ff453a}
+.impact-swatch.medium{background:#f5a623}
+.calendar-summary{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 1px 6px;color:var(--secondary);font-size:10px}
+.calendar-summary span:first-child{font-weight:750;color:var(--ink)}
+.calendar-impact-legend{display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin:8px 0 12px;font-size:9px;color:var(--secondary)}
+.calendar-impact-legend span{display:inline-flex;align-items:center;gap:5px}
+.calendar-legend-note{margin-left:auto}
+.calendar-day-group{margin:14px 0 18px}
+.calendar-day-heading{display:flex;justify-content:space-between;align-items:center;padding:6px 1px;border-bottom:1px solid var(--line);margin-bottom:7px}
+.calendar-day-heading strong{font-size:12px;letter-spacing:-.015em}
+.calendar-day-heading span{font-size:9px;color:var(--secondary)}
+.calendar-event-card{border:1px solid var(--line);border-left:3px solid #f5a623;border-radius:11px;background:var(--surface);padding:11px 12px;margin:7px 0;min-width:0;transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.calendar-event-card.impact-high{border-left-color:#ff453a}
+.calendar-event-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:9px;color:var(--secondary)}
+.calendar-country{font-weight:750;color:var(--ink)}
+.calendar-event-top time{font-variant-numeric:tabular-nums}
+.calendar-event-impact{margin-left:auto;padding:3px 7px;border-radius:99px;font-size:8px;font-weight:800;letter-spacing:.06em}
+.calendar-event-impact.high{background:rgba(255,69,58,.15);color:#ff453a}
+.calendar-event-impact.medium{background:rgba(245,166,35,.16);color:#d78b00}
+.calendar-event-name{display:block;font-size:13px;line-height:1.35;margin-top:6px;letter-spacing:-.01em}
+.calendar-event-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:3px;font-size:9px;color:var(--secondary)}
+.calendar-event-meta span:first-child{color:var(--green);font-weight:650}
+.calendar-event-values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}
+.calendar-event-metric{min-width:0;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}
+.calendar-event-metric small{display:block;font-size:8px;letter-spacing:.06em;font-weight:800;color:var(--secondary)}
+.calendar-event-metric strong{display:block;font-size:12px;line-height:1.3;font-weight:750;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;margin-top:3px}
+.calendar-event-metric.actual strong{color:var(--green)}
+.calendar-event-footer{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:8px;color:var(--secondary)}
+.calendar-event-footer a{color:var(--secondary);text-decoration:underline;text-underline-offset:2px}
+.calendar-source-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:9px}
+.treasury-terminal em{display:block;font-size:8px;line-height:1.25;font-style:normal;color:var(--secondary);margin-top:3px}
+.treasury-grid-wide>div{min-width:0}
+.calendar-foot{font-size:9px;line-height:1.45;color:var(--secondary);margin-top:12px}
+@media(max-width:760px),(hover:none) and (pointer:coarse){
+ .calendar-terminal{padding:12px}
+ .calendar-title-row{flex-direction:column;align-items:stretch}
+ .calendar-toolbar{justify-content:space-between}
+ .calendar-filter-content{grid-template-columns:1fr;gap:12px;padding:11px}
+ .calendar-check-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .calendar-filter-heading>strong{font-size:9px}
+ .calendar-summary{align-items:flex-start;flex-direction:column;gap:3px}
+ .calendar-legend-note{margin-left:0}
+ .calendar-event-card{padding:9px}
+ .calendar-event-name{font-size:12px}
+ .calendar-event-values{gap:5px}
+ .calendar-event-metric{padding:6px}
+ .calendar-event-metric strong{font-size:11px}
+ .calendar-event-footer{flex-direction:column;gap:3px}
+ .ios-stock-session{font-size:7.5px}
+}
+
 </style>
 </head>
 <body>
@@ -940,7 +1025,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
   <div class="note" style="margin-top:14px"><strong>Cara menjalankan:</strong> simpan file ini di komputer lalu buka dengan Chrome, Edge, Safari, atau Firefox yang terhubung ke internet. Sebagian jaringan memblokir penyedia data pasar publik atau widget eksternal; dashboard akan menandainya unavailable dan tidak mengganti data dengan simulasi. Untuk akses provider yang lebih konsisten, file dapat dijalankan melalui web server statis lokal (opsional)—tanpa backend API.</div>
 </section>
 </main>
-<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.3.0</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
+<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.6.0</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -1232,7 +1317,7 @@ async function fetchYahooQuote(item){
 function parseTwseDate(value){
  const raw=String(value||'').replace(/[^0-9]/g,'');
  if(raw.length===7){const year=Number(raw.slice(0,3))+1911,month=Number(raw.slice(3,5)),day=Number(raw.slice(5,7));return {year,month,day}}
- const match=String(value||'').match(/(20\\d{2})[/-](\\d{1,2})[/-](\\d{1,2})/);
+ const match=String(value||'').match(/(20\d{2})[/-](\d{1,2})[/-](\d{1,2})/);
  return match?{year:Number(match[1]),month:Number(match[2]),day:Number(match[3])}:null;
 }
 async function fetchTaiwanOfficialQuote(item){
@@ -1661,7 +1746,7 @@ async function loadTreasuryCurve(){
  const series={two:'DGS2',five:'DGS5',ten:'DGS10',thirty:'DGS30'};
  const target='https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2%2CDGS5%2CDGS10%2CDGS30';
  const routes=[target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target),'https://proxy.cors.dev/'+target];
- let observation=null,lastError='FRED H.15 CSV unavailable';
+ let observation=null,lastError='FRED H.15 CSV unavailable',source='FRED · Federal Reserve H.15';
  for(const route of routes){
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8500);
   try{

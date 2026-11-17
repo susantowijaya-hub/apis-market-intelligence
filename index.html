@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f5">
-<meta name="build-version" content="2.3.1">
+<meta name="build-version" content="2.4.0">
 <meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — The Market Terminal v2.3.1</title>
+<title>APIS — The Market Terminal v2.4.0</title>
 <style>
 :root{
   color-scheme:light;
@@ -317,6 +317,13 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
  .watchlist-panel .status-label{white-space:normal;text-align:left}
 }
 
+
+/* APIS v2.4.0 — free public-data mode */
+.provider-free-note{margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.provider-free-note strong{font-size:12px}
+.provider-free-note p{font-size:10px;line-height:1.5;color:var(--secondary);margin:6px 0 9px}
+.provider-free-note .source-pill{display:inline-flex;max-width:100%;white-space:normal;font-size:9px}
+
 </style>
 </head>
 <body>
@@ -358,34 +365,11 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
     <div class="section-head"><div><h2>Daftar pantauan</h2><p>Observasi dari provider terpilih per instrumen; timestamp mengikuti waktu dari sumber yang memvalidasi harga.</p></div><div class="section-tools"><button class="button secondary" id="exportWatchlist">Unduh CSV</button></div></div>
     <div class="table-wrap"><table><thead><tr><th>Instrumen</th><th>Terakhir</th><th>Perubahan</th><th>Perubahan %</th><th>Status penyedia</th><th>Waktu observasi (WIB)</th><th>Sumber</th></tr></thead><tbody id="watchlistBody"><tr><td colspan="7" class="empty-row">Waiting for provider response. No sample or simulated quotes are displayed.</td></tr></tbody></table></div>
     <div class="note" style="margin-top:10px"><strong>Cross-reference instrumen:</strong> simbol provider dipetakan terpisah dari simbol chart. Kontrak komoditas: <strong>BZ=F ↔ NYMEX:BZ1!</strong> untuk Brent futures dan <strong>GC=F ↔ COMEX:GC1!</strong> untuk Gold futures; bukan harga spot.</div>
-    <details class="provider-settings" id="providerSettings">
-      <summary>Konfigurasi multi-source market data</summary>
-      <div class="provider-settings-body">
-        <p class="provider-settings-intro">APIS mencoba Twelve Data → Financial Modeling Prep → Yahoo Finance fallback. Masukkan API key provider yang Anda miliki untuk mengaktifkan feed independen. Key tersimpan di local storage browser ini dan dikirim langsung ke endpoint provider terkait; jangan gunakan pada perangkat bersama.</p>
-        <div class="provider-key-grid">
-          <label class="provider-key-field">Twelve Data API key
-            <input id="twelveDataKey" type="password" autocomplete="off" placeholder="Masukkan Twelve Data key">
-            <small><a href="https://twelvedata.com/" target="_blank" rel="noopener">Twelve Data account & API access ↗</a></small>
-          </label>
-          <label class="provider-key-field">Financial Modeling Prep API key
-            <input id="fmpKey" type="password" autocomplete="off" placeholder="Masukkan FMP key">
-            <small><a href="https://site.financialmodelingprep.com/developer/docs" target="_blank" rel="noopener">FMP API documentation ↗</a></small>
-          </label>
-        </div>
-        <div class="provider-settings-actions">
-          <button class="button" id="saveProviderKeys" type="button">Simpan konfigurasi feed</button>
-          <button class="button secondary" id="clearProviderKeys" type="button">Hapus API keys</button>
-          <span class="source-pill" id="providerConfigStatus">Public fallback only</span>
-        </div>
-        <p class="provider-settings-note">Feed tanpa API key tidak menjamin real-time. Jika provider tidak memiliki izin atau cakupan instrumen tertentu, APIS otomatis mencoba sumber berikutnya dan mencatat sumber yang berhasil untuk setiap harga. Google Finance menyediakan fungsi GOOGLEFINANCE untuk Google Sheets, bukan endpoint quote JavaScript umum; kontrak futures tertentu juga tidak didukung. Reuters/LSEG dan Bloomberg menyediakan API/feed profesional berbasis lisensi dan entitlement.</p>
-        <div class="provider-source-links">
-          <a href="https://support.google.com/docs/answer/3093281" target="_blank" rel="noopener">Google Finance / Sheets</a>
-          <a href="https://www.investing.com/" target="_blank" rel="noopener">Investing.com</a>
-          <a href="https://developers.lseg.com/en/product/news" target="_blank" rel="noopener">Reuters via LSEG</a>
-          <a href="https://professional.bloomberg.com/products/data/data-connectivity/server-api/" target="_blank" rel="noopener">Bloomberg SAPI</a>
-        </div>
-      </div>
-    </details>
+    <div class="provider-free-note" id="providerSettings">
+      <strong>Free-data mode · no paid API key</strong>
+      <p>APIS uses public Stooq CSV snapshots where available, Yahoo public fallback, Binance public BTC streams, Frankfurter reference FX, and official macro/news feeds. Coverage and update frequency vary by provider. No paid subscription or API key is required.</p>
+      <span class="source-pill" id="providerConfigStatus">STOOQ → YAHOO · PUBLIC FALLBACK</span>
+    </div>
   </div>
   
 <div class="grid three-col" style="margin-top:14px">
@@ -538,9 +522,8 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
   <div class="section-head"><div><div class="eyebrow">04 / Tata kelola</div><h2>Sumber data & catatan operasional</h2><p>Asal-usul data, batasan penyedia, dan batas kemampuan edisi browser.</p></div></div>
   <div class="grid two-col">
     <div class="card card-pad"><div class="card-title"><div><h3>Registri sumber</h3><p>Dependensi data dan visualisasi</p></div></div><div class="source-list">
-      <div class="source-row"><div><strong>Twelve Data API</strong><small>Optional authenticated REST quote adapter for supported indices and instruments. Symbol coverage, real-time access, delay and credits depend on the subscription/entitlement.</small></div><span class="badge warn">API KEY REQUIRED</span></div>
-      <div class="source-row"><div><strong>Financial Modeling Prep (FMP)</strong><small>Optional authenticated quote adapter and index quote endpoint. Availability of specific indices/futures depends on account plan and instrument coverage.</small></div><span class="badge warn">API KEY / PLAN</span></div>
-      <div class="source-row"><div><strong>Yahoo Finance public fallback</strong><small>Unofficial quote endpoint through public CORS relays; used only when configured providers are absent or fail. May be delayed and is not a licensed exchange feed.</small></div><span class="badge warn">FALLBACK ONLY</span></div>
+      <div class="source-row"><div><strong>Stooq public CSV snapshots</strong><small>No paid subscription or API key. Daily/delayed public quote snapshots for mapped instruments; coverage is selective and the provider may rate-limit or block automated requests.</small></div><span class="badge warn">FREE · EOD / DELAYED</span></div>
+      <div class="source-row"><div><strong>Yahoo Finance public chart fallback</strong><small>Unofficial public endpoint through CORS relays. Used only when Stooq has no mapped symbol or its public endpoint is unavailable. May be delayed and can be blocked.</small></div><span class="badge warn">FREE · BEST EFFORT</span></div>
       <div class="source-row"><div><strong>TradingView chart embed (optional)</strong><small>Optional chart only. APIS market snapshot, news feed and macro calendar are rendered internally from their respective sources.</small></div><span class="badge warn">EXTERNAL EMBED</span></div>
       <div class="source-row"><div><strong>Binance / Coinbase / Kraken public streams</strong><small>BTC spot WebSocket tickers with REST snapshot fallback. Tick-by-tick label only while a provider WebSocket message is fresh.</small></div><span class="badge good">PUBLIC STREAM</span></div>
       <div class="source-row"><div><strong>U.S. Treasury / FRED H.15</strong><small>Daily par yield curve 2Y/5Y/10Y/30Y; official Treasury table first, free FRED CSV fallback; not intraday.</small></div><span class="badge good">DAILY</span></div>
@@ -552,10 +535,10 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
     </div></div>
     <div class="card card-pad"><div class="card-title"><div><h3>Batasan yang diketahui</h3><p>Kemampuan yang tersedia dan yang tidak diklaim</p></div></div>
       <ul class="check-list">
-        <li><span class="check-mark">✓</span><span>Runs as a local HTML file in a modern browser. Public fallback feeds work without keys; Twelve Data and FMP adapters require user-supplied API credentials and provider entitlements.</span></li>
+        <li><span class="check-mark">✓</span><span>Runs as a static HTML app with no paid API keys. Market prices use free public endpoints and are validated before display.</span></li>
         <li><span class="check-mark">✓</span><span>Only provider responses with a valid price and observation timestamp enter the quote table and CSV export.</span></li>
         <li><span class="check-mark">✓</span><span>Binance BTC/USDT is labelled live only when a timestamped WebSocket message is received.</span></li>
-        <li><span class="check-miss">!</span><span>Yahoo is retained only as a public fallback. With no Twelve Data/FMP key configured, most public equity/index quotes will still depend on this fallback; APIS does not invent replacement prices.</span></li>
+        <li><span class="check-miss">!</span><span>Stooq coverage is selective and EOD/delayed; Yahoo public endpoints are unofficial. Neither source guarantees live tick-by-tick prices or uninterrupted availability.</span></li>
         <li><span class="check-miss">!</span><span>Feed tanpa autentikasi tidak menjamin real-time. Data live berlisensi untuk indeks/futures/BEI memerlukan entitlement provider yang sesuai.</span></li>
         <li><span class="check-miss">!</span><span>No guaranteed live IDX equities feed is included. IDX real-time market data requires the appropriate licensed source.</span></li>
         <li><span class="check-miss">!</span><span>Full APIS Python orchestration, database, background automation, LLM features, issuer ingestion and persistent cloud storage are not ported into this single HTML file.</span></li>
@@ -644,7 +627,7 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 </script>
 <script>
 'use strict';
-/* APIS The Market Terminal 2.3.1 · Multi-provider mobile terminal
+/* APIS The Market Terminal 2.4.0 · Free public-data terminal
    - No synthetic market data or fabricated news.
    - Yahoo Finance is an unofficial public fallback accessed through third-party CORS relays.
    - TradingView widgets are visual embeds; their data is not read back into calculations.
@@ -654,27 +637,27 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 const TZ='Asia/Jakarta';
 const WATCHLIST=[
   {symbol:'^JKSE',name:'IDX Composite',short:'IHSG',group:'Index',tv:'IDX:COMPOSITE',tdSymbol:'JKSE'},
-  {symbol:'^GSPC',name:'S&P 500',short:'S&P 500',group:'Index',tv:'SP:SPX',tdSymbol:'SPX'},
-  {symbol:'^IXIC',name:'Nasdaq Composite',short:'Nasdaq',group:'Index',tv:'NASDAQ:IXIC',tdSymbol:'IXIC'},
-  {symbol:'^DJI',name:'Dow Jones Industrial Average',short:'Dow Jones',group:'Index',tv:'DJ:DJI',tdSymbol:'DJI'},
+  {symbol:'^GSPC',name:'S&P 500',short:'S&P 500',group:'Index',tv:'SP:SPX',tdSymbol:'SPX',stooqSymbol:'^spx'},
+  {symbol:'^IXIC',name:'Nasdaq Composite',short:'Nasdaq',group:'Index',tv:'NASDAQ:IXIC',tdSymbol:'IXIC',stooqSymbol:'^ndq'},
+  {symbol:'^DJI',name:'Dow Jones Industrial Average',short:'Dow Jones',group:'Index',tv:'DJ:DJI',tdSymbol:'DJI',stooqSymbol:'^dji'},
   {symbol:'000001.SS',name:'Shanghai Composite',short:'Shanghai',group:'Index',tv:'SSE:000001'},
   {symbol:'^TWII',name:'Taiwan Weighted',short:'Taiwan',group:'Index',tv:'TWSE:IX0001'},
-  {symbol:'^KS11',name:'KOSPI Composite',short:'KOSPI',group:'Index',tv:'KRX:KOSPI',tdSymbol:'KS11'},
+  {symbol:'^KS11',name:'KOSPI Composite',short:'KOSPI',group:'Index',tv:'KRX:KOSPI',tdSymbol:'KS11',stooqSymbol:'^kospi'},
   {symbol:'^NSEI',name:'NIFTY 50',short:'NIFTY 50',group:'Index',tv:'NSE:NIFTY',tdSymbol:'NIFTY'},
   {symbol:'NQ=F',name:'Nasdaq-100 E-mini Futures',short:'NQ Futures',group:'Index',tv:'CME_MINI:NQ1!'},
-  {symbol:'^N225',name:'Nikkei 225',short:'Nikkei 225',group:'Index',tv:'TVC:NI225',tdSymbol:'N225'},
-  {symbol:'^VIX',name:'CBOE Volatility Index',short:'VIX',group:'Risk',tv:'TVC:VIX',tdSymbol:'VIX'},
-  {symbol:'EIDO',name:'iShares MSCI Indonesia ETF',short:'EIDO',group:'ETF',tv:'AMEX:EIDO'},
-  {symbol:'IDR=X',name:'USD / IDR',short:'USD/IDR',group:'FX',tv:'FX_IDC:USDIDR'},
-  {symbol:'BZ=F',name:'Brent Crude Futures',short:'Brent',group:'Commodity',tv:'NYMEX:BZ1!'},
-  {symbol:'GC=F',name:'Gold Futures',short:'Gold',group:'Commodity',tv:'COMEX:GC1!'},
+  {symbol:'^N225',name:'Nikkei 225',short:'Nikkei 225',group:'Index',tv:'TVC:NI225',tdSymbol:'N225',stooqSymbol:'^nkx'},
+  {symbol:'^VIX',name:'CBOE Volatility Index',short:'VIX',group:'Risk',tv:'TVC:VIX',tdSymbol:'VIX',stooqSymbol:'^vix'},
+  {symbol:'EIDO',name:'iShares MSCI Indonesia ETF',short:'EIDO',group:'ETF',tv:'AMEX:EIDO',stooqSymbol:'eido.us'},
+  {symbol:'IDR=X',name:'USD / IDR',short:'USD/IDR',group:'FX',tv:'FX_IDC:USDIDR',stooqSymbol:'usdidr'},
+  {symbol:'BZ=F',name:'Brent Crude Futures',short:'Brent',group:'Commodity',tv:'NYMEX:BZ1!',stooqSymbol:'brent.f'},
+  {symbol:'GC=F',name:'Gold Futures',short:'Gold',group:'Commodity',tv:'COMEX:GC1!',stooqSymbol:'gc.f'},
   {symbol:'BBCA.JK',name:'Bank Central Asia',short:'BBCA',group:'Indonesia equity',tv:'IDX:BBCA'},
   {symbol:'BMRI.JK',name:'Bank Mandiri',short:'BMRI',group:'Indonesia equity',tv:'IDX:BMRI'},
   {symbol:'BBRI.JK',name:'Bank Rakyat Indonesia',short:'BBRI',group:'Indonesia equity',tv:'IDX:BBRI'},
   {symbol:'GOTO.JK',name:'GoTo Gojek Tokopedia',short:'GOTO',group:'Indonesia equity',tv:'IDX:GOTO'},
-  {symbol:'AAPL',name:'Apple',short:'AAPL',group:'US equity',tv:'NASDAQ:AAPL'},
-  {symbol:'NVDA',name:'NVIDIA',short:'NVDA',group:'US equity',tv:'NASDAQ:NVDA'},
-  {symbol:'MSFT',name:'Microsoft',short:'MSFT',group:'US equity',tv:'NASDAQ:MSFT'}
+  {symbol:'AAPL',name:'Apple',short:'AAPL',group:'US equity',tv:'NASDAQ:AAPL',stooqSymbol:'aapl.us'},
+  {symbol:'NVDA',name:'NVIDIA',short:'NVDA',group:'US equity',tv:'NASDAQ:NVDA',stooqSymbol:'nvda.us'},
+  {symbol:'MSFT',name:'Microsoft',short:'MSFT',group:'US equity',tv:'NASDAQ:MSFT',stooqSymbol:'msft.us'}
 ];
 const QUOTES=new Map();
 /* Restore only previously received provider observations. Restored values are
@@ -728,138 +711,67 @@ function restoreAuxCache(){
   }
 }
 
-/* Multi-provider quote adapters.
-   Priority: Twelve Data (credentialed) -> Financial Modeling Prep (credentialed) -> Yahoo public fallback.
-   Credentials are entered by the user and are never sent to CORS relay services.
+/* FREE-ONLY market quote adapters.
+   Priority: Stooq public CSV snapshot (where mapped) -> Yahoo public chart fallback.
+   No paid API, account, or API key is required. Stooq may rate-limit or deny public requests.
 */
-function marketProviderKeys(){
- const keys=loadJSON('apis_market_provider_keys',{twelveData:'',fmp:''})||{};
- return {twelveData:String(keys.twelveData||''),fmp:String(keys.fmp||'')};
-}
-function normalizeProviderQuote(item,payload,provider,sourceUrl){
- const raw=Array.isArray(payload)?payload[0]:payload;
- if(!raw||typeof raw!=='object'||raw.status==='error'||raw.code>=400)throw new Error(raw?.message||raw?.error||'Provider returned an invalid quote');
- const price=num(Number(raw.price??raw.close??raw.last??raw.lastPrice));
- const providerChange=num(Number(raw.change??raw.changeAmount??raw.priceChange));
- const providerPct=num(Number(raw.percent_change??raw.changePercentage??raw.percentChange));
- const explicitPrevious=num(Number(raw.previous_close??raw.previousClose??raw.prevClose));
- const previousClose=explicitPrevious??(providerChange!==null?price-providerChange:(providerPct!==null&&price!==null&&1+providerPct/100!==0?price/(1+providerPct/100):null));
- const timestamp=num(Number(raw.timestamp??raw.lastTradeTimestamp??raw.time));
- if(price===null||price<=0||timestamp===null||timestamp<=0)throw new Error('Price or provider timestamp missing');
- if(timestamp>Date.now()/1000+300)throw new Error('Provider timestamp is ahead of current time');
- const age=Math.max(0,Date.now()/1000-timestamp);
- const status=age>48*3600?'STALE_OBSERVATION':age>20*60?'LAST_AVAILABLE_CLOSE':'PROVIDER_QUOTE';
- return {
-  symbol:item.symbol,name:item.name,short:item.short,group:item.group,
-  price,previousClose,change:providerChange,changePct:providerPct,currency:String(raw.currency||item.currency||''),
-  exchange:String(raw.exchange||raw.exchangeName||''),marketState:String(raw.marketState||'PROVIDER'),
-  observedAt:timestamp,observedAge:age,status,
-  source:provider,sourceUrl,retrievedAt:Date.now(),proxy:'direct-provider-api'
- };
-}
-async function fetchTwelveDataQuote(item,key){
- const symbol=item.tdSymbol;
- if(!symbol)throw new Error('No verified Twelve Data symbol mapping for this instrument');
- const url='https://api.twelvedata.com/quote?symbol='+encodeURIComponent(symbol)+'&apikey='+encodeURIComponent(key);
- const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
- try{
-  const response=await fetch(url,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
-  if(!response.ok)throw new Error('HTTP '+response.status);
-  const data=await response.json();
-  if(data.status==='error'||data.code)throw new Error(data.message||'Twelve Data rejected this symbol or plan');
-  return normalizeProviderQuote(item,data,'Twelve Data','https://twelvedata.com/indices');
- }finally{clearTimeout(timer)}
-}
-async function fetchFmpQuote(item,key){
- const symbol=item.fmpSymbol||item.symbol;
- const url='https://financialmodelingprep.com/stable/quote?symbol='+encodeURIComponent(symbol)+'&apikey='+encodeURIComponent(key);
- const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
- try{
-  const response=await fetch(url,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
-  if(!response.ok)throw new Error('HTTP '+response.status);
-  const payload=await response.json();
-  if(!Array.isArray(payload)||!payload.length)throw new Error(payload?.message||'FMP has no quote for this symbol or plan');
-  return normalizeProviderQuote(item,payload[0],'Financial Modeling Prep','https://site.financialmodelingprep.com/developer/docs/stable/index-quote');
- }finally{clearTimeout(timer)}
-}
-async function fetchYahooQuote(item){
- const encoded=encodeURIComponent(item.symbol);
- const plans=[
-  {host:'query1.finance.yahoo.com',range:'1d',interval:'1m'},
-  {host:'query2.finance.yahoo.com',range:'1d',interval:'1m'},
-  {host:'query1.finance.yahoo.com',range:'5d',interval:'5m'},
-  {host:'query2.finance.yahoo.com',range:'5d',interval:'5m'},
-  {host:'query1.finance.yahoo.com',range:'1mo',interval:'1d'}
+const STOOQ_SYMBOLS={
+ '^GSPC':'^spx','^IXIC':'^ndq','^DJI':'^dji','^N225':'^nkx','^KS11':'^kospi','^VIX':'^vix',
+ 'EIDO':'eido.us','AAPL':'aapl.us','NVDA':'nvda.us','MSFT':'msft.us',
+ 'IDR=X':'usdidr','GC=F':'gc.f','BZ=F':'brent.f'
+};
+const STOOQ_CACHE=new Map();
+let STOOQ_LAST_REQUEST=0;
+async function fetchStooqQuote(item){
+ const symbol=item.stooqSymbol||STOOQ_SYMBOLS[item.symbol];
+ if(!symbol)throw new Error('Stooq has no mapped symbol for this instrument');
+ const cached=STOOQ_CACHE.get(item.symbol);
+ if(cached&&Date.now()-cached.retrievedAt<10*60*1000)return {...cached};
+ const wait=Math.max(0,1100-(Date.now()-STOOQ_LAST_REQUEST));
+ if(wait)await new Promise(resolve=>setTimeout(resolve,wait));
+ STOOQ_LAST_REQUEST=Date.now();
+ const target='https://stooq.com/q/l/?s='+encodeURIComponent(symbol)+'&f=sd2t2ohlcvnp&h&e=csv';
+ const routes=[
+  'https://corsproxy.io/?url='+encodeURIComponent(target),
+  'https://api.allorigins.win/raw?url='+encodeURIComponent(target),
+  'https://proxy.cors.dev/'+target
  ];
  const errors=[];
- for(const plan of plans){
-  const target='https://'+plan.host+'/v8/finance/chart/'+encoded+'?range='+plan.range+'&interval='+plan.interval+'&includePrePost=true';
-  const routes=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
-  for(const route of routes){
-   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);
-   try{
-    const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
-    if(!response.ok)throw new Error('HTTP '+response.status);
-    const payload=await response.json(),result=payload?.chart?.result?.[0];
-    if(!result?.meta)throw new Error(payload?.chart?.error?.description||'No quote metadata');
-    const meta=result.meta,ts=Array.isArray(result.timestamp)?result.timestamp:[];
-    const closes=result.indicators?.quote?.[0]?.close||[];
-    let idx=-1;for(let i=closes.length-1;i>=0;i--){if(num(closes[i])!==null){idx=i;break}}
-    const barPrice=idx>=0?num(closes[idx]):null,barTime=idx>=0?num(ts[idx]):null;
-    const marketPrice=num(meta.regularMarketPrice),regularTime=num(meta.regularMarketTime);
-    const useMeta=marketPrice!==null&&(regularTime||0)>=(barTime||0);
-    const price=useMeta?marketPrice:barPrice,observedAt=useMeta?regularTime:barTime;
-    const previous=num(meta.chartPreviousClose??meta.previousClose);
-    if(price===null||price<=0||!observedAt)throw new Error('Price/timestamp missing');
-    const age=Math.max(0,Date.now()/1000-observedAt),state=String(meta.marketState||'UNKNOWN').toUpperCase();
-    const open=['REGULAR','PRE','POST','PREPRE','POSTPOST'].includes(state);
-    const status=age>48*3600?'STALE_OBSERVATION':(!open||age>20*60?'LAST_AVAILABLE_CLOSE':'DELAYED_PROVIDER');
-    return {symbol:item.symbol,name:item.name,short:item.short,group:item.group,price,previousClose:previous,
-     currency:meta.currency||item.currency||'',exchange:meta.exchangeName||meta.fullExchangeName||'',marketState:state,
-     observedAt,observedAge:age,status,intervalUsed:plan.interval,
-     source:'Yahoo Finance · public fallback (unofficial)',sourceUrl:'https://finance.yahoo.com/quote/'+encoded+'/',retrievedAt:Date.now(),proxy:new URL(route).host};
-   }catch(e){errors.push(new URL(route).host+': '+(e?.name==='AbortError'?'timeout':String(e?.message||e).slice(0,65)))}
-   finally{clearTimeout(timer)}
-  }
+ for(const route of routes){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);
+  try{
+   const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'text/csv,text/plain,*/*'}});
+   if(!response.ok)throw new Error('HTTP '+response.status);
+   const csv=(await response.text()).trim();
+   if(!csv||/exceeded|captcha|cloudflare|access denied/i.test(csv))throw new Error('Public CSV denied or rate-limited');
+   const lines=csv.split(/\r?\n/);
+   if(lines.length<2||!/^symbol,date,time,open,high,low,close,volume/i.test(lines[0].replace(/"/g,'')))throw new Error('Unexpected CSV schema');
+   const parseCsvLine=line=>{
+    const out=[];let cell='',quoted=false;
+    for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(quoted&&line[i+1]==='"'){cell+='"';i++}else quoted=!quoted}else if(ch===','&&!quoted){out.push(cell);cell=''}else cell+=ch}
+    out.push(cell);return out.map(value=>value.trim().replace(/^"|"$/g,''));
+   };
+   const headers=parseCsvLine(lines[0]).map(x=>x.toLowerCase()),values=parseCsvLine(lines[1]);
+   const row=Object.fromEntries(headers.map((key,index)=>[key,values[index]||'']));
+   const price=num(Number(row.close)),previous=num(Number(row.prev));
+   if(price===null||price<=0||!row.date||row.date==='N/D')throw new Error('No valid Stooq observation for '+symbol);
+   const dateMatch=row.date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+   if(!dateMatch)throw new Error('Invalid Stooq observation date');
+   const observedAt=Date.UTC(Number(dateMatch[1]),Number(dateMatch[2])-1,Number(dateMatch[3]))/1000;
+   if(observedAt>Date.now()/1000+86400)throw new Error('Stooq observation date is in the future');
+   const age=Math.max(0,Date.now()/1000-observedAt);
+   const quote={
+    symbol:item.symbol,name:item.name,short:item.short,group:item.group,price,previousClose:previous,
+    currency:item.currency||'',exchange:'Stooq',marketState:'PUBLIC CSV SNAPSHOT',
+    observedAt,observedAge:age,status:age>48*3600?'STALE_OBSERVATION':'LAST_AVAILABLE_CLOSE',
+    source:'Stooq · public CSV snapshot (EOD/delayed)',sourceUrl:'https://stooq.com/q/?s='+encodeURIComponent(symbol),
+    retrievedAt:Date.now(),proxy:new URL(route).host,observationDate:row.date,providerFallbacks:[]
+   };
+   STOOQ_CACHE.set(item.symbol,quote);return {...quote};
+  }catch(error){errors.push(new URL(route).host+': '+String(error?.message||error).slice(0,70))}
+  finally{clearTimeout(timer)}
  }
- throw new Error(errors.slice(0,6).join(' | ')||'No free Yahoo endpoint responded');
-}
-async function fetchMarketQuote(item){
- const keys=marketProviderKeys(),errors=[];
- if(keys.twelveData){
-  try{const quote=await fetchTwelveDataQuote(item,keys.twelveData);quote.providerFallbacks=errors.slice();return quote}
-  catch(error){errors.push('Twelve Data: '+String(error?.message||error).slice(0,100))}
- }
- if(keys.fmp){
-  try{const quote=await fetchFmpQuote(item,keys.fmp);quote.providerFallbacks=errors.slice();return quote}
-  catch(error){errors.push('FMP: '+String(error?.message||error).slice(0,100))}
- }
- try{const quote=await fetchYahooQuote(item);quote.providerFallbacks=errors.slice();return quote}
- catch(error){errors.push('Yahoo fallback: '+String(error?.message||error).slice(0,150))}
- throw new Error(errors.join(' · ')||'All configured market providers failed');
-}
-function initProviderSettings(){
- const keys=marketProviderKeys();
- const td=document.getElementById('twelveDataKey'),fmp=document.getElementById('fmpKey');
- if(td)td.value=keys.twelveData;
- if(fmp)fmp.value=keys.fmp;
- const refreshLabel=()=>{
-  const latest=marketProviderKeys();
-  const text=(latest.twelveData?'Twelve Data configured':'Twelve Data not set')+' · '+(latest.fmp?'FMP configured':'FMP not set')+' · Yahoo fallback';
-  setText('providerConfigStatus',text);
- };
- const save=document.getElementById('saveProviderKeys'),clear=document.getElementById('clearProviderKeys');
- if(save)save.onclick=()=>{
-  const next={twelveData:String(td?.value||'').trim(),fmp:String(fmp?.value||'').trim()};
-  saveJSON('apis_market_provider_keys',next);refreshLabel();toast('Provider configuration saved in this browser.');
-  fetchQuoteBatch();
- };
- if(clear)clear.onclick=()=>{
-  saveJSON('apis_market_provider_keys',{twelveData:'',fmp:''});
-  if(td)td.value='';if(fmp)fmp.value='';refreshLabel();toast('API keys removed from this browser.');
-  fetchQuoteBatch();
- };
- refreshLabel();
+ throw new Error(errors.slice(0,3).join(' | ')||'Stooq public CSV unavailable');
 }
 async function fetchQuoteBatch(){
   if(APP.yahooState==='loading')return;
@@ -1037,7 +949,7 @@ function renderQuality(){
   const browserStatus=!navigator.onLine?'OFFLINE':(protocol==='content:'||protocol==='file:'?'LOCAL FILE CONTEXT':'ONLINE');
   const rows=[
     ['Browser network context',browserDetail,browserStatus,browserStatus==='ONLINE'?'good':'warn'],
-    ['Multi-provider market quotes',updated+' of '+total+' valid observations; Twelve Data / FMP when configured, Yahoo public fallback otherwise.',APP.yahooState==='ready'?'UPDATED':APP.yahooState==='partial'?'PARTIAL':APP.yahooState==='loading'?'FETCHING':'UNAVAILABLE',APP.yahooState==='ready'?'good':'warn'],
+    ['Multi-provider market quotes',updated+' of '+total+' validated observations; Stooq public CSV where mapped, Yahoo public chart fallback otherwise.',APP.yahooState==='ready'?'UPDATED':APP.yahooState==='partial'?'PARTIAL':APP.yahooState==='loading'?'FETCHING':'UNAVAILABLE',APP.yahooState==='ready'?'good':'warn'],
     ['TradingView chart embed',APP.widgetError||'Optional chart only; quote snapshot is rendered by APIS and does not rely on this widget',APP.widgetError?'UNAVAILABLE':'OPTIONAL','warn'],
     ['Binance WebSocket',cryptoLive?'Timestamped BTC/USDT trade stream is fresh':cryptoRest?'BTC/USDT REST observation is fresh; not a live stream':cryptoCached?'Only a previously saved BTC observation is available':APP.btcError||'BTC/USDT unavailable',cryptoLive?'LIVE STREAM':cryptoRest?'REST UPDATE':cryptoCached?'STALE CACHE':'NOT LIVE',cryptoLive?'good':'warn'],
     ['Frankfurter FX',APP.fxState==='loaded'?'Daily reference-rate response received':APP.fxState==='cached'?'Saved dated reference rate; refresh failed':APP.fxError||'Reference-rate response unavailable',APP.fxState==='loaded'?'DAILY':APP.fxState==='cached'?'STALE':'UNAVAILABLE',APP.fxState==='loaded'?'good':'warn'],
@@ -1746,7 +1658,7 @@ function bootstrap(){
  safeInit('Theme controls',initThemeControls);
  safeInit('News controls',initNewsControls);
  safeInit('Calendar controls',initCalendarControls);
- safeInit('Market data provider settings',initProviderSettings);
+ try{localStorage.removeItem('apis_market_provider_keys')}catch(_){}
  safeInit('Clock',()=>{tickClock();setInterval(tickClock,1000);setMarketSession();setInterval(setMarketSession,60000)});
  safeInit('Quote view',renderQuoteViews);
  safeInit('Source health',renderQuality);

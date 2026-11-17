@@ -737,22 +737,80 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
 </section>
 
 <section class="section page-view" id="macroView" data-page-view="macro">
- <div class="page-heading"><div><div class="eyebrow">APIS · MACRO INTELLIGENCE</div><h1>Macro Dashboard</h1><p>Official yield observations and a curated list of major economic releases. All event times are displayed in WIB.</p></div><span class="source-pill">Official data sources</span></div>
+ <div class="page-heading"><div><div class="eyebrow">APIS · MACRO INTELLIGENCE</div><h1>Macro Dashboard</h1><p>U.S. Treasury daily yields and a multi-region economic release calendar. All event times shown in WIB.</p></div><span class="source-pill">Official & public calendars</span></div>
  <div class="card treasury-terminal">
-  <div class="card-title"><div><h2>U.S. Treasury par yield curve</h2><p>Daily closing market observations · not intraday</p></div><span class="source-pill" id="tsyStatus">CONNECTING</span></div>
+  <div class="card-title"><div><h2>U.S. Treasury par yield curve</h2><p>Federal Reserve H.15 / FRED daily constant-maturity observations</p></div><span class="source-pill" id="tsyStatus">CONNECTING</span></div>
   <div class="treasury-grid treasury-grid-wide">
-   <div><small>2 YEAR</small><strong id="tsy2">—</strong></div><div><small>5 YEAR</small><strong id="tsy5">—</strong></div><div><small>10 YEAR</small><strong id="tsy10">—</strong></div><div><small>30 YEAR</small><strong id="tsy30">—</strong></div><div class="spread-box"><small>10Y − 2Y</small><strong id="tsySpread">—</strong></div>
+   <div><small>2 YEAR</small><strong id="tsy2">—</strong><em id="tsy2Date">—</em></div>
+   <div><small>5 YEAR</small><strong id="tsy5">—</strong><em id="tsy5Date">—</em></div>
+   <div><small>10 YEAR</small><strong id="tsy10">—</strong><em id="tsy10Date">—</em></div>
+   <div><small>30 YEAR</small><strong id="tsy30">—</strong><em id="tsy30Date">—</em></div>
+   <div class="spread-box"><small>10Y − 2Y</small><strong id="tsySpread">—</strong><em>Same-date observations only</em></div>
   </div>
-  <div class="treasury-foot"><span id="tsyDate">Waiting for official Treasury observation.</span><div class="treasury-links"><a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve" target="_blank" rel="noopener">Official Treasury ↗</a><a href="https://fred.stlouisfed.org/graph/?id=DGS2%2CDGS5%2CDGS10%2CDGS30" target="_blank" rel="noopener">FRED H.15 fallback ↗</a></div></div>
+  <div class="treasury-foot"><span id="tsyDate">Waiting for FRED daily observations.</span><div class="treasury-links"><a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve" target="_blank" rel="noopener">Official Treasury ↗</a><a href="https://fred.stlouisfed.org/graph/?id=DGS2%2CDGS5%2CDGS10%2CDGS30" target="_blank" rel="noopener">FRED H.15 ↗</a></div></div>
   <div class="treasury-error" id="tsyError" hidden></div>
  </div>
  <div class="card calendar-terminal">
-  <div class="card-title"><div><h2>Economic calendar · high impact</h2><p>CPI, employment, GDP, PCE, PPI, JOLTS, and FOMC policy decisions.</p></div><div class="calendar-tools"><select id="calendarImpact" aria-label="Calendar impact filter"><option value="high">High impact only</option><option value="all">High + medium</option></select><button class="button secondary" id="refreshCalendarBtn">Refresh</button></div></div>
-  <div class="calendar-summary"><span id="calendarCount">Loading major releases…</span><span id="calendarUpdatedAt">Official schedules · BLS, BEA, Federal Reserve</span></div>
-  <div id="calendarEvents" class="calendar-events"><div class="empty-state">Loading official release schedules…</div></div>
-  <div class="calendar-foot">The calendar filters out routine and low-impact releases. Event schedules can be revised by the publishing agency; verify the source before trading.</div>
+  <div class="calendar-title-row">
+   <div><div class="eyebrow">FOREX FACTORY STYLE · WIB</div><h2>Economic calendar</h2><p>Previous · Forecast · Actual. Released items remain visible for the rest of the same WIB day.</p></div>
+   <div class="calendar-toolbar">
+    <div class="calendar-range-switch" role="group" aria-label="Calendar range">
+     <button type="button" data-cal-range="3" class="active" aria-pressed="true">3D</button>
+     <button type="button" data-cal-range="7" aria-pressed="false">7D</button>
+    </div>
+    <button class="button secondary" id="refreshCalendarBtn" type="button">Refresh</button>
+   </div>
+  </div>
+  <details class="calendar-filter-drawer" id="calendarFilterDrawer">
+   <summary><span>Calendar filters</span><small id="calendarFilterSummary">High + Medium · all countries · all categories</small></summary>
+   <div class="calendar-filter-content">
+    <div class="calendar-filter-block">
+     <div class="calendar-filter-heading"><strong>Expected impact</strong><span><button type="button" data-cal-all="impact">All</button><button type="button" data-cal-none="impact">None</button></span></div>
+     <div class="calendar-check-grid impact-filter-grid">
+      <label><input type="checkbox" data-cal-impact="HIGH" checked><i class="impact-swatch high"></i>High impact</label>
+      <label><input type="checkbox" data-cal-impact="MEDIUM" checked><i class="impact-swatch medium"></i>Medium impact</label>
+     </div>
+    </div>
+    <div class="calendar-filter-block">
+     <div class="calendar-filter-heading"><strong>Countries / currencies</strong><span><button type="button" data-cal-all="country">All</button><button type="button" data-cal-none="country">None</button></span></div>
+     <div class="calendar-check-grid currency-filter-grid">
+      <label><input type="checkbox" data-cal-country="AUD" checked>🇦🇺 AUD</label>
+      <label><input type="checkbox" data-cal-country="CAD" checked>🇨🇦 CAD</label>
+      <label><input type="checkbox" data-cal-country="CHF" checked>🇨🇭 CHF</label>
+      <label><input type="checkbox" data-cal-country="CNY" checked>🇨🇳 CNY</label>
+      <label><input type="checkbox" data-cal-country="EUR" checked>🇪🇺 EUR</label>
+      <label><input type="checkbox" data-cal-country="GBP" checked>🇬🇧 GBP</label>
+      <label><input type="checkbox" data-cal-country="IDR" checked>🇮🇩 IDR</label>
+      <label><input type="checkbox" data-cal-country="JPY" checked>🇯🇵 JPY</label>
+      <label><input type="checkbox" data-cal-country="NZD" checked>🇳🇿 NZD</label>
+      <label><input type="checkbox" data-cal-country="USD" checked>🇺🇸 USD</label>
+     </div>
+    </div>
+    <div class="calendar-filter-block">
+     <div class="calendar-filter-heading"><strong>Event types</strong><span><button type="button" data-cal-all="category">All</button><button type="button" data-cal-none="category">None</button></span></div>
+     <div class="calendar-check-grid category-filter-grid">
+      <label><input type="checkbox" data-cal-category="Growth" checked>Growth</label>
+      <label><input type="checkbox" data-cal-category="Inflation" checked>Inflation</label>
+      <label><input type="checkbox" data-cal-category="Employment" checked>Employment</label>
+      <label><input type="checkbox" data-cal-category="Central Bank" checked>Central Bank</label>
+      <label><input type="checkbox" data-cal-category="Bonds" checked>Bonds</label>
+      <label><input type="checkbox" data-cal-category="Housing" checked>Housing</label>
+      <label><input type="checkbox" data-cal-category="Consumer Surveys" checked>Consumer Surveys</label>
+      <label><input type="checkbox" data-cal-category="Business Surveys" checked>Business Surveys</label>
+      <label><input type="checkbox" data-cal-category="Speeches" checked>Speeches</label>
+      <label><input type="checkbox" data-cal-category="Misc" checked>Misc</label>
+     </div>
+    </div>
+   </div>
+  </details>
+  <div class="calendar-summary"><span id="calendarCount">Loading high and medium impact releases…</span><span id="calendarUpdatedAt">Forex Factory · XOOMAR · Bank Indonesia</span></div>
+  <div class="calendar-impact-legend"><span><i class="impact-swatch high"></i>High impact</span><span><i class="impact-swatch medium"></i>Medium impact</span><span class="calendar-legend-note">Times: Asia/Jakarta (WIB)</span></div>
+  <div id="calendarEvents" class="calendar-events"><div class="empty-state">Loading economic release schedules…</div></div>
+  <div class="calendar-foot">Schedule and consensus fields: Forex Factory public calendar. U.S. published actuals / previous: XOOMAR with agency attribution. Indonesia dates: Bank Indonesia. A blank actual or forecast means the provider has not supplied it; no values are estimated.</div>
+  <div class="calendar-source-links"><a href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener">Forex Factory calendar ↗</a><a href="https://xoomar.com/economic-calendar-api" target="_blank" rel="noopener">XOOMAR U.S. actuals API ↗</a><a href="https://www.bi.go.id/id/publikasi/Kalender/Default.aspx" target="_blank" rel="noopener">Bank Indonesia calendar ↗</a><a href="https://www.bps.go.id/id/pressrelease" target="_blank" rel="noopener">BPS releases ↗</a></div>
  </div>
-</section><section class="section page-view" id="moversView" data-page-view="movers">
+</section>
+<section class="section page-view" id="moversView" data-page-view="movers">
  <div class="page-heading"><div><div class="eyebrow">APIS · MARKET BREADTH</div><h1>Market Movers</h1><p>Winners and decliners calculated from the latest valid provider observations. Stale and unavailable instruments are excluded.</p></div><span class="source-pill" id="moversStamp">Waiting for quotes</span></div>
  <div class="section" id="moversPanel" style="margin-top:14px">
  <div class="section-head"><div><div class="eyebrow">MARKET BREADTH</div><h2>Today's flow · winners & losers</h2><p>Sorted from latest validated provider observations; unavailable instruments are excluded.</p></div><span class="source-pill" id="moversPageStatus">Provider snapshot</span></div>
@@ -1429,7 +1487,7 @@ function renderHomeStocks(){
  const items=homeWatchlistItems().filter(item=>!query||(item.name+' '+item.short+' '+item.symbol+' '+item.group).toLowerCase().includes(query));
  host.replaceChildren();
  if(!items.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='No instruments match your search.';host.append(empty)}
- items.forEach(item=>host.append(createStockRow(item,QUOTES.get(item.symbol))));
+ renderGroupedStockRows(host,items,'No market references match this search.');
  setText('homeWatchCount',items.length+' market references · no individual equities · tap a row for source details');
  setText('homeSnapshotStamp',APP.yahooState==='loading'?'PUBLIC FEEDS · UPDATING':(APP.successCount||0)+' / '+WATCHLIST.length+' UPDATED');
  setText('homeDate',new Intl.DateTimeFormat('en-GB',{timeZone:TZ,day:'numeric',month:'long'}).format(new Date()));
@@ -1600,100 +1658,90 @@ async function loadFxReference(){
  renderQuality();
 }
 async function loadTreasuryCurve(){
- const year=Number(new Intl.DateTimeFormat('en-US',{timeZone:TZ,year:'numeric'}).format(new Date()));
- const month=Number(new Intl.DateTimeFormat('en-US',{timeZone:TZ,month:'2-digit'}).format(new Date()));
- const months=[{y:year,m:month},{y:month===1?year-1:year,m:month===1?12:month-1}];
- let observation=null,lastError='Treasury public table unavailable',source='U.S. Treasury TextView';
- for(const ym of months){
-  const mm=String(ym.m).padStart(2,'0');
-  const target='https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?field_tdr_date_value='+ym.y+'&field_tdr_date_value_month='+ym.y+mm+'&type=daily_treasury_yield_curve';
-  const urls=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
-  const controllers=urls.map(()=>new AbortController());
-  const requests=urls.map((url,i)=>fetch(url,{cache:'no-store',credentials:'omit',signal:controllers[i].signal}).then(async response=>{
+ const series={two:'DGS2',five:'DGS5',ten:'DGS10',thirty:'DGS30'};
+ const target='https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2%2CDGS5%2CDGS10%2CDGS30';
+ const routes=[target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target),'https://proxy.cors.dev/'+target];
+ let observation=null,lastError='FRED H.15 CSV unavailable';
+ for(const route of routes){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8500);
+  try{
+   const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'text/csv,text/plain,*/*'}});
    if(!response.ok)throw new Error('HTTP '+response.status);
-   const text=await response.text();if(text.length<3000)throw new Error('Treasury response incomplete');return text;
-  }));
-  try{
-   const markup=await Promise.any(requests);controllers.forEach(c=>c.abort());
-   const doc=new DOMParser().parseFromString(markup,'text/html');let candidates=[];
-   for(const table of [...doc.querySelectorAll('table')]){
-    const rows=[...table.querySelectorAll('tr')];if(rows.length<2)continue;
-    let headerIndex=-1,headers=[];
-    for(let i=0;i<Math.min(rows.length,6);i++){
-     const cells=[...rows[i].querySelectorAll('th,td')].map(x=>x.textContent.trim());
-     const normalized=cells.map(x=>x.toLowerCase().replace(/[^a-z0-9]/g,''));
-     if(normalized.includes('2yr')&&normalized.includes('5yr')&&normalized.includes('10yr')&&normalized.includes('30yr')){headerIndex=i;headers=normalized;break}
+   const csv=(await response.text()).replace(/\r/g,'').trim();
+   const lines=csv.split('\n');if(lines.length<2)throw new Error('FRED CSV has no observations');
+   const header=lines.shift().split(',').map(x=>x.trim().toUpperCase());
+   const dateIndex=header.findIndex(x=>x==='DATE'||x==='OBSERVATION_DATE');
+   const dateCol=dateIndex>=0?dateIndex:0;
+   const found={};
+   Object.entries(series).forEach(([key,seriesName])=>{
+    const index=header.indexOf(seriesName);
+    if(index<0)return;
+    for(let rowIndex=lines.length-1;rowIndex>=0;rowIndex--){
+     const cells=lines[rowIndex].split(',');
+     const date=String(cells[dateCol]||'').trim();
+     const raw=String(cells[index]||'').trim();
+     if(!date||raw===''||raw==='.'||raw==='NA')continue;
+     const value=Number(raw);
+     if(!Number.isFinite(value)||value<=0)continue;
+     const check=new Date(date+'T12:00:00Z');
+     if(Number.isNaN(check.getTime()))continue;
+     found[key]={value,date,dayKey:date};
+     break;
     }
-    if(headerIndex<0)continue;
-    const i2=headers.indexOf('2yr'),i5=headers.indexOf('5yr'),i10=headers.indexOf('10yr'),i30=headers.indexOf('30yr');
-    for(const row of rows.slice(headerIndex+1)){
-     const cells=[...row.querySelectorAll('td,th')].map(x=>x.textContent.trim());
-     const dm=(cells[0]||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(!dm)continue;
-     const date=new Date(Date.UTC(+dm[3],+dm[1]-1,+dm[2]));
-     const val=i=>i>=0?Number(String(cells[i]||'').replace(/[^0-9.\-]/g,'')):NaN;
-     const values={two:val(i2),five:val(i5),ten:val(i10),thirty:val(i30)};
-     if(Object.values(values).every(Number.isFinite))candidates.push({date,values});
-    }
-   }
-   if(!candidates.length)throw new Error('Treasury table missing 2Y/5Y/10Y/30Y rows');
-   candidates.sort((a,b)=>b.date-a.date);observation=candidates[0];break;
-  }catch(error){
-   const reason=error?.errors?.map(x=>String(x?.message||x)).slice(0,2).join(' | ')||error?.message||String(error);
-   lastError=String(reason).slice(0,140);
-  }finally{controllers.forEach(c=>c.abort())}
-  if(observation)break;
+   });
+   if(!Object.keys(found).length)throw new Error('No valid FRED tenor observation found');
+   observation={values:{},dates:{},found};
+   Object.keys(series).forEach(key=>{
+    observation.values[key]=found[key]?.value??null;
+    observation.dates[key]=found[key]?.date??null;
+   });
+   source='FRED · Federal Reserve H.15';lastError='';break;
+  }catch(error){lastError=error?.name==='AbortError'?'FRED request timeout':String(error?.message||error).slice(0,140)}
+  finally{clearTimeout(timer)}
  }
- // Public FRED CSV fallback: DGS2/DGS5/DGS10/DGS30 are daily H.15 series.
- if(!observation){
-  const target='https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2%2CDGS5%2CDGS10%2CDGS30';
-  const urls=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
-  const controllers=urls.map(()=>new AbortController());
-  const requests=urls.map((url,i)=>fetch(url,{cache:'no-store',credentials:'omit',signal:controllers[i].signal}).then(async response=>{
-   if(!response.ok)throw new Error('FRED HTTP '+response.status);
-   return await response.text();
-  }));
-  try{
-   const csv=await Promise.any(requests);controllers.forEach(c=>c.abort());
-   const lines=csv.replace(/\r/g,'').trim().split('\n'),header=lines.shift().split(',');
-   const indexes={two:header.indexOf('DGS2'),five:header.indexOf('DGS5'),ten:header.indexOf('DGS10'),thirty:header.indexOf('DGS30')};
-   if(Object.values(indexes).some(i=>i<0))throw new Error('FRED CSV missing DGS columns');
-   for(let i=lines.length-1;i>=0;i--){
-    const cells=lines[i].split(','),dateValue=cells[0],date=new Date(dateValue+'T12:00:00Z');
-    const val=key=>{const raw=(cells[indexes[key]]||'').trim();return raw===''||raw==='.'?NaN:Number(raw)};
-    const values={two:val('two'),five:val('five'),ten:val('ten'),thirty:val('thirty')};
-    if(!Number.isNaN(date.getTime())&&Object.values(values).every(Number.isFinite)){observation={date,values};source='FRED · Federal Reserve H.15';break}
-   }
-   if(!observation)throw new Error('FRED CSV contains no complete daily yield row');
-  }catch(error){
-   const reason=error?.errors?.map(x=>String(x?.message||x)).slice(0,2).join(' | ')||error?.message||String(error);
-   lastError=lastError+' · FRED fallback: '+String(reason).slice(0,130);
-  }finally{controllers.forEach(c=>c.abort())}
- }
+ const formatDate=date=>date?new Intl.DateTimeFormat('en-GB',{timeZone:TZ,day:'2-digit',month:'short',year:'numeric'}).format(new Date(date+'T12:00:00Z')):'—';
+ const setTenor=(key,id,dateId)=>{
+  const value=observation?.values?.[key],date=observation?.dates?.[key];
+  setText(id,Number.isFinite(value)?value.toFixed(2)+'%':'—');
+  if(dateId)setText(dateId,date?formatDate(date):'No observation');
+ };
  if(observation){
-  const v=observation.values,spread=v.ten-v.two;
-  setText('tsy2',v.two.toFixed(2)+'%');setText('tsy5',v.five.toFixed(2)+'%');setText('tsy10',v.ten.toFixed(2)+'%');setText('tsy30',v.thirty.toFixed(2)+'%');
-  setText('tsySpread',(spread>0?'+':'')+spread.toFixed(2)+' pp');
-  setText('tsyDate',source+' · '+new Intl.DateTimeFormat('en-GB',{timeZone:TZ,dateStyle:'medium'}).format(observation.date)+' · daily close');
-  setText('tsyStatus',source.startsWith('FRED')?'FRED · DAILY':'TREASURY · DAILY');
+  setTenor('two','tsy2','tsy2Date');setTenor('five','tsy5','tsy5Date');
+  setTenor('ten','tsy10','tsy10Date');setTenor('thirty','tsy30','tsy30Date');
+  const two=observation.values.two,ten=observation.values.ten;
+  const spreadAvailable=Number.isFinite(two)&&Number.isFinite(ten)&&observation.dates.two===observation.dates.ten;
+  setText('tsySpread',spreadAvailable?((ten-two)>0?'+':'')+(ten-two).toFixed(2)+' pp':'—');
+  const dates=Object.entries(observation.dates).filter(([,date])=>date).map(([key,date])=>key.toUpperCase()+' '+formatDate(date));
+  setText('tsyDate',source+' · '+dates.join(' · ')+' · daily close');
+  const available=Object.values(observation.values).filter(Number.isFinite).length;
+  setText('tsyStatus',available===4?'FRED · 4 TENORS':'FRED · PARTIAL');
   const errorNode=document.getElementById('tsyError');if(errorNode)errorNode.hidden=true;
-  APP.tsyState='loaded';APP.tsySource=source;APP.tsyError='';
-  saveJSON('apis_browser_treasury',{...v,date:observation.date.toISOString(),retrievedAt:Date.now(),source});
+  APP.tsyState=available?'loaded':'unavailable';APP.tsySource=source;APP.tsyError='';
+  saveJSON('apis_browser_treasury',{values:observation.values,dates:observation.dates,retrievedAt:Date.now(),source});
  }else{
-  APP.tsyError=lastError;const cache=loadJSON('apis_browser_treasury',null);
-  if(cache&&cache.date&&Number.isFinite(Number(cache.ten))){
-   const spread=Number(cache.ten)-Number(cache.two);
-   setText('tsy2',Number(cache.two).toFixed(2)+'%');setText('tsy5',Number(cache.five).toFixed(2)+'%');setText('tsy10',Number(cache.ten).toFixed(2)+'%');setText('tsy30',Number(cache.thirty).toFixed(2)+'%');
-   setText('tsySpread',(spread>0?'+':'')+spread.toFixed(2)+' pp');
-   setText('tsyDate','STALE · '+(cache.source||'last official observation')+' · '+new Intl.DateTimeFormat('en-GB',{timeZone:TZ,dateStyle:'medium'}).format(new Date(cache.date))+' · refresh failed');
-   setText('tsyStatus','STALE DATA');APP.tsyState='cached';APP.tsySource=cache.source||'STALE';
+  APP.tsyError=lastError;
+  const cache=loadJSON('apis_browser_treasury',null);
+  if(cache?.values){
+   setText('tsy2',Number.isFinite(cache.values.two)?cache.values.two.toFixed(2)+'%':'—');
+   setText('tsy5',Number.isFinite(cache.values.five)?cache.values.five.toFixed(2)+'%':'—');
+   setText('tsy10',Number.isFinite(cache.values.ten)?cache.values.ten.toFixed(2)+'%':'—');
+   setText('tsy30',Number.isFinite(cache.values.thirty)?cache.values.thirty.toFixed(2)+'%':'—');
+   setText('tsy2Date',formatDate(cache.dates?.two));setText('tsy5Date',formatDate(cache.dates?.five));
+   setText('tsy10Date',formatDate(cache.dates?.ten));setText('tsy30Date',formatDate(cache.dates?.thirty));
+   const spread=cache.values.ten-cache.values.two;
+   setText('tsySpread',Number.isFinite(spread)&&cache.dates?.ten===cache.dates?.two?(spread>0?'+':'')+spread.toFixed(2)+' pp':'—');
+   setText('tsyDate','STALE · '+(cache.source||'FRED')+' · last stored provider observations');
+   setText('tsyStatus','STALE DATA');APP.tsyState='cached';APP.tsySource=cache.source||'FRED';
   }else{
    ['tsy2','tsy5','tsy10','tsy30','tsySpread'].forEach(id=>setText(id,'—'));
+   ['tsy2Date','tsy5Date','tsy10Date','tsy30Date'].forEach(id=>setText(id,'No observation'));
    setText('tsyDate','No official Treasury/FRED observation was received.');setText('tsyStatus','UNAVAILABLE');APP.tsyState='unavailable';
   }
   const errorNode=document.getElementById('tsyError');if(errorNode){errorNode.hidden=false;errorNode.textContent='Connection detail: '+lastError+' · The dashboard will retry automatically.'}
  }
  renderQuality();
 }
+
 function zonedDateToUtc(year,month,day,hour,minute,timeZone){
  const values=[year,month,day,hour,minute].map(Number);
  if(values.some(value=>!Number.isInteger(value)))return null;
@@ -1746,139 +1794,249 @@ function macroImpact(title){
  if(/producer price index|\bppi\b|job openings and labor turnover|\bjolts\b|retail sales|initial claims|trade in goods and services/i.test(title))return 'MEDIUM';
  return null;
 }
+function calendarWibDayKey(date){
+ return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
+}
+function calendarDateKeyPlus(days){
+ const today=calendarWibDayKey(new Date()),parts=today.split('-').map(Number);
+ return new Date(Date.UTC(parts[0],parts[1]-1,parts[2]+days)).toISOString().slice(0,10);
+}
+function classifyCalendarCategory(title){
+ const t=String(title||'').toLowerCase();
+ if(/speaks|speech|testimony|remarks|address by|press conference|president .* speak|member .* speak/.test(t))return 'Speeches';
+ if(/cpi|consumer price|inflation|ppi|producer price|pce price|price index|inflation expectations/.test(t))return 'Inflation';
+ if(/employment|payroll|jobless|unemployment|claimant|wage|earnings|labour market|labor market|jolts/.test(t))return 'Employment';
+ if(/gdp|gross domestic|industrial production|production index|retail sales|trade balance|exports|imports|durable goods|factory orders|capacity utilization|business inventories|current account/.test(t))return 'Growth';
+ if(/central bank|fomc|monetary policy|interest rate|rate decision|policy meeting|minutes|board of governor|rdg|ecb|rba|rbnz|boj|boe|snb|pboc/.test(t))return 'Central Bank';
+ if(/bond|treasury|auction|yield|government debt|coupon/.test(t))return 'Bonds';
+ if(/housing|home sales|house price|building permits|mortgage|property|housing starts/.test(t))return 'Housing';
+ if(/consumer confidence|consumer sentiment|consumer survey|uom|gfk|expectations survey/.test(t))return 'Consumer Surveys';
+ if(/business confidence|business sentiment|pmi|manufacturing index|services index|business survey|empire state|philly fed|zew|ifo|cbi/.test(t))return 'Business Surveys';
+ return 'Misc';
+}
+const CALENDAR_COUNTRY_NAMES={AUD:'Australia',CAD:'Canada',CHF:'Switzerland',CNY:'China',EUR:'Euro Area',GBP:'United Kingdom',IDR:'Indonesia',JPY:'Japan',NZD:'New Zealand',USD:'United States'};
+const CALENDAR_FLAGS={AUD:'🇦🇺',CAD:'🇨🇦',CHF:'🇨🇭',CNY:'🇨🇳',EUR:'🇪🇺',GBP:'🇬🇧',IDR:'🇮🇩',JPY:'🇯🇵',NZD:'🇳🇿',USD:'🇺🇸'};
+function calendarSourceLink(source){
+ const s=String(source||'').toLowerCase();
+ if(s.includes('xoomar'))return 'https://xoomar.com/economic-calendar-api';
+ if(s.includes('bank indonesia'))return 'https://www.bi.go.id/id/publikasi/Kalender/Default.aspx';
+ return 'https://www.forexfactory.com/calendar';
+}
+function normalizeFxCalendarEvent(raw){
+ const date=new Date(raw.date||raw.scheduledAt||raw.scheduled_at||'');
+ if(Number.isNaN(date.getTime()))return null;
+ const country=String(raw.country||raw.currency||raw.currencyCode||'USD').toUpperCase();
+ const impact=String(raw.impact||raw.importance||'').toUpperCase();
+ if(!['HIGH','MEDIUM'].includes(impact))return null;
+ const title=String(raw.title||raw.eventName||raw.name||'').trim();if(!title)return null;
+ const source=raw.sourceLabel||'Forex Factory · public calendar';
+ return {
+  id:raw.id||country+'|'+title+'|'+date.toISOString(),title,country,
+  countryName:CALENDAR_COUNTRY_NAMES[country]||country,date,dateKey:calendarWibDayKey(date),
+  impact,category:classifyCalendarCategory(title),
+  previous:raw.previous??'',forecast:raw.forecast??'',actual:raw.actual??'',
+  unit:raw.unit||'',periodLabel:raw.periodLabel||'',
+  timeLabel:new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hour12:false}).format(date)+' WIB',
+  source,sourceLink:raw.sourceLink||calendarSourceLink(source),sourceNote:raw.sourceNote||'Schedule / consensus'
+ };
+}
+async function fetchCalendarJSON(url,label){
+ const routes=[url,'https://corsproxy.io/?url='+encodeURIComponent(url),'https://api.allorigins.win/raw?url='+encodeURIComponent(url)];
+ let lastError=label+' unavailable';
+ for(const route of routes){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9500);
+  try{
+   const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json,text/plain,*/*'}});
+   if(!response.ok)throw new Error('HTTP '+response.status);
+   const text=await response.text(),payload=JSON.parse(text);
+   if(payload===null||payload===undefined)throw new Error('Empty '+label+' payload');
+   return payload;
+  }catch(error){lastError=error?.name==='AbortError'?'timeout':String(error?.message||error).slice(0,110)}
+  finally{clearTimeout(timer)}
+ }
+ throw new Error(label+': '+lastError);
+}
+function mergeUsCalendarActuals(factoryEvents,agencyEvents){
+ const merged=factoryEvents.slice();
+ const normalize=text=>String(text||'').toLowerCase().replace(/\([^)]*\)/g,' ').replace(/[^a-z0-9]+/g,' ').trim();
+ agencyEvents.forEach(agency=>{
+  const a=normalize(agency.title);
+  const candidates=merged.map((item,index)=>{
+   if(item.country!=='USD'||item.dateKey!==agency.dateKey)return {index,score:0};
+   const b=normalize(item.title),aw=a.split(' ').filter(Boolean),bw=b.split(' ').filter(Boolean);
+   let score=aw.length&&bw.length?aw.filter(word=>bw.includes(word)).length/Math.max(aw.length,bw.length):0;
+   if(a.includes('jobless claims')&&b.includes('unemployment claims'))score=Math.max(score,.9);
+   if(a.includes('unemployment claims')&&b.includes('jobless claims'))score=Math.max(score,.9);
+   if(a.includes('retail sales')&&b.includes('retail sales'))score=Math.max(score,.8);
+   return {index,score};
+  }).sort((x,y)=>y.score-x.score);
+  const match=candidates[0]&&candidates[0].score>=.45?merged[candidates[0].index]:null;
+  if(match){
+   match.previous=agency.previous!==''&&agency.previous!==null?agency.previous:match.previous;
+   match.actual=agency.actual!==''&&agency.actual!==null?agency.actual:match.actual;
+   match.unit=agency.unit||match.unit;
+   match.source='Forex Factory + XOOMAR / U.S. agencies';
+   match.sourceLink='https://xoomar.com/economic-calendar-api';
+   match.sourceNote='Forecast: Forex Factory · Previous / Actual: XOOMAR';
+   if(agency.periodLabel)match.periodLabel=agency.periodLabel;
+  }else merged.push({...agency});
+ });
+ return merged;
+}
+function buildIndonesiaCalendarEvents(){
+ const official='https://www.bi.go.id/id/publikasi/Kalender/Default.aspx';
+ const rows=[
+  {day:'2026-11-17',title:'Bank Indonesia · Board of Governors Meeting (day 1)',impact:'MEDIUM'},
+  {day:'2026-11-18',title:'Bank Indonesia · RDG monetary policy decision (day 2)',impact:'HIGH'},
+  {day:'2026-12-15',title:'Bank Indonesia · Board of Governors Meeting (day 1)',impact:'MEDIUM'},
+  {day:'2026-12-16',title:'Bank Indonesia · RDG monetary policy decision (day 2)',impact:'HIGH'}
+ ];
+ return rows.map(row=>{
+  const date=new Date(row.day+'T00:00:00+07:00');
+  return {
+   id:'BI|'+row.day+'|'+row.title,title:row.title,country:'IDR',countryName:'Indonesia',
+   date,dateKey:row.day,impact:row.impact,category:'Central Bank',
+   previous:'',forecast:'',actual:'',unit:'',periodLabel:'',
+   timeLabel:'Time TBA · official calendar date only',
+   source:'Bank Indonesia · official RDG annual calendar',sourceLink:official,
+   sourceNote:'Official schedule · no release time published'
+  };
+ });
+}
+function calendarRefreshStatus(){
+ const errors=APP.calendarErrors||[];
+ const status=APP.calendarSourcesOK||0;
+ setText('calendarUpdatedAt',(status?status+' sources · ':'')+'Updated '+new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit'}).format(new Date())+' WIB');
+ if(errors.length)setText('calendarCount', (APP.calendarEvents||[]).length+' releases · partial source coverage');
+}
 function renderMacroCalendar(){
  const host=document.getElementById('calendarEvents');if(!host)return;
  host.replaceChildren();
- const mode=document.getElementById('calendarImpact')?.value||'high',now=Date.now(),cutoff=now+75*86400000;
- const events=(APP.calendarEvents||[]).filter(item=>item.date.getTime()>=now-2*3600000&&item.date.getTime()<=cutoff&&(mode==='all'||item.impact==='HIGH')).sort((a,b)=>a.date-b.date);
+ const selectedImpacts=[...document.querySelectorAll('[data-cal-impact]:checked')].map(el=>el.dataset.calImpact);
+ const selectedCountries=[...document.querySelectorAll('[data-cal-country]:checked')].map(el=>el.dataset.calCountry);
+ const selectedCategories=[...document.querySelectorAll('[data-cal-category]:checked')].map(el=>el.dataset.calCategory);
+ const today=calendarWibDayKey(new Date()),end=calendarDateKeyPlus((APP.calendarRangeDays||3)-1);
+ const events=(APP.calendarEvents||[]).filter(item=>
+  item.dateKey>=today&&item.dateKey<=end&&
+  selectedImpacts.includes(item.impact)&&selectedCountries.includes(item.country)&&selectedCategories.includes(item.category)
+ ).sort((a,b)=>a.date-b.date);
+ const rangeButtons=document.querySelectorAll('[data-cal-range]');
+ rangeButtons.forEach(button=>{
+  const active=Number(button.dataset.calRange)===(APP.calendarRangeDays||3);
+  button.classList.toggle('active',active);button.setAttribute('aria-pressed',active?'true':'false');
+ });
+ const impactCount=selectedImpacts.length,countryCount=selectedCountries.length,categoryCount=selectedCategories.length;
+ setText('calendarFilterSummary',(impactCount===2?'High + Medium':impactCount?selectedImpacts.join(' + '):'No impact')+' · '+(countryCount===10?'all countries':countryCount+' currencies')+' · '+(categoryCount===10?'all categories':categoryCount+' types'));
  if(!events.length){
   const empty=document.createElement('div');empty.className='empty-state';
-  empty.textContent=(APP.calendarEvents||[]).length?'No major releases in the selected period.':'No official calendar data was received.';
+  empty.textContent=(APP.calendarEvents||[]).length?'No releases match these filters in the selected '+(APP.calendarRangeDays||3)+'D window.':'No economic events were received from the public calendar providers.';
   host.append(empty);
-  if(!(APP.calendarEvents||[]).length){
-   const links=document.createElement('div');links.className='calendar-source-links';
-   [['BLS release calendar','https://www.bls.gov/schedule/'],['BEA release schedule','https://www.bea.gov/news/schedule'],['Federal Reserve calendar','https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm']].forEach(([label,url])=>{const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';a.textContent=label+' ↗';links.append(a)});
-   host.append(links);
-  }
  }
- events.forEach(item=>{
-  const row=document.createElement('div');row.className='event-row';
-  const date=document.createElement('div');date.className='event-date';
-  date.textContent=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,day:'2-digit',month:'short'}).format(item.date);
-  const time=document.createElement('small');
-  time.textContent=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hour12:false}).format(item.date)+' WIB';
-  date.append(time);
-  const detail=document.createElement('div'),title=document.createElement('div');
-  title.className='event-title';title.textContent=item.title;
-  const meta=document.createElement('div');meta.className='event-meta';meta.textContent=item.source+' · '+item.region;
-  detail.append(title,meta);
-  const impact=document.createElement('span');impact.className='impact-pill'+(item.impact==='MEDIUM'?' medium':'');impact.textContent=item.impact;
-  row.append(date,detail,impact);
-  if(item.link){row.style.cursor='pointer';row.addEventListener('click',()=>window.open(item.link,'_blank','noopener'))}
-  host.append(row);
+ const dayGroups=new Map();
+ events.forEach(item=>{if(!dayGroups.has(item.dateKey))dayGroups.set(item.dateKey,[]);dayGroups.get(item.dateKey).push(item)});
+ dayGroups.forEach((dayEvents,dayKey)=>{
+  const group=document.createElement('section');group.className='calendar-day-group';
+  const head=document.createElement('div');head.className='calendar-day-heading';
+  const date=new Date(dayKey+'T12:00:00+07:00');
+  const title=document.createElement('strong');title.textContent=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,weekday:'long',day:'2-digit',month:'long'}).format(date);
+  const count=document.createElement('span');count.textContent=dayEvents.length+' releases';
+  head.append(title,count);group.append(head);
+  dayEvents.forEach(item=>{
+   const card=document.createElement('article');card.className='calendar-event-card '+(item.impact==='HIGH'?'impact-high':'impact-medium');
+   const top=document.createElement('div');top.className='calendar-event-top';
+   const country=document.createElement('span');country.className='calendar-country';
+   country.textContent=(CALENDAR_FLAGS[item.country]||'🌐')+' '+item.country+' · '+item.countryName;
+   const time=document.createElement('time');time.textContent=item.timeLabel;
+   const impact=document.createElement('span');impact.className='calendar-event-impact '+(item.impact==='HIGH'?'high':'medium');
+   impact.textContent=item.impact;
+   top.append(country,time,impact);
+   const name=document.createElement('strong');name.className='calendar-event-name';name.textContent=item.title;
+   const meta=document.createElement('div');meta.className='calendar-event-meta';
+   const category=document.createElement('span');category.textContent=item.category;
+   const period=document.createElement('span');period.textContent=item.periodLabel||'';
+   meta.append(category);if(item.periodLabel)meta.append(period);
+   const values=document.createElement('div');values.className='calendar-event-values';
+   [['PREVIOUS',item.previous],['FORECAST',item.forecast],['ACTUAL',item.actual]].forEach(([label,value])=>{
+    const metric=document.createElement('div');metric.className='calendar-event-metric '+label.toLowerCase();
+    const small=document.createElement('small');small.textContent=label;
+    const strong=document.createElement('strong');strong.textContent=value===null||value===undefined||value===''?'—':String(value)+(item.unit&&label==='ACTUAL'?' '+item.unit:'');
+    metric.append(small,strong);values.append(metric);
+   });
+   const footer=document.createElement('div');footer.className='calendar-event-footer';
+   const source=document.createElement('a');source.href=item.sourceLink||calendarSourceLink(item.source);source.target='_blank';source.rel='noopener';source.textContent=item.source||'Public calendar source';
+   const note=document.createElement('span');note.textContent=item.sourceNote||'Public schedule';
+   footer.append(source,note);
+   card.append(top,name,meta,values,footer);group.append(card);
+  });
+  host.append(group);
  });
- setText('calendarCount',events.length+' scheduled releases · '+(mode==='high'?'high impact only':'high + medium'));
+ setText('calendarCount',events.length+' high / medium releases · '+(APP.calendarRangeDays||3)+'D · current day retained');
 }
-async function loadMacroCalendar(){
-
- try{ const sources=[
-  'https://www.bls.gov/schedule/news_release/bls.ics',
-  'https://www.bea.gov/news/schedule/',
-  'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm'
- ];
- const fetchPublic=async target=>{
-  const routes=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
-  let lastError='No public response';
-  for(const route of routes){
-   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
-   try{
-    const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal});
-    if(!response.ok)throw new Error('HTTP '+response.status);
-    return await response.text();
-   }catch(error){lastError=error?.name==='AbortError'?'Request timed out':String(error?.message||error).slice(0,100)}
-   finally{clearTimeout(timer)}
-  }
-  throw new Error(lastError);
- };
- const results=await Promise.allSettled(sources.map(fetchPublic)),events=[],errors=[];
- if(results[0].status==='fulfilled'){
-  const ics=results[0].value.replace(/\r/g,'').replace(/\n[ \t]/g,'');
-  const blocks=ics.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g)||[];
-  blocks.forEach(block=>{
-   const getProperty=name=>{
-    const line=block.split('\n').find(value=>value.startsWith(name+':')||value.startsWith(name+';'));
-    if(!line)return null;
-    const colon=line.indexOf(':');if(colon<0)return null;
-    const left=line.slice(0,colon),value=line.slice(colon+1).trim();
-    const zone=left.match(/;TZID=([^;]+)/);
-    return {zone:zone?zone[1]:null,value:value.replace(/\\n/g,' ').replace(/\\,/g,',').replace(/\\;/g,';')};
-   };
-   const summary=getProperty('SUMMARY'),start=getProperty('DTSTART');
-   if(!summary||!start)return;
-   const impact=macroImpact(summary.value);if(!impact)return;
-   const date=parseIcsDate(start.value,start.zone||'America/New_York');if(!date)return;
-   let link='https://www.bls.gov/schedule/';
-   if(/consumer price/i.test(summary.value))link='https://www.bls.gov/schedule/news_release/cpi.htm';
-   else if(/employment situation/i.test(summary.value))link='https://www.bls.gov/schedule/news_release/empSit.htm';
-   else if(/producer price/i.test(summary.value))link='https://www.bls.gov/schedule/news_release/ppi.htm';
-   else if(/job openings/i.test(summary.value))link='https://www.bls.gov/schedule/news_release/jolts.htm';
-   events.push({title:summary.value,date,impact,source:'Bureau of Labor Statistics',region:'United States',link});
+async function loadMacroCalendar(force=false){
+ const last=Number(loadJSON('apis_calendar_last_success',0));
+ const cached=loadJSON('apis_browser_calendar_cache',null);
+ if(!force&&cached&&cached.savedAt&&Date.now()-cached.savedAt<15*60*1000){
+  APP.calendarEvents=Array.isArray(cached.events)?cached.events.map(event=>({...event,date:new Date(event.date)})).filter(event=>!Number.isNaN(event.date.getTime())):[];
+  APP.calendarState=APP.calendarEvents.length?'loaded':'unavailable';APP.calendarErrors=cached.errors||[];APP.calendarSourcesOK=cached.sourcesOK||0;
+  renderMacroCalendar();setText('calendarUpdatedAt','Cached '+new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit'}).format(new Date(cached.savedAt))+' WIB · refresh after 15 min');
+  renderQuality();return;
+ }
+ APP.calendarState='loading';setText('calendarUpdatedAt','Refreshing Forex Factory / XOOMAR / Bank Indonesia…');
+ const today=calendarWibDayKey(new Date());
+ const ffUrl='https://nfs.faireconomy.media/ff_calendar_thisweek.json';
+ const highUrl='https://xoomar.com/api/markets/calendar?importance=high';
+ const mediumUrl='https://xoomar.com/api/markets/calendar?importance=med';
+ const results=await Promise.allSettled([
+  fetchCalendarJSON(ffUrl,'Forex Factory'),
+  fetchCalendarJSON(highUrl,'XOOMAR high-impact'),
+  fetchCalendarJSON(mediumUrl,'XOOMAR medium-impact')
+ ]);
+ const errors=[],factory=[],agency=[];
+ if(results[0].status==='fulfilled'&&Array.isArray(results[0].value)){
+  results[0].value.forEach(raw=>{
+   const item=normalizeFxCalendarEvent(raw);
+   if(item)factory.push(item);
   });
- }else errors.push('BLS: '+String(results[0].reason?.message||results[0].reason));
- if(results[1].status==='fulfilled'){
-  const doc=new DOMParser().parseFromString(results[1].value,'text/html');
-  const rows=[...doc.querySelectorAll('tr')];
-  rows.forEach(row=>{
-   const cells=[...row.querySelectorAll('th,td')].map(cell=>cell.textContent.trim()).filter(Boolean);
-   if(!cells.length)return;
-   const title=cells.find(value=>/GDP\s*\((Advance|Second|Third) Estimate|Gross Domestic Product.*(Advance|Second|Third)|Personal Income and Outlays/i.test(value));
-   if(!title)return;
-   const impact=macroImpact(title);if(!impact)return;
-   const combined=cells.join(' | ');
-   const dateMatch=combined.match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})\b/i);
-   const timeMatch=combined.match(/\b(\d{1,2}):(\d{2})\s*(AM|PM)\b/i);
-   if(!dateMatch)return;
-   const monthNames=['january','february','march','april','may','june','july','august','september','october','november','december'];
-   const month=monthNames.indexOf(dateMatch[1].toLowerCase())+1,day=Number(dateMatch[2]);
-   let year=Number((combined.match(/\b20\d{2}\b/)||[])[0])||new Date().getFullYear();
-   if(month<new Date().getMonth()+1-1&&year===new Date().getFullYear())year++;
-   let hour=timeMatch?Number(timeMatch[1]):8,minute=timeMatch?Number(timeMatch[2]):30;
-   if(month<1||day<1||day>31||hour<0||hour>12||minute<0||minute>59)return;
-   if(timeMatch&&timeMatch[3].toUpperCase()==='PM'&&hour<12)hour+=12;
-   if(timeMatch&&timeMatch[3].toUpperCase()==='AM'&&hour===12)hour=0;
-   const link=row.querySelector('a[href]');
-   events.push({title,date:zonedDateToUtc(year,month,day,hour,minute,'America/New_York'),impact,source:'Bureau of Economic Analysis',region:'United States',link:link?new URL(link.getAttribute('href'),sources[1]).href:sources[1]});
+ }else errors.push('Forex Factory: '+String(results[0].reason?.message||results[0].reason||'invalid weekly JSON'));
+ [1,2].forEach(index=>{
+  const result=results[index];if(result.status!=='fulfilled'){errors.push(String(result.reason?.message||result.reason));return}
+  const rows=result.value?.data;
+  if(!Array.isArray(rows)){errors.push('XOOMAR returned no data array');return}
+  rows.forEach(raw=>{
+   const date=new Date(raw.scheduledAt||'');if(Number.isNaN(date.getTime()))return;
+   const impact=String(raw.importance||'').toUpperCase()==='HIGH'?'HIGH':'MEDIUM';
+   agency.push(normalizeFxCalendarEvent({
+    title:raw.eventName,country:'USD',date:date.toISOString(),impact,
+    previous:raw.previous??'',forecast:raw.forecast??'',actual:raw.actual??'',
+    unit:raw.unit||'',periodLabel:raw.periodLabel||'',
+    sourceLabel:'XOOMAR · U.S. agency actuals',sourceLink:raw.canonicalUrl||'https://xoomar.com/economic-calendar-api',
+    sourceNote:'U.S. official previous / actual · forecast not supplied'
+   }));
   });
- }else errors.push('BEA: '+String(results[1].reason?.message||results[1].reason));
- if(results[2].status==='fulfilled'){
-  const doc=new DOMParser().parseFromString(results[2].value,'text/html'),textValue=doc.body?.innerText||doc.body?.textContent||'',year=new Date().getFullYear();
-  const marker=textValue.indexOf(year+' FOMC Meetings'),nextMarker=textValue.indexOf((year+1)+' FOMC Meetings',marker+1);
-  const block=marker>=0?textValue.slice(marker,nextMarker>marker?nextMarker:marker+4500):'';
-  const regex=/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})\s*[–-]\s*(\d{1,2})/g;
-  let match;
-  while((match=regex.exec(block))){
-   const monthNames=['january','february','march','april','may','june','july','august','september','october','november','december'];
-   const month=monthNames.indexOf(match[1].toLowerCase())+1,decisionDay=Number(match[3]);
-   events.push({title:'FOMC monetary policy decision & press conference',date:zonedDateToUtc(year,month,decisionDay,14,0,'America/New_York'),impact:'HIGH',source:'Federal Reserve',region:'United States',link:sources[2]});
-  }
- }else errors.push('Federal Reserve: '+String(results[2].reason?.message||results[2].reason));
+ });
+ const merged=mergeUsCalendarActuals(factory,agency).filter(Boolean);
+ const bi=buildIndonesiaCalendarEvents();
  const unique=new Map();
- events.forEach(item=>{if(!(item.date instanceof Date)||!Number.isFinite(item.date.getTime()))return;const key=item.title+'|'+item.date.toISOString().slice(0,10);if(!unique.has(key))unique.set(key,item)});
+ [...merged,...bi].forEach(item=>{
+  const key=[item.country,item.dateKey,String(item.title).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()].join('|');
+  if(!unique.has(key))unique.set(key,item);
+  else{
+   const previous=unique.get(key);
+   if(!previous.actual&&item.actual)previous.actual=item.actual;
+   if(!previous.previous&&item.previous)previous.previous=item.previous;
+   if(!previous.forecast&&item.forecast)previous.forecast=item.forecast;
+  }
+ });
  APP.calendarEvents=[...unique.values()].sort((a,b)=>a.date-b.date);
+ APP.calendarErrors=errors;APP.calendarSourcesOK=(results[0].status==='fulfilled'?1:0)+(results[1].status==='fulfilled'?1:0)+(results[2].status==='fulfilled'?1:0)+1;
  APP.calendarState=APP.calendarEvents.length?'loaded':'unavailable';
  APP.calendarError=errors.join(' · ');
- renderMacroCalendar();
- setText('calendarUpdatedAt',APP.calendarEvents.length?'Updated '+new Date().toLocaleTimeString('en-GB',{timeZone:TZ})+' WIB · BLS / BEA / Fed':APP.calendarError||'Official schedule unavailable');
- renderQuality();
- }catch(error){
-  APP.calendarState='error';APP.calendarError=String(error?.message||error).slice(0,180);APP.calendarEvents=[];
-  console.error('[APIS macro calendar]',APP.calendarError);
-  renderMacroCalendar();setText('calendarUpdatedAt','Calendar source unavailable · retry scheduled');
-  const host=document.getElementById('calendarEvents');
-  if(host&&!host.children.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='Official schedule temporarily unavailable. Use the source links below or retry.';host.append(empty)}
-  renderQuality();
- }
+ const serializable=APP.calendarEvents.map(item=>({...item,date:item.date.toISOString()}));
+ saveJSON('apis_browser_calendar_cache',{events:serializable,savedAt:Date.now(),errors,sourcesOK:APP.calendarSourcesOK});
+ saveJSON('apis_calendar_last_success',Date.now());
+ renderMacroCalendar();calendarRefreshStatus();renderQuality();
 }
+
 function classifyNews(title,source){
  const t=(title+' '+source).toLowerCase();
  if(/federal reserve|fomc|ecb|european central bank|bank of japan|boj|bank of england|bank indonesia|pboc|central bank|monetary policy|interest rate decision/.test(t))return 'Central Banks';
@@ -2197,11 +2355,28 @@ function initNewsControls(){
  if(toggle)toggle.checked=!!APP.newsAlertsOn;
 }
 function initCalendarControls(){
- const select=document.getElementById('calendarImpact');
- if(select)select.addEventListener('change',renderMacroCalendar);
- const button=document.getElementById('refreshCalendarBtn');
- if(button)button.onclick=loadMacroCalendar;
+ const filterRoot=document.getElementById('calendarFilterDrawer');
+ const eventRoot=document.querySelector('.calendar-terminal');
+ APP.calendarRangeDays=APP.calendarRangeDays||3;
+ if(filterRoot){
+  filterRoot.addEventListener('change',event=>{
+   if(event.target.matches('[data-cal-impact],[data-cal-country],[data-cal-category]'))renderMacroCalendar();
+  });
+  filterRoot.addEventListener('click',event=>{
+   const all=event.target.closest('[data-cal-all]'),none=event.target.closest('[data-cal-none]');
+   const control=all||none;if(!control)return;
+   const kind=control.dataset.calAll||control.dataset.calNone;
+   const selector=kind==='impact'?'[data-cal-impact]':kind==='country'?'[data-cal-country]':'[data-cal-category]';
+   filterRoot.querySelectorAll(selector).forEach(input=>{input.checked=!!all});
+   renderMacroCalendar();
+  });
+ }
+ if(eventRoot)eventRoot.addEventListener('click',event=>{
+  const range=event.target.closest('[data-cal-range]');if(range){APP.calendarRangeDays=Number(range.dataset.calRange)||3;renderMacroCalendar();return}
+  const refresh=event.target.closest('#refreshCalendarBtn');if(refresh)loadMacroCalendar(true);
+ });
 }
+
 ['refreshBtn','refreshTop','refreshHomeBtn'].forEach(id=>{const e=document.getElementById(id);if(e)e.onclick=()=>fetchQuoteBatch()});
 function safeInit(label,fn){
  try{

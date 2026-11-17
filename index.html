@@ -1361,9 +1361,9 @@ function parseTwseIndexReport(payload){
   const fieldIndex=pattern=>fields.findIndex(field=>pattern.test(String(field||'').replace(/<[^>]*>/g,'')));
   const nameIndex=fieldIndex(/^(指數|指數名稱|Index)$/i);
   const priceIndex=fieldIndex(/^(收盤指數|Closing Index|ClosingIndex)$/i);
-  const changeIndex=fieldIndex(/漲跌百分比|Change Percent|Change%/i);
+  const changeIndex=fieldIndex(/漲跌.*百分比|漲跌.*%|Change Percent|Change%/i);
   const signIndex=fieldIndex(/漲跌\(\+\/-\)|漲跌$|Change Sign/i);
-  const pointIndex=fieldIndex(/漲跌點數|Change Points/i);
+  const pointIndex=fieldIndex(/漲跌.*點數|Change Points/i);
   const dateIndex=fieldIndex(/^日期$|^Date$/i);
   if(nameIndex<0||priceIndex<0)continue;
   for(const row of rows){
@@ -1374,7 +1374,7 @@ function parseTwseIndexReport(payload){
    const price=Number(String(row[priceIndex]||'').replace(/[,\s]/g,''));
    if(!date||!Number.isFinite(price)||price<=0)continue;
    const signText=String(signIndex>=0?row[signIndex]||'':'').replace(/<[^>]*>/g,'').trim();
-   const signedText=value=>String(value??'').replace(/<[^>]*>/g,'').replace(/[−－﹣]/g,'-').replace(/[＋]/g,'+').replace(/[,，％%\s]/g,'').trim();
+   const signedText=value=>{const raw=String(value??'').replace(/<[^>]*>/g,'');const arrowSign=/[▼▽]/.test(raw)?'-':/[▲△]/.test(raw)?'+':'';return raw.replace(/[−－﹣]/g,'-').replace(/[＋]/g,'+').replace(/[▲△▼▽]/g,'').replace(/[,，％%\s]/g,'').trim()||arrowSign};
    const sign=signedText(signIndex>=0?row[signIndex]:'');
    const changeText=signedText(changeIndex>=0?row[changeIndex]:'');
    let changePct=changeText===''?NaN:Number(changeText);

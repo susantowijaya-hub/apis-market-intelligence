@@ -365,57 +365,47 @@ function restoreAuxCache(){
 /* Quote collection: Yahoo Finance chart endpoint through CORS.dev. No API key.
    CORS.dev is an external intermediary; this adapter is best-effort and not a licensed real-time feed. */
 async function fetchYahooQuote(item){
-  const encoded=encodeURIComponent(item.symbol);
-  const plans=[
-    {host:'query1.finance.yahoo.com',range:'1d',interval:'1m'},
-    {host:'query2.finance.yahoo.com',range:'1d',interval:'1m'},
-    {host:'query1.finance.yahoo.com',range:'5d',interval:'5m'},
-    {host:'query2.finance.yahoo.com',range:'5d',interval:'5m'},
-    {host:'query1.finance.yahoo.com',range:'1mo',interval:'1d'},
-    {host:'query2.finance.yahoo.com',range:'1mo',interval:'1d'}
-  ];
-  const errors=[];
-  for(const plan of plans){
-    const yahooUrl=`https://${plan.host}/v8/finance/chart/${encoded}?range=${plan.range}&interval=${plan.interval}&includePrePost=true`;
-    const proxyUrl='https://proxy.cors.dev/'+yahooUrl;
-    const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),12000);
-    try{
-      const response=await fetch(proxyUrl,{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',signal:controller.signal,headers:{'Accept':'application/json'}});
-      if(!response.ok){const proxyError=response.headers.get('X-Cors-Error');throw new Error(proxyError||`HTTP ${response.status}`)}
-      const body=await response.json(),result=body?.chart?.result?.[0];
-      if(!result?.meta)throw new Error(body?.chart?.error?.description||'No chart metadata');
-      const meta=result.meta,ts=Array.isArray(result.timestamp)?result.timestamp:[];
-      const quoteRows=result.indicators?.quote?.[0]||{},closes=Array.isArray(quoteRows.close)?quoteRows.close:[];
-      let lastIndex=-1;
-      for(let i=closes.length-1;i>=0;i--){if(num(closes[i])!==null){lastIndex=i;break}}
-      const barPrice=lastIndex>=0?num(closes[lastIndex]):null;
-      const barTime=lastIndex>=0?num(ts[lastIndex]):null;
-      const marketPrice=num(meta.regularMarketPrice);
-      const regularTime=num(meta.regularMarketTime);
-      const useMeta=marketPrice!==null&&(regularTime||0)>=(barTime||0);
-      const rawPrice=useMeta?marketPrice:barPrice;
-      const lastTimestamp=useMeta?regularTime:barTime;
-      const previous=num(meta.chartPreviousClose??meta.previousClose);
-      if(rawPrice===null||rawPrice<=0||!lastTimestamp)throw new Error('No valid price/provider timestamp');
-      const observedAge=Math.max(0,Date.now()/1000-lastTimestamp);
-      const marketState=String(meta.marketState||'UNKNOWN').toUpperCase();
-      const isOpen=['REGULAR','PRE','POST','PREPRE','POSTPOST'].includes(marketState);
-      const status=observedAge>48*3600?'STALE_OBSERVATION':(!isOpen||observedAge>20*60?'LAST_AVAILABLE_CLOSE':'DELAYED_PROVIDER');
-      return {
-        symbol:item.symbol,name:item.name,short:item.short,group:item.group,
-        price:rawPrice,previousClose:previous,currency:meta.currency||'',
-        exchange:meta.exchangeName||meta.fullExchangeName||'',
-        marketState,observedAt:lastTimestamp,observedAge,status,
-        intervalUsed:plan.interval,source:'Yahoo Finance chart via cors.dev',
-        sourceUrl:`https://finance.yahoo.com/quote/${encoded}/`,
-        retrievedAt:Date.now(),proxy:'proxy.cors.dev'
-      };
-    }catch(e){
-      errors.push(`${plan.host.split('.')[0]} ${plan.interval}: ${e?.name==='AbortError'?'timeout':String(e?.message||e).slice(0,90)}`);
-    }finally{clearTimeout(timeout)}
+ const encoded=encodeURIComponent(item.symbol);
+ const plans=[
+  {host:'query1.finance.yahoo.com',range:'1d',interval:'1m'},
+  {host:'query2.finance.yahoo.com',range:'1d',interval:'1m'},
+  {host:'query1.finance.yahoo.com',range:'5d',interval:'5m'},
+  {host:'query2.finance.yahoo.com',range:'5d',interval:'5m'},
+  {host:'query1.finance.yahoo.com',range:'1mo',interval:'1d'}
+ ];
+ const errors=[];
+ for(const plan of plans){
+  const target=`https://${plan.host}/v8/finance/chart/${encoded}?range=${plan.range}&interval=${plan.interval}&includePrePost=true`;
+  const routes=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
+  for(const route of routes){
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);
+   try{
+    const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    const payload=await response.json(),result=payload?.chart?.result?.[0];
+    if(!result?.meta)throw new Error(payload?.chart?.error?.description||'No quote metadata');
+    const meta=result.meta,ts=Array.isArray(result.timestamp)?result.timestamp:[];
+    const closes=result.indicators?.quote?.[0]?.close||[];
+    let idx=-1;for(let i=closes.length-1;i>=0;i--){if(num(closes[i])!==null){idx=i;break}}
+    const barPrice=idx>=0?num(closes[idx]):null,barTime=idx>=0?num(ts[idx]):null;
+    const marketPrice=num(meta.regularMarketPrice),regularTime=num(meta.regularMarketTime);
+    const useMeta=marketPrice!==null&&(regularTime||0)>=(barTime||0);
+    const price=useMeta?marketPrice:barPrice,observedAt=useMeta?regularTime:barTime;
+    const previous=num(meta.chartPreviousClose??meta.previousClose);
+    if(price===null||price<=0||!observedAt)throw new Error('Price/timestamp missing');
+    const age=Math.max(0,Date.now()/1000-observedAt),state=String(meta.marketState||'UNKNOWN').toUpperCase();
+    const open=['REGULAR','PRE','POST','PREPRE','POSTPOST'].includes(state);
+    const status=age>48*3600?'STALE_OBSERVATION':(!open||age>20*60?'LAST_AVAILABLE_CLOSE':'DELAYED_PROVIDER');
+    return {symbol:item.symbol,name:item.name,short:item.short,group:item.group,price,previousClose:previous,
+     currency:meta.currency||'',exchange:meta.exchangeName||meta.fullExchangeName||'',marketState:state,
+     observedAt,observedAge:age,status,intervalUsed:plan.interval,
+     source:'Yahoo Finance chart · public endpoint via CORS relay',
+     sourceUrl:`https://finance.yahoo.com/quote/${encoded}/`,retrievedAt:Date.now(),proxy:new URL(route).host};
+   }catch(e){errors.push(new URL(route).host+': '+(e?.name==='AbortError'?'timeout':String(e?.message||e).slice(0,65)))}
+   finally{clearTimeout(timer)}
   }
-  throw new Error(errors.slice(0,4).join(' | ')||'Yahoo intraday chart unavailable');
+ }
+ throw new Error(errors.slice(0,6).join(' | ')||'No free Yahoo endpoint responded');
 }
 async function fetchQuoteBatch(){
   if(APP.yahooState==='loading')return;
@@ -442,24 +432,36 @@ async function fetchQuoteBatch(){
 }
 function btcIsFresh(){if(!APP.btc)return false;const age=Date.now()-APP.btc.receivedAt;if(APP.btc.transport==='WEBSOCKET')return !!(typeof WebSocket!=='undefined'&&APP.ws&&APP.ws.readyState===WebSocket.OPEN&&age<=15000&&(Date.now()-APP.btc.observedAt)<=15000);return APP.btc.transport==='REST'&&age<=90000&&(Date.now()-APP.btc.observedAt)<=90000;}
 function quoteStatusClass(status){
-  if(['STALE_OBSERVATION','STALE_CACHE','UNAVAILABLE'].includes(status))return 'bad';
-  if(['LAST_AVAILABLE_CLOSE','DELAYED_PROVIDER'].includes(status))return 'warn';
-  return 'ok';
+ if(['STALE_OBSERVATION','STALE_CACHE','UNAVAILABLE'].includes(status))return 'bad';
+ if(['LAST_AVAILABLE_CLOSE','DELAYED_PROVIDER'].includes(status))return 'warn';
+ return 'ok';
 }
 function quoteStatusLabel(status){
-  return ({DELAYED_PROVIDER:'DELAYED',LAST_AVAILABLE_CLOSE:'LAST CLOSE',STALE_OBSERVATION:'STALE',STALE_CACHE:'CACHED / STALE',PROVIDER_QUOTE:'PROVIDER UPDATE'})[status]||String(status||'UNAVAILABLE').replaceAll('_',' ');
+ return ({DELAYED_PROVIDER:'DELAYED',LAST_AVAILABLE_CLOSE:'LAST CLOSE',STALE_OBSERVATION:'STALE',STALE_CACHE:'CACHED / STALE',PROVIDER_QUOTE:'PROVIDER UPDATE'})[status]||String(status||'UNAVAILABLE').replaceAll('_',' ');
 }
 function updateFeedState(){
-  const dot=document.getElementById('feedDot'),label=document.getElementById('feedState');
-  const cryptoLive=!!(APP.btc&&APP.btc.transport==='WEBSOCKET'&&btcIsFresh());
-  const freshProvider=[...QUOTES.values()].filter(q=>q.activeRunId===APP.currentRunId&&q.status==='DELAYED_PROVIDER').length;
-  const closed=[...QUOTES.values()].filter(q=>q.activeRunId===APP.currentRunId&&q.status==='LAST_AVAILABLE_CLOSE').length;
-  dot.className='dot'+(cryptoLive?' live':freshProvider?' warn':'');
-  const suffix=APP.yahooState==='loading'?' · updating':APP.yahooState==='partial'?' · partial':APP.yahooState==='unavailable'?' · unavailable':'';
-  label.textContent=(cryptoLive?'BTC LIVE · ':'')+`Yahoo ${APP.successCount||0}/19`+(freshProvider?' · delayed '+freshProvider:'')+(closed?' · close '+closed:'')+suffix;
+ const dot=document.getElementById('feedDot'),label=document.getElementById('feedState');
+ const cryptoLive=!!(APP.btc&&APP.btc.transport==='WEBSOCKET'&&btcIsFresh());
+ const delayed=[...QUOTES.values()].filter(q=>q.activeRunId===APP.currentRunId&&q.status==='DELAYED_PROVIDER').length;
+ const closed=[...QUOTES.values()].filter(q=>q.activeRunId===APP.currentRunId&&q.status==='LAST_AVAILABLE_CLOSE').length;
+ if(dot)dot.className='dot'+(cryptoLive?' live':delayed?' warn':'');
+ if(label){const suffix=APP.yahooState==='loading'?' · updating':APP.yahooState==='partial'?' · partial':APP.yahooState==='unavailable'?' · unavailable':'';
+  label.textContent=(cryptoLive?'BTC LIVE · ':'')+`Yahoo ${APP.successCount||0}/${WATCHLIST.length}`+(delayed?' · delayed '+delayed:'')+(closed?' · close '+closed:'')+suffix;}
 }
 
 function createQuoteCard(item,quote){const card=document.createElement('article');card.className='card quote-card'+(quote?'':' empty');const top=document.createElement('div');top.className='quote-top';const name=document.createElement('div');name.className='quote-name';name.textContent=item.name;const sym=document.createElement('span');sym.className='symbol';sym.textContent=item.short;top.append(name,sym);card.append(top);const value=document.createElement('div');value.className='quote-value';value.textContent=quote?fmtPrice(quote):'Unavailable';card.append(value);const bottom=document.createElement('div');bottom.className='quote-bottom';const ch=document.createElement('span');ch.className='change '+(quote?changeClass((quote.price-(quote.previousClose??quote.price))):'flat');ch.textContent=quote&&num(quote.previousClose)!==null?`${fmt(quote.price-quote.previousClose,2)} (${pct((quote.price/quote.previousClose-1)*100)})`:'No verified observation';const status=document.createElement('span');status.className='status-label '+(quote?quoteStatusClass(quote.status):'bad');status.textContent=quote?quoteStatusLabel(quote.status):'UNAVAILABLE';bottom.append(ch,status);card.append(bottom);const asof=document.createElement('div');asof.className='quote-asof';asof.textContent=quote?`Observed ${fmtTime(quote.observedAt)} · ${quote.exchange||'provider quote'}`:'No price shown because a valid provider observation was not received';card.append(asof);return card;}
+function renderMovers(){
+ const rows=[...QUOTES.values()].filter(q=>num(q.price)!==null&&num(q.previousClose)!==null&&q.previousClose>0&&q.status!=='STALE_OBSERVATION')
+  .map(q=>({...q,changePct:(q.price/q.previousClose-1)*100})).sort((a,b)=>b.changePct-a.changePct);
+ const draw=(id,items,cls)=>{const host=document.getElementById(id);if(!host)return;host.replaceChildren();
+  if(!items.length){const e=document.createElement('div');e.className='empty-state';e.textContent='No validated mover observations available.';host.append(e);return}
+  items.forEach(q=>{const row=document.createElement('div');row.className='mover-row';const name=document.createElement('div');const symbol=document.createElement('span');symbol.className='mover-symbol';symbol.textContent=q.short;const label=document.createElement('span');label.className='mover-name';label.textContent=q.name;name.append(symbol,label);
+   const val=document.createElement('span');val.className='mover-value';val.textContent=fmtPrice(q);const change=document.createElement('span');change.className='mover-change '+cls;change.textContent=(q.changePct>0?'+':'')+q.changePct.toFixed(2)+'%';row.append(name,val,change);host.append(row)});
+ };
+ draw('gainersList',rows.filter(q=>q.changePct>0).slice(0,5),'up');
+ draw('losersList',rows.filter(q=>q.changePct<0).slice(-5).reverse(),'down');
+ setText('moversStamp',rows.length+' instruments · '+(APP.lastRefresh?'latest snapshot':'provider pending'));
+}
 function renderQuoteViews(){
   const featured=['^JKSE','^GSPC','^IXIC','^DJI','^VIX','IDR=X','BZ=F','GC=F'];const grid=document.getElementById('featuredQuotes');grid.replaceChildren();featured.forEach(sym=>{const item=WATCHLIST.find(x=>x.symbol===sym);grid.append(createQuoteCard(item,QUOTES.get(sym))) });
   const body=document.getElementById('watchlistBody');body.replaceChildren();let usable=0;
@@ -472,9 +474,15 @@ function renderQuoteViews(){
     const src=document.createElement('td');if(q){const a=document.createElement('a');a.href=q.sourceUrl;a.target='_blank';a.rel='noopener';a.textContent='Yahoo Finance ↗';src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
     cells.forEach(c=>tr.append(c));body.append(tr);
   });
-  setText('quoteCount',`${usable} / ${WATCHLIST.length} observations`);renderTape();evaluateAlerts();updateFeedState();
+  setText('quoteCount',`${usable} / ${WATCHLIST.length} observations`);renderTape();renderMovers();evaluateAlerts();updateFeedState();
 }
-function renderTape(){const tape=document.getElementById('tickerTape');tape.replaceChildren();const keys=['^JKSE','^GSPC','^IXIC','^DJI','^VIX','IDR=X','BZ=F','GC=F'];let any=false;keys.forEach(sym=>{const item=WATCHLIST.find(x=>x.symbol===sym),q=QUOTES.get(sym);if(!q)return;any=true;const node=document.createElement('div');node.className='tape-item';const s=document.createElement('strong');s.textContent=item.short;const v=document.createElement('span');v.textContent=fmtPrice(q);const c=document.createElement('span');c.className='change '+changeClass(q.price-(q.previousClose??q.price));c.textContent=q.previousClose?pct((q.price/q.previousClose-1)*100):'—';node.append(s,v,c);tape.append(node)});if(!any){const node=document.createElement('div');node.className='tape-item';node.textContent='No provider quotes available. The tape will populate when valid observations arrive.';tape.append(node)}}
+function renderTape(){
+ const tape=document.getElementById('tickerTape');if(!tape)return;tape.replaceChildren();let any=false;
+ const add=(symbol,value,change,sub='')=>{const node=document.createElement('div');node.className='tape-item';const s=document.createElement('strong');s.textContent=symbol;const v=document.createElement('span');v.textContent=value;const c=document.createElement('span');c.className='change '+(change>0?'up':change<0?'down':'flat');c.textContent=Number.isFinite(change)?((change>0?'+':'')+change.toFixed(2)+'%'):'—';node.append(s,v,c);if(sub){const x=document.createElement('span');x.className='minor';x.textContent=sub;node.append(x)}tape.append(node);any=true};
+ ['^JKSE','^GSPC','^IXIC','^DJI','^VIX','IDR=X','BZ=F','GC=F'].forEach(sym=>{const item=WATCHLIST.find(x=>x.symbol===sym),q=QUOTES.get(sym);if(q&&item){const change=q.previousClose?((q.price/q.previousClose)-1)*100:NaN;add(item.short,fmtPrice(q),change,quoteStatusLabel(q.status))}});
+ if(APP.btc&&num(APP.btc.price)!==null)add('BTC/USDT',fmt(APP.btc.price,2)+' USD',num(APP.btc.changePct),APP.btc.transport==='WEBSOCKET'?'LIVE TICK':'REST SNAPSHOT');
+ if(!any){const n=document.createElement('div');n.className='tape-item';const b=document.createElement('strong');b.textContent='APIS';const t=document.createElement('span');t.className='minor';t.textContent='No validated provider observations yet.';n.append(b,t);tape.append(n)}
+}
 function renderQuality(){
   const total=WATCHLIST.length;
   const valid=[...QUOTES.values()].filter(q=>num(q.price)!==null&&num(q.observedAt)!==null);

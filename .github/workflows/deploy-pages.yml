@@ -58,7 +58,8 @@ jobs:
             if (!js.includes('function ' + fn + '(') && !js.includes('async function ' + fn + '('))
               throw new Error('Required terminal function missing: ' + fn);
           }
-          const pageIds = new Set([...html.matchAll(/<section\b[^>]*\bid=["']([^"']+)["'][^>]*class=["'][^"']*page-view/g)].map(m => m[1]));
+          const sectionTags = [...html.matchAll(/<section\\b[^>]*>/gi)].map(m => m[0]);
+          const pageIds = new Set(sectionTags.filter(tag => /\\bclass=[\"'][^\"']*\\bpage-view\\b/.test(tag)).map(tag => tag.match(/\\bid=[\"']([^\"']+)[\"']/)?.[1]).filter(Boolean));
           const routes = [...html.matchAll(/data-page="([^"]+)"/g)].map(m => m[1]);
           if (!['home','markets','news','macro','movers','filings','tools','research'].every(x => routes.includes(x)))
             throw new Error('A primary navigation route is missing.');

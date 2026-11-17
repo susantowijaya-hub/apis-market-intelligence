@@ -99,9 +99,12 @@ jobs:
           };
           const vm = require('node:vm');
           const assert = require('node:assert/strict');
-          const baselineSource = html.match(/function exchangeDateKey\\([\\s\\S]*?function selectDailyIndexPreviousClose\\([\\s\\S]*?\\n\\}/)?.[0];
-          const numericSource = html.match(/function calendarNumericValue\\(value\\)\\{[\\s\\S]*?\\n\\}/)?.[0];
-          const toneSource = html.match(/function calendarActualTone\\(item\\)\\{[\\s\\S]*?\\n\\}/)?.[0];
+          const baselineStart = html.indexOf('function exchangeDateKey(');
+          const baselineEnd = html.indexOf('\nasync function fetchYahooQuote', baselineStart);
+          const baselineSource = baselineStart >= 0 && baselineEnd > baselineStart ? html.slice(baselineStart, baselineEnd) : '';
+          const calendarStart = html.indexOf('function calendarNumericValue(');
+          const calendarEnd = html.indexOf('function renderMacroCalendar()', calendarStart);
+          const calendarSource = calendarStart >= 0 && calendarEnd > calendarStart ? html.slice(calendarStart, calendarEnd) : '';
           if (!baselineSource || !numericSource || !toneSource) throw new Error('Regression helper extraction failed');
           const unit = { exchangeWallClock: date => ({year:date.getUTCFullYear(),month:date.getUTCMonth()+1,day:date.getUTCDate()}) };
           vm.createContext(unit);

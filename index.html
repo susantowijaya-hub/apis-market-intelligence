@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f5">
-<meta name="build-version" content="2.2.0">
+<meta name="build-version" content="2.2.1">
 <meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — The Market Terminal v2.2.0</title>
+<title>APIS — The Market Terminal v2.2.1</title>
 <style>
 :root{
   color-scheme:light;
@@ -152,6 +152,15 @@ html[data-theme="dark"] .footer{border-color:var(--line);background:var(--surfac
 .treasury-links{display:flex;gap:10px;flex-wrap:wrap}.treasury-links a{font-size:10px;font-weight:650}
 html[data-theme="dark"] .treasury-links a{color:#a9e8c9}
 
+
+/* APIS v2.2.1 — stable quote rendering and page/toggle feedback */
+@keyframes apis-page-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes apis-card-in{from{opacity:.72;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.page-view.active{animation:apis-page-in .24s var(--motion-ease) both}
+.quote-card,.snapshot-item{animation:apis-card-in .28s var(--motion-ease) both}
+.theme-menu [data-theme-choice],.news-filter,[data-news-filter],.nav a{transition:background-color .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.theme-menu [data-theme-choice]:active,[data-news-filter]:active{transform:scale(.97)}
+.quote-value,.snapshot-item-price{transition:color .18s ease,opacity .18s ease}
 /* APIS v2.2.0 — responsive terminal polish and interaction motion */
 :root{--motion-fast:150ms;--motion-base:220ms;--motion-ease:cubic-bezier(.2,.75,.25,1)}
 html{scroll-behavior:smooth}
@@ -696,7 +705,7 @@ function renderMarketOverview(){
    const status=document.createElement('span');status.className='snapshot-item-status';
    status.textContent=q?(q.transport==='WEBSOCKET'?'LIVE TICK':quoteStatusLabel(q.status||q.transport||'OBSERVED')):'UNAVAILABLE';
    details.append(change,status);card.append(head,price,details);
-   if(q&&q.observedAt){const time=document.createElement('div');time.className='quote-asof';time.textContent='As of '+fmtTime(q.observedAt/1000);card.append(time)}
+   if(q&&q.observedAt){const time=document.createElement('div');time.className='quote-asof';time.textContent='As of '+fmtTime(q.observedAt);card.append(time)}
    grid.append(card);count++;
   });
   section.append(grid);host.append(section);

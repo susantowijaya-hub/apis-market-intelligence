@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f5">
-<meta name="build-version" content="2.4.0">
+<meta name="build-version" content="2.4.1">
 <meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — The Market Terminal v2.4.0</title>
+<title>APIS — The Market Terminal v2.4.1</title>
 <style>
 :root{
   color-scheme:light;
@@ -627,7 +627,7 @@ input[type=checkbox]:checked,input[type=radio]:checked{filter:drop-shadow(0 0 3p
 </script>
 <script>
 'use strict';
-/* APIS The Market Terminal 2.4.0 · Free public-data terminal
+/* APIS The Market Terminal 2.4.1 · Free public-data terminal
    - No synthetic market data or fabricated news.
    - Yahoo Finance is an unofficial public fallback accessed through third-party CORS relays.
    - TradingView widgets are visual embeds; their data is not read back into calculations.
@@ -760,6 +760,7 @@ async function fetchStooqQuote(item){
    const observedAt=Date.UTC(Number(dateMatch[1]),Number(dateMatch[2])-1,Number(dateMatch[3]))/1000;
    if(observedAt>Date.now()/1000+86400)throw new Error('Stooq observation date is in the future');
    const age=Math.max(0,Date.now()/1000-observedAt);
+   if(age>48*3600)throw new Error('Stooq last available session is older than 48 hours');
    const quote={
     symbol:item.symbol,name:item.name,short:item.short,group:item.group,price,previousClose:previous,
     currency:item.currency||'',exchange:'Stooq',marketState:'PUBLIC CSV SNAPSHOT',
@@ -825,6 +826,11 @@ function quoteStatusClass(status){
 function quoteStatusLabel(status){
  return ({DELAYED_PROVIDER:'DELAYED',LAST_AVAILABLE_CLOSE:'LAST CLOSE',STALE_OBSERVATION:'STALE',STALE_CACHE:'CACHED / STALE',PROVIDER_QUOTE:'PROVIDER UPDATE'})[status]||String(status||'UNAVAILABLE').replaceAll('_',' ');
 }
+function formatQuoteObservation(quote){
+ if(!quote)return '—';
+ if(quote.observationDate)return quote.observationDate+' · Stooq public snapshot';
+ return fmtTime(quote.observedAt);
+}
 function updateFeedState(){
  const dot=document.getElementById('feedDot'),label=document.getElementById('feedState');
  const cryptoLive=!!(APP.btc&&APP.btc.transport==='WEBSOCKET'&&btcIsFresh());
@@ -833,11 +839,11 @@ function updateFeedState(){
  if(dot)dot.className='dot'+(cryptoLive?' live':hasFresh?' warn':'');
  if(label){
   const suffix=APP.yahooState==='loading'?' · updating':APP.yahooState==='partial'?' · partial':APP.yahooState==='unavailable'?' · unavailable':'';
-  label.textContent=(cryptoLive?'BTC LIVE · ':'')+'MD '+(APP.successCount||0)+'/'+WATCHLIST.length+suffix;
+  label.textContent=(cryptoLive?'BTC LIVE · ':'')+'PUBLIC '+(APP.successCount||0)+'/'+WATCHLIST.length+suffix;
  }
 }
 
-function createQuoteCard(item,quote){const card=document.createElement('article');card.className='card quote-card'+(quote?'':' empty');const top=document.createElement('div');top.className='quote-top';const name=document.createElement('div');name.className='quote-name';name.textContent=item.name;const sym=document.createElement('span');sym.className='symbol';sym.textContent=item.short;top.append(name,sym);card.append(top);const value=document.createElement('div');value.className='quote-value';value.textContent=quote?fmtPrice(quote):'Unavailable';card.append(value);const bottom=document.createElement('div');bottom.className='quote-bottom';const ch=document.createElement('span');ch.className='change '+(quote?changeClass((quote.price-(quote.previousClose??quote.price))):'flat');ch.textContent=quote&&num(quote.previousClose)!==null?`${fmt(quote.price-quote.previousClose,2)} (${pct((quote.price/quote.previousClose-1)*100)})`:'No verified observation';const status=document.createElement('span');status.className='status-label '+(quote?quoteStatusClass(quote.status):'bad');status.textContent=quote?quoteStatusLabel(quote.status):'UNAVAILABLE';bottom.append(ch,status);card.append(bottom);const asof=document.createElement('div');asof.className='quote-asof';asof.textContent=quote?`Observed ${fmtTime(quote.observedAt)} · ${quote.exchange||'provider quote'}`:'No price shown because a valid provider observation was not received';card.append(asof);return card;}
+function createQuoteCard(item,quote){const card=document.createElement('article');card.className='card quote-card'+(quote?'':' empty');const top=document.createElement('div');top.className='quote-top';const name=document.createElement('div');name.className='quote-name';name.textContent=item.name;const sym=document.createElement('span');sym.className='symbol';sym.textContent=item.short;top.append(name,sym);card.append(top);const value=document.createElement('div');value.className='quote-value';value.textContent=quote?fmtPrice(quote):'Unavailable';card.append(value);const bottom=document.createElement('div');bottom.className='quote-bottom';const ch=document.createElement('span');ch.className='change '+(quote?changeClass((quote.price-(quote.previousClose??quote.price))):'flat');ch.textContent=quote&&num(quote.previousClose)!==null?`${fmt(quote.price-quote.previousClose,2)} (${pct((quote.price/quote.previousClose-1)*100)})`:'No verified observation';const status=document.createElement('span');status.className='status-label '+(quote?quoteStatusClass(quote.status):'bad');status.textContent=quote?quoteStatusLabel(quote.status):'UNAVAILABLE';bottom.append(ch,status);card.append(bottom);const asof=document.createElement('div');asof.className='quote-asof';asof.textContent=quote?`Observed ${formatQuoteObservation(quote)} · ${quote.exchange||'provider quote'}`:'No price shown because a valid provider observation was not received';card.append(asof);return card;}
 function renderMovers(){
  const rows=[...QUOTES.values()].filter(q=>num(q.price)!==null&&num(q.previousClose)!==null&&q.previousClose>0&&q.status!=='STALE_OBSERVATION')
   .map(q=>({...q,changePct:(q.price/q.previousClose-1)*100})).sort((a,b)=>b.changePct-a.changePct);
@@ -884,7 +890,7 @@ function renderMarketOverview(){
    details.append(change,status);
    const observed=document.createElement('div');observed.className='snapshot-item-time';
    const timeSec=q?(symbol==='BTCUSDT'?q.observedAt/1000:q.observedAt):null;
-   observed.textContent=q&&num(timeSec)!==null?'As of '+fmtTime(timeSec):'No validated observation';
+   observed.textContent=q&&num(timeSec)!==null?'As of '+formatQuoteObservation(q):'No validated observation';
    row.append(head,price,details,observed);
    list.append(row);count++;
   });
@@ -925,7 +931,7 @@ function renderQuoteViews(){
    const d=document.createElement('td');d.setAttribute('data-label','Perubahan');d.textContent=q&&num(q.previousClose)!==null?fmt(q.price-q.previousClose,2):'—';if(q)d.className='change '+changeClass(q.price-q.previousClose);cells.push(d);
    const pc=document.createElement('td');pc.setAttribute('data-label','Perubahan %');pc.textContent=q&&q.previousClose?pct((q.price/q.previousClose-1)*100):'—';if(q)pc.className='change '+changeClass(q.price-q.previousClose);cells.push(pc);
    const st=document.createElement('td');st.setAttribute('data-label','Status feed');st.textContent=q?quoteStatusLabel(q.status):'UNAVAILABLE';st.className='status-label '+(q?quoteStatusClass(q.status):'bad');cells.push(st);
-   const t=document.createElement('td');t.setAttribute('data-label','Waktu observasi');t.textContent=q?fmtTime(q.observedAt):'—';cells.push(t);
+   const t=document.createElement('td');t.setAttribute('data-label','Waktu observasi');t.textContent=q?formatQuoteObservation(q):'—';cells.push(t);
    const src=document.createElement('td');src.setAttribute('data-label','Sumber');if(q){const a=document.createElement('a');a.href=q.sourceUrl||'#';a.target='_blank';a.rel='noopener';a.textContent=q.source||'Provider';a.title=(q.providerFallbacks||[]).join(' → ');src.append(a)}else{src.textContent='Unavailable';src.title=APP.failures.get(item.symbol)||'No provider observation'}cells.push(src);
    cells.forEach(cell=>tr.append(cell));body.append(tr);
   });

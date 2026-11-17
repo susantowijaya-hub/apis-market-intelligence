@@ -1144,7 +1144,7 @@ const WATCHLIST=[
   {symbol:'^KS11',name:'KOSPI Composite',short:'KOSPI',group:'Index',region:'North Asia',tv:'KRX:KOSPI',tdSymbol:'KS11',stooqSymbol:'^kospi'},
   {symbol:'^NSEI',name:'NIFTY 50',short:'NIFTY 50',group:'Index',region:'South Asia',tv:'NSE:NIFTY',tdSymbol:'NIFTY'},
   {symbol:'NQ=F',name:'Nasdaq-100 E-mini Futures',short:'NQ Futures',group:'Index',region:'United States',tv:'CME_MINI:NQ1!'},
-  {symbol:'^N225',name:'Nikkei 225',short:'Nikkei 225',group:'Index',region:'North Asia',tv:'TVC:NI225',stooqSymbol:'^nkx'},
+  {symbol:'^N225',name:'Nikkei 225',short:'Nikkei 225',group:'Index',region:'North Asia',tv:'TVC:NI225'},
   {symbol:'^HSI',name:'Hang Seng Index',short:'HSI',group:'Index',region:'Greater China',tv:'HKEX:HSI'},
   {symbol:'^VIX',name:'CBOE Volatility Index',short:'VIX',group:'Risk',region:'United States',tv:'TVC:VIX',tdSymbol:'VIX',stooqSymbol:'^vix'},
   {symbol:'EIDO',name:'iShares MSCI Indonesia ETF',short:'EIDO',group:'ETF',region:'Indonesia',tv:'AMEX:EIDO',stooqSymbol:'eido.us'},
@@ -1197,6 +1197,7 @@ function restoreQuoteCache(){
 const APP={lastRefresh:null,closedRefreshDone:{},yahooState:'idle',runCounter:0,currentRunId:0,btcState:'connecting',btc:null,btcLastSavedAt:0,btcError:'',ws:null,wsRetry:0,fxState:'loading',fxError:'',widgetError:'',failures:new Map(),successCount:0,storageWarned:false,alerts:Array.isArray(loadJSON('apis_browser_alerts',[]))?loadJSON('apis_browser_alerts',[]):[],ledger:Array.isArray(loadJSON('apis_browser_ledger',[]))?loadJSON('apis_browser_ledger',[]):[],fired:new Set(),timer:null,staleTimer:null,btcRestTimer:null};
 function loadJSON(k,fallback){try{const v=JSON.parse(localStorage.getItem(k));return v??fallback}catch{return fallback}}
 function saveJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast('Browser storage is unavailable in this session.')}}
+APP.closedRefreshDone=loadJSON('apis_market_closed_refresh_done',{})||{};
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function num(v){return typeof v==='number'&&Number.isFinite(v)?v:null}
 function fmt(v,maximumFractionDigits=2){if(num(v)===null)return'—';return new Intl.NumberFormat('en-US',{maximumFractionDigits,minimumFractionDigits:maximumFractionDigits}).format(v)}
@@ -1232,7 +1233,7 @@ function restoreAuxCache(){
    No paid API, account, or API key is required. Stooq may rate-limit or deny public requests.
 */
 const STOOQ_SYMBOLS={
- '^GSPC':'^spx','^IXIC':'^ixic','^DJI':'^dji','^N225':'^nkx','^KS11':'^kospi','^VIX':'^vix',
+ '^GSPC':'^spx','^IXIC':'^ixic','^DJI':'^dji','^KS11':'^kospi','^VIX':'^vix',
  'EIDO':'eido.us','AAPL':'aapl.us','NVDA':'nvda.us','MSFT':'msft.us',
  'IDR=X':'usdidr','GC=F':'gc.f','BZ=F':'brent.f'
 };
@@ -1493,7 +1494,8 @@ async function fetchMarketQuote(item){
  const errors=[];
  if(item.symbol==='XAUUSD=X')return fetchXauSpotQuote(item);
  if(item.symbol==='^TWII')return fetchTaiwanOfficialQuote(item);
- if(item.stooqSymbol||STOOQ_SYMBOLS[item.symbol]){
+ const session=exchangeSession(item);
+ if((!session||session.state==='CLOSED'||session.state==='PREOPEN')&&(item.stooqSymbol||STOOQ_SYMBOLS[item.symbol])){
   try{return await fetchStooqQuote(item)}
   catch(error){errors.push('Stooq public CSV: '+String(error?.message||error).slice(0,130))}
  }
@@ -1510,11 +1512,11 @@ async function fetchQuoteBatch(){
   if(APP.yahooState==='loading')return;
   APP.yahooState='loading';APP.failures.clear();APP.successCount=0;APP.currentRunId=++APP.runCounter;const runId=APP.currentRunId;updateFeedState();
   const buttons=['refreshBtn','refreshTop'];buttons.forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true});
-  const queue=homeWatchlistItems();
+  const queue=homeWatchlistItems().filter(item=>marketPollEligible(item,new Date()));
   setText('lastRefresh','Fetching '+queue.length+' Home market references…');
   let cursor=0,successes=0,failures=0;const queueSize=queue.length;
-  const workers=Array.from({length:3},async()=>{while(cursor<queue.length){const item=queue[cursor++];try{const q=await fetchMarketQuote(item);q.activeRunId=runId;QUOTES.set(item.symbol,q);APP.failures.delete(item.symbol);successes++}
-    catch(e){failures++;APP.failures.set(item.symbol,String(e?.message||'Provider request failed'));const old=QUOTES.get(item.symbol);if(old){const age=Date.now()/1000-old.observedAt;old.status=age>48*3600?'STALE_OBSERVATION':'STALE_CACHE';old.activeRunId=0;old.lastError=String(e?.message||'Refresh failed').slice(0,180);old.cacheRestored=true;QUOTES.set(item.symbol,old)}}
+  const workers=Array.from({length:3},async()=>{while(cursor<queue.length){const item=queue[cursor++];try{const q=await fetchMarketQuote(item);q.activeRunId=runId;QUOTES.set(item.symbol,q);APP.failures.delete(item.symbol);successes++;if(exchangeSession(item)?.state==='CLOSED')markClosedRefreshAttempt(item)}
+    catch(e){failures++;if(exchangeSession(item)?.state==='CLOSED')markClosedRefreshAttempt(item);APP.failures.set(item.symbol,String(e?.message||'Provider request failed'));const old=QUOTES.get(item.symbol);if(old){const age=Date.now()/1000-old.observedAt;old.status=age>48*3600?'STALE_OBSERVATION':'STALE_CACHE';old.activeRunId=0;old.lastError=String(e?.message||'Refresh failed').slice(0,180);old.cacheRestored=true;QUOTES.set(item.symbol,old)}}
     APP.successCount=successes;setText('lastRefresh',`Fetching ${successes+failures}/${queueSize} · ${successes} updated · ${failures} failed`);
   }});
   try{
@@ -1632,7 +1634,7 @@ function renderMovers(){
  };
  draw('gainersList',rows.filter(q=>q.changePct>0).slice(0,5),'up');
  draw('losersList',rows.filter(q=>q.changePct<0).slice(-5).reverse(),'down');
- setText('moversStamp',rows.length+' individual stocks · Indonesia / US / Hong Kong + Samsung / SK Hynix / TSMC focus');
+ setText('moversStamp',rows.length+' stock observations · ranked by session change · index quotes excluded');
 }
 function stockChangePct(quote){
  if(!quote)return null;
@@ -1716,12 +1718,13 @@ function marketPollEligible(item,now=new Date()){
  if(session.state!=='CLOSED'||session.tradeDate.weekday==='Sat'||session.tradeDate.weekday==='Sun')return false;
  const minute=session.tradeDate.hour*60+session.tradeDate.minute;if(minute<session.finalCloseMinute)return false;
  const p=session.tradeDate,key=[p.year,String(p.month).padStart(2,'0'),String(p.day).padStart(2,'0')].join('-');
- if(marketQuoteDayKey(QUOTES.get(item.symbol),session)===key){APP.closedRefreshDone[item.symbol]=key;return false}
+ const prior=QUOTES.get(item.symbol),retrieved=Number(prior?.retrievedAt||0),retrievedLocal=retrieved?exchangeWallClock(new Date(retrieved),session.zone):null;
+ if(marketQuoteDayKey(prior,session)===key&&retrievedLocal&&retrievedLocal.hour*60+retrievedLocal.minute>=session.finalCloseMinute){APP.closedRefreshDone[item.symbol]=key;return false}
  return APP.closedRefreshDone[item.symbol]!==key;
 }
 function markClosedRefreshAttempt(item,now=new Date()){
  const session=exchangeSession(item,now);
- if(session&&session.state==='CLOSED'&&session.tradeDate.weekday!=='Sat'&&session.tradeDate.weekday!=='Sun'){const p=session.tradeDate;APP.closedRefreshDone[item.symbol]=[p.year,String(p.month).padStart(2,'0'),String(p.day).padStart(2,'0')].join('-')}
+ if(session&&session.state==='CLOSED'&&session.tradeDate.weekday!=='Sat'&&session.tradeDate.weekday!=='Sun'){const p=session.tradeDate;APP.closedRefreshDone[item.symbol]=[p.year,String(p.month).padStart(2,'0'),String(p.day).padStart(2,'0')].join('-');saveJSON('apis_market_closed_refresh_done',APP.closedRefreshDone)}
 }
 function marketQuoteDayKey(quote,session){
  if(!quote||!session)return '';
@@ -1884,7 +1887,7 @@ function renderMarketOverview(){
   indices:{title:'Global indices',description:'Major equity benchmarks across the US, India, Japan and Asia.',items:WATCHLIST.filter(item=>['Index','Risk','ETF'].includes(item.group))},
   commodities:{title:'Commodities',description:'Gold spot, crude oil, Brent crude and copper futures. Public quotes may be delayed or last close.',items:WATCHLIST.filter(item=>item.group==='Commodity')},
   'fx-crypto':{title:'FX & Crypto',description:'Currency observations and public cryptocurrency exchange data.',items:WATCHLIST.filter(item=>item.group==='FX')},
-  equities:{title:'Equities',description:'Selected Indonesian and US listed companies.',items:WATCHLIST.filter(item=>item.group==='Indonesia equity'||item.group==='US equity')}
+  equities:{title:'Equities',description:'Market-moving individual stocks: Indonesia, US, Hong Kong; Samsung / SK Hynix and TSMC focus names.',items:WATCHLIST.filter(item=>['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity'].includes(item.group))}
  };
  const current=filters[selected]||filters.indices;
  setText('marketSegmentTitle',current.title);setText('marketSegmentDescription',current.description);

@@ -116,7 +116,7 @@ jobs:
                 page.on('pageerror', error => errors.push(error.message));
                 await page.route('https://**/*', route => route.abort());
                 await page.goto('http://127.0.0.1:4173/', {waitUntil:'domcontentloaded'});
-                await page.waitForTimeout(700);
+                await page.waitForTimeout(900);
                 const home = await page.evaluate(() => ({
                   booted:window.__APIS_BOOTED__===true,
                   rows:document.querySelectorAll('#featuredQuotes .ios-stock-item').length,
@@ -128,10 +128,10 @@ jobs:
                   documentWidth:document.documentElement.scrollWidth,
                   date:document.getElementById('homeDate')?.textContent || ''
                 }));
-                if (!home.booted || home.rows < 27 || !home.refresh || home.routes < 8 || !home.btc || !home.fx)
+                if (!home.booted || home.rows !== 27 || !home.refresh || home.routes < 8 || !home.btc || !home.fx)
                   throw new Error(engine.name+' '+viewport.name+' Home boot failed: '+JSON.stringify({home,errors}));
-                if (home.documentWidth > home.pageWidth + 1)
-                  throw new Error(engine.name+' '+viewport.name+' Home horizontal overflow: '+JSON.stringify(home));
+                if (!home.date || home.documentWidth > home.pageWidth + 1)
+                  throw new Error(engine.name+' '+viewport.name+' Home date/width check failed: '+JSON.stringify(home));
                 await page.locator('#homeSearchToggle').click();
                 await page.locator('#homeSearch').fill('Brent');
                 if (await page.locator('#featuredQuotes .ios-stock-item').count() !== 1)
@@ -147,16 +147,16 @@ jobs:
                 if (commodities !== 5 || !commodityLabels.includes('XAU/USD') || !commodityLabels.includes('WTI Crude') ||
                     !commodityLabels.includes('Brent') || !commodityLabels.includes('Copper'))
                   throw new Error(engine.name+' commodity segment failed: '+commodities+' rows · '+commodityLabels);
-                if (await page.locator('#mainChart').count() !== 0)
-                  throw new Error(engine.name+' broken chart embed should have been removed');
+                if (await page.locator('#mainChart').count() !== 0 || await page.locator('#chartSymbol').count() !== 0)
+                  throw new Error(engine.name+' non-working external chart should be removed');
                 const marketOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
                 if (marketOverflow) throw new Error(engine.name+' '+viewport.name+' Markets horizontal overflow');
                 await page.locator('#marketSnapshotGrid .ios-stock-item summary').first().click();
                 if (!(await page.locator('#marketSnapshotGrid .ios-stock-item').first().evaluate(el=>el.open)))
                   throw new Error(engine.name+' market row expansion failed');
                 await page.locator('[data-market-filter="fx-crypto"]').click();
-                const fxCrypto=await page.locator('#marketSnapshotGrid').innerText();
-                if (!fxCrypto.includes('Bitcoin') || !fxCrypto.includes('USD/IDR'))
+                const fxCrypto = await page.locator('#marketSnapshotGrid').innerText();
+                if (!fxCrypto.includes('Bitcoin') || !fxCrypto.includes('USD / IDR'))
                   throw new Error(engine.name+' FX/Crypto segment failed: '+fxCrypto);
                 await page.locator('[data-page="news"]').click();
                 if (!(await page.locator('#research').evaluate(el=>el.classList.contains('active'))))
@@ -168,12 +168,12 @@ jobs:
                 await page.locator('[data-theme-choice="dark"]').click();
                 if (await page.locator('html').getAttribute('data-theme')!=='dark')
                   throw new Error(engine.name+' dark theme control failed');
-                const transition=await page.locator('.theme-menu-items button').first().evaluate(el=>getComputedStyle(el).transitionDuration);
+                const transition = await page.locator('.theme-menu-items button').first().evaluate(el=>getComputedStyle(el).transitionDuration);
                 if (!transition || transition==='0s') throw new Error(engine.name+' theme toggle animation missing');
                 await page.locator('[data-page="home"]').click();
                 await page.locator('#refreshTop').click();
                 if (errors.length) throw new Error(engine.name+' runtime errors: '+errors.join(' | '));
-                console.log(engine.name+' '+viewport.name+' PASS · '+home.rows+' Home watchlist rows · search · BTC/USDIDR · commodity tabs · no chart embed · row expansion · no horizontal overflow · News/Macro · theme animation · refresh');
+                console.log(engine.name+' '+viewport.name+' PASS · 27 Home rows · search · BTC/USDIDR · 5 commodity instruments · no chart embed · row expansion · no horizontal overflow · News/Macro · animated theme · refresh');
                 await page.close();
               }
               await browser.close();

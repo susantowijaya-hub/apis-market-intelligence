@@ -1320,6 +1320,15 @@ async function fetchStooqQuote(item){
  }
  throw new Error(errors.slice(0,3).join(' | ')||'Stooq public CSV unavailable');
 }
+function exchangeDateKey(timestamp,timeZone){
+ const p=exchangeWallClock(new Date(Number(timestamp)*1000),timeZone);
+ return [p.year,String(p.month).padStart(2,'0'),String(p.day).padStart(2,'0')].join('-');
+}
+function selectDailyIndexPreviousClose(dailyBars,cutoff,timeZone){
+ if(!Array.isArray(dailyBars)||!cutoff||!timeZone)return null;
+ const eligible=dailyBars.filter(bar=>bar&&Number.isFinite(Number(bar.price))&&Number(bar.price)>0&&Number.isFinite(Number(bar.timestamp))&&exchangeDateKey(bar.timestamp,timeZone)<cutoff);
+ return eligible.length?Number(eligible[eligible.length-1].price):null;
+}
 async function fetchYahooQuote(item){
  const encoded=encodeURIComponent(item.symbol);
  const isDailyIndex=['^JKSE','^GSPC','^IXIC','^DJI','000001.SS','^TWII','^KS11','^N225','^HSI'].includes(item.symbol);
@@ -1370,8 +1379,7 @@ async function fetchYahooQuote(item){
     if(isDailyIndex&&session?.state==='CLOSED'&&(!useDailyClose||selectedDailyBarDay!==sessionDay))throw new Error('No verified daily close for the current exchange session; refusing stale intraday/metadata value');
     if(useDailyClose&&selectedDailyBarDay!==sessionDay&&session?.state==='CLOSED')throw new Error('Daily close date does not match the exchange session date');
     const baselineCutoff=useDailyClose?selectedDailyBarDay:sessionDay;
-    const dailyBaselineBars=baselineCutoff?dailyBars.filter(bar=>{const p=exchangeWallClock(new Date(bar.timestamp*1000),session.zone),key=[p.year,String(p.month).padStart(2,'0'),String(p.day).padStart(2,'0')].join('-');return key<baselineCutoff}):dailyBars.slice(0,-1);
-    const dailyPreviousClose=dailyBaselineBars.length?dailyBaselineBars[dailyBaselineBars.length-1].price:null;
+    const dailyPreviousClose=baselineCutoff?selectDailyIndexPreviousClose(dailyBars,baselineCutoff,session.zone):(dailyBars.length>1?dailyBars[dailyBars.length-2].price:null);
     if(useDailyClose&&(!dailyPreviousClose||dailyPreviousClose<=0))throw new Error('Previous session close unavailable; refusing unverified daily percentage');
     const previousClose=dailyPreviousClose??providerPreviousClose??(providerChangePct!==null&&providerChangePct>-100?price/(1+providerChangePct/100):null);
     const changePct=previousClose!==null&&previousClose>0?(price/previousClose-1)*100:null;

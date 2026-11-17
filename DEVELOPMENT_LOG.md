@@ -329,3 +329,19 @@
 - The daily previous-close calculation is applied only when the selected Yahoo response is actually a 1-day interval. If the daily endpoint fails and the adapter falls back to 5-minute / 1-minute bars, it no longer mistakes the previous intraday candle for the previous session close.
 - This additional guard specifically protects closing price and daily percentage integrity for Nikkei, Hang Seng, Shanghai, IHSG, KOSPI, Taiwan and US benchmark indices.
 - Updated static CI version and added a regression marker for daily-interval-only close selection.
+
+
+## 2026-11-17 — v2.9.3 Daily Baseline Alignment and Closing Auction State
+
+### Root-cause correction
+- Reworked Yahoo daily-index previous-close selection to align daily candles with the exchange-local session date. The old positional `closes[-2]` assumption could point at the wrong prior session when Yahoo included (or omitted) the current partial daily candle.
+- During an open session, the baseline is the latest daily candle strictly before the current exchange-local date. After close, the baseline is the latest daily candle strictly before the selected closing candle's exchange-local date.
+- Percentage is recomputed from the displayed quote price and that aligned previous close. Provider change-percent is only a last fallback when neither a valid daily baseline nor provider previous-close is available.
+- This targets the reported mismatches on IHSG, Hang Seng, Shanghai, Nikkei and Taiwan while keeping price selection and baseline selection internally consistent.
+- US regular-session window now ends at 15:50 ET and the 15:50–16:00 ET closing auction is represented separately, so the session badge no longer labels the auction as ordinary continuous trading.
+- Hong Kong lunch break and closing auction remain explicitly modelled.
+
+### Validation
+- Updated static validation to v2.9.3 and added regression assertions for exchange-local daily-baseline alignment and the US closing-auction boundary.
+- The change does not invent values or substitute an index's provider percentage when a valid previous close can be derived from dated daily candles.
+- Runtime correctness still depends on the quote provider returning correctly dated daily candles; the dashboard retains source and observation timestamps for audit.

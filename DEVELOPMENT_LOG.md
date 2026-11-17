@@ -186,7 +186,7 @@
 - Replaced the Yahoo Finance / CORS-proxy dependency for spot gold with XAUS GET https://xaus.com/api/v1/spot?compact=1.
 - Uses the direct public browser endpoint; XAUS documents open CORS, no API key, spot response cache of approximately 60 seconds and data-state metadata.
 - Reads spot_usd_oz, data_state.status, data_state.as_of / price_as_of, and age. Unavailable, stale or timestamp-less responses are rejected rather than replaced by a fallback estimate.
-- The intraday line / percentage uses XAUS first-party intraday points only when at least 20 hours of series coverage is available. Otherwise the price may be shown but percentage/history remains unavailable. No fabricated 24-hour percentage.
+- The intraday line / percentage uses XAUS first-party intraday points only when at least 23 hours of series coverage is available. Otherwise the price may be shown but percentage/history remains unavailable. No fabricated 24-hour percentage.
 - Source / provider link is shown in the expanded row. Quote is indicative spot (USD per troy ounce), not an executable broker quote.
 
 ### Taiwan Weighted (TAIEX)

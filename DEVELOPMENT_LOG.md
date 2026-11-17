@@ -389,3 +389,5 @@
 - CI's five gates now additionally assert the Yahoo final-close timestamp and Stooq observation-date guards.
 
 - Browser smoke testing exposed one schedule inconsistency: IDX session metadata still reported 16:02 WIB although the UI and the established cash-market close are 16:00 WIB. Corrected the regular-session / closing-auction boundary to 15:50–16:00 WIB and aligned the CI schedule assertion. The earlier v2.9 notes referring to 16:02 are superseded by this correction.
+
+- Second browser regression exposed a stale Yahoo Taiwan percentage path: the shared mover/quote percentage helper could still return an unverified Yahoo percentage for ^TWII. It now returns no percentage unless the observation source is the official TWSE adapter. The official TWSE report remains the only source permitted to publish the Taiwan daily percentage.

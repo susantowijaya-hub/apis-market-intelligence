@@ -1530,6 +1530,40 @@ async function persistQuoteCache(){
  saveJSON('apis_browser_quotes',all.slice(-WATCHLIST.length));
  APP.lastCacheSavedAt=Date.now();
 }
+function updateQuoteRowsInPlace(){
+ const visibleRows=[...document.querySelectorAll('.ios-stock-item[data-symbol]')];
+ visibleRows.forEach(row=>{
+  const symbol=row.dataset.symbol;
+  if(symbol==='BTCUSDT')return;
+  const item=WATCHLIST.find(entry=>entry.symbol===symbol);
+  const quote=QUOTES.get(symbol);
+  if(!item||!quote)return;
+  const pctValue=stockChangePct(quote);
+  const price=row.querySelector('.ios-stock-price');
+  const badge=row.querySelector('.ios-stock-change');
+  const session=row.querySelector('.ios-stock-session');
+  const stamp=row.querySelector('.ios-stock-updated');
+  const spark=row.querySelector('.ios-stock-spark');
+  if(price)price.textContent=stockPriceText(quote,item);
+  if(badge){
+   badge.textContent=pctValue===null?'—':pct(pctValue);
+   badge.className='ios-stock-change '+(pctValue===null?'unavailable':pctValue>0?'up':pctValue<0?'down':'flat');
+  }
+  if(session)session.textContent=marketSessionLabel(quote,item);
+  if(stamp)stamp.textContent=marketFeedTimestampLabel(quote,item);
+  if(spark)spark.replaceChildren(buildStockSparkline(quote.sparkline,pctValue));
+  if(row.open){
+   const chip=row.querySelector('.ios-detail-chip');
+   const observed=row.querySelector('.ios-detail-time');
+   const source=row.querySelector('.ios-detail-source');
+   const error=row.querySelector('.ios-detail-error');
+   if(chip)chip.textContent=quote.transport==='WEBSOCKET'?'LIVE TICK':quoteStatusLabel(quote.status);
+   if(observed)observed.textContent='Provider observation '+fmtTime(quote.observedAt)+' · checked '+marketFeedTimestampLabel(quote,item);
+   if(source){source.href=quote.sourceUrl||'#';source.textContent=quote.source||'Public provider unavailable'}
+   if(error)error.textContent=quote.lastError||APP.failures.get(symbol)||'';
+  }
+ });
+}
 async function fetchQuoteSlice(){
  if(document.hidden||!navigator.onLine||APP.yahooState==='loading'||APP.sliceBusy)return;
  APP.sliceBusy=true;
@@ -1557,7 +1591,7 @@ async function fetchQuoteSlice(){
   APP.sliceUpdated=(APP.sliceUpdated||0)+updated;APP.sliceFailed=(APP.sliceFailed||0)+failed;
   APP.lastSliceRefreshAt=Date.now();APP.nextRefreshAt=Date.now()+5000;
   if(Date.now()-(APP.lastCacheSavedAt||0)>15000)await persistQuoteCache();
-  renderQuoteViews();renderQuality();
+  updateQuoteRowsInPlace();renderTape();renderMovers();evaluateAlerts();updateFeedState();renderQuality();
   const stamp=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).format(new Date());
   setText('lastRefresh','Feed '+stamp+' WIB · '+updated+' updated · '+failed+' failed · rotating watchlist');
  }finally{APP.sliceBusy=false}

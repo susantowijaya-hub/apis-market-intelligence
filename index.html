@@ -645,7 +645,8 @@ function renderQuality(){
     ['Binance WebSocket',cryptoLive?'Timestamped BTC/USDT trade stream is fresh':cryptoRest?'BTC/USDT REST observation is fresh; not a live stream':cryptoCached?'Only a previously saved BTC observation is available':APP.btcError||'BTC/USDT unavailable',cryptoLive?'LIVE STREAM':cryptoRest?'REST UPDATE':cryptoCached?'STALE CACHE':'NOT LIVE',cryptoLive?'good':'warn'],
     ['Frankfurter FX',APP.fxState==='loaded'?'Daily reference-rate response received':APP.fxState==='cached'?'Saved dated reference rate; refresh failed':APP.fxError||'Reference-rate response unavailable',APP.fxState==='loaded'?'DAILY':APP.fxState==='cached'?'STALE':'UNAVAILABLE',APP.fxState==='loaded'?'good':'warn'],
     ['U.S. Treasury yield curve',APP.tsyState==='loaded'?'Official daily Treasury par-yield curve':APP.tsyError||'No daily Treasury response',APP.tsyState==='loaded'?'DAILY':'UNAVAILABLE',APP.tsyState==='loaded'?'good':'warn'],
-    ['Public market news RSS',APP.newsState==='loaded'?'Current RSS items with source and publication date':APP.newsError||'RSS unavailable',APP.newsState==='loaded'?'UPDATED':'UNAVAILABLE',APP.newsState==='loaded'?'good':'warn'],
+    ['Publisher news RSS',APP.newsState==='loaded'?(APP.newsItems?.length||0)+' headlines from '+(APP.newsSourcesOK||0)+' free publisher feeds':APP.newsError||'RSS unavailable',APP.newsState==='loaded'?'UPDATED':'UNAVAILABLE',APP.newsState==='loaded'?'good':'warn'],
+    ['Official macro calendar',APP.calendarState==='loaded'?(APP.calendarEvents?.length||0)+' major releases from BLS / BEA / Fed':APP.calendarError||'Calendar unavailable',APP.calendarState==='loaded'?'UPDATED':'UNAVAILABLE',APP.calendarState==='loaded'?'good':'warn'],
     ['SEC EDGAR submissions',APP.filingsState==='loaded'?'Recent public company filings loaded':APP.filingsError||'SEC filing feed not yet available',APP.filingsState==='loaded'?'UPDATED':'UNAVAILABLE',APP.filingsState==='loaded'?'good':'warn']
   ];
   const container=document.getElementById('sourceHealth');container.replaceChildren();
@@ -781,6 +782,98 @@ async function loadTreasuryCurve(){
   }
   const errorNode=document.getElementById('tsyError');if(errorNode){errorNode.hidden=false;errorNode.textContent='Connection detail: '+lastError+' · The dashboard will retry automatically.'}
  }
+ renderQuality();
+}
+function zonedDateToUtc(year,month,day,hour,minute,timeZone){
+ const guess=Date.UTC(year,month-1,day,hour,minute,0);
+ const parts=new Intl.DateTimeFormat('en-US',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(guess));
+ const map={};parts.forEach(part=>{if(part.type!=='literal')map[part.type]=Number(part.value)});
+ const represented=Date.UTC(map.year,map.month-1,map.day,map.hour,map.minute,0);
+ return new Date(guess-(represented-guess));
+}
+function parseIcsDate(value,timeZone){
+ if(!value)return null;
+ const m=value.match(/^(\d{4})(\d{2})(\d{2})T?(\d{2})?(\d{2})?(\d{2})?Z?$/);if(!m)return null;
+ const year=+m[1],month=+m[2],day=+m[3],hour=+(m[4]||8),minute=+(m[5]||30);
+ return value.endsWith('Z')?new Date(Date.UTC(year,month-1,day,hour,minute,+(m[6]||0))):zonedDateToUtc(year,month,day,hour,minute,timeZone||'America/New_York');
+}
+function macroImpact(title){
+ if(/consumer price index|\bcpi\b|employment situation|nonfarm payroll|fomc|federal funds|gdp \((advance|second|third)|personal income and outlays/i.test(title))return 'HIGH';
+ if(/producer price index|\bppi\b|job openings and labor turnover|\bjolts\b|retail sales|initial claims|trade in goods and services/i.test(title))return 'MEDIUM';
+ return null;
+}
+function renderMacroCalendar(){
+ const host=document.getElementById('calendarEvents');if(!host)return;host.replaceChildren();
+ const mode=document.getElementById('calendarImpact')?.value||'high',now=Date.now(),cutoff=now+75*86400000;
+ const items=(APP.calendarEvents||[]).filter(item=>item.date.getTime()>=now-2*3600000&&item.date.getTime()<=cutoff&&(mode==='all'||item.impact==='HIGH')).sort((a,b)=>a.date-b.date);
+ if(!items.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent=(APP.calendarEvents||[]).length?'No major releases in the selected period.':'No official calendar data was received.';host.append(empty)}
+ items.forEach(item=>{
+  const row=document.createElement('div');row.className='event-row';
+  const date=document.createElement('div');date.className='event-date';date.textContent=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,day:'2-digit',month:'short'}).format(item.date);
+  const time=document.createElement('small');time.textContent=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hour12:false}).format(item.date)+' WIB';date.append(time);
+  const detail=document.createElement('div'),title=document.createElement('div');title.className='event-title';title.textContent=item.title;
+  const meta=document.createElement('div');meta.className='event-meta';meta.textContent=item.source+' · '+item.region;detail.append(title,meta);
+  const impact=document.createElement('span');impact.className='impact-pill'+(item.impact==='MEDIUM'?' medium':'');impact.textContent=item.impact;
+  row.append(date,detail,impact);if(item.link){row.style.cursor='pointer';row.addEventListener('click',()=>window.open(item.link,'_blank','noopener'))}host.append(row);
+ });
+ setText('calendarCount',items.length+' scheduled releases · '+(mode==='high'?'high impact only':'high + medium'));
+}
+async function loadMacroCalendar(){
+ const urls=['https://www.bls.gov/schedule/news_release/bls.ics','https://www.bea.gov/news/schedule/','https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm'];
+ const fetchPublic=async target=>{
+  const routes=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target)];let last='No public response';
+  for(const route of routes){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);try{
+   const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal});if(!response.ok)throw new Error('HTTP '+response.status);return await response.text();
+  }catch(error){last=error?.name==='AbortError'?'Request timed out':String(error?.message||error).slice(0,100)}finally{clearTimeout(timer)}}
+  throw new Error(last);
+ };
+ const results=await Promise.allSettled(urls.map(fetchPublic)),events=[],errors=[];
+ if(results[0].status==='fulfilled'){
+  const ics=results[0].value.replace(/\r/g,'').replace(/\n[ \t]/g,''),blocks=ics.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g)||[];
+  blocks.forEach(block=>{
+   const property=name=>{const match=block.match(new RegExp('(?:^|\\n)'+name+'(?:;TZID=([^:;]+))?(?:;[^:]*)?:(.*)'));return match?{tz:match[1],value:match[2].trim().replace(/\\n/g,' ').replace(/\\,/g,',')}:null};
+   const summary=property('SUMMARY'),start=property('DTSTART');if(!summary||!start)return;
+   const impact=macroImpact(summary.value);if(!impact)return;
+   const date=parseIcsDate(start.value,start.tz||'America/New_York');if(!date)return;
+   let page='https://www.bls.gov/schedule/';
+   if(/consumer price/i.test(summary.value))page='https://www.bls.gov/schedule/news_release/cpi.htm';
+   else if(/employment situation/i.test(summary.value))page='https://www.bls.gov/schedule/news_release/empSit.htm';
+   else if(/producer price/i.test(summary.value))page='https://www.bls.gov/schedule/news_release/ppi.htm';
+   else if(/job openings/i.test(summary.value))page='https://www.bls.gov/schedule/news_release/jolts.htm';
+   events.push({title:summary.value,date,impact,source:'Bureau of Labor Statistics',region:'United States',link:page});
+  });
+ }else errors.push('BLS: '+String(results[0].reason?.message||results[0].reason));
+ if(results[1].status==='fulfilled'){
+  const doc=new DOMParser().parseFromString(results[1].value,'text/html');
+  for(const row of [...doc.querySelectorAll('tr')]){
+   const cells=[...row.querySelectorAll('th,td')].map(cell=>cell.textContent.trim()).filter(Boolean);if(!cells.length)continue;
+   const title=cells.find(value=>/GDP \((Advance|Second|Third) Estimate|Personal Income and Outlays/i.test(value));if(!title)continue;
+   const impact=macroImpact(title);if(!impact)continue;const combined=cells.join(' | ');
+   const dateMatch=combined.match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})\b/i);
+   const timeMatch=combined.match(/\b(\d{1,2}):(\d{2})\s*(AM|PM)\b/i);if(!dateMatch)continue;
+   const monthNames=['january','february','march','april','may','june','july','august','september','october','november','december'];
+   const month=monthNames.indexOf(dateMatch[1].toLowerCase())+1,day=Number(dateMatch[2]);let year=new Date().getFullYear();if(month<new Date().getMonth()+1-1)year++;
+   let hour=timeMatch?Number(timeMatch[1]):8,minute=timeMatch?Number(timeMatch[2]):30;
+   if(timeMatch&&timeMatch[3].toUpperCase()==='PM'&&hour<12)hour+=12;if(timeMatch&&timeMatch[3].toUpperCase()==='AM'&&hour===12)hour=0;
+   const link=row.querySelector('a[href]');
+   events.push({title,date:zonedDateToUtc(year,month,day,hour,minute,'America/New_York'),impact,source:'Bureau of Economic Analysis',region:'United States',link:link?new URL(link.getAttribute('href'),urls[1]).href:urls[1]});
+  }
+ }else errors.push('BEA: '+String(results[1].reason?.message||results[1].reason));
+ if(results[2].status==='fulfilled'){
+  const doc=new DOMParser().parseFromString(results[2].value,'text/html'),text=doc.body?.innerText||doc.body?.textContent||'',year=new Date().getFullYear();
+  const marker=text.indexOf(year+' FOMC Meetings'),block=marker>=0?text.slice(marker,marker+6000):text;
+  const regex=/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})\s*[–-]\s*(\d{1,2})/g;let match;
+  while((match=regex.exec(block))){
+   const months=['january','february','march','april','may','june','july','august','september','october','november','december'];
+   const month=months.indexOf(match[1].toLowerCase())+1,day=Number(match[3]);
+   events.push({title:'FOMC monetary policy decision & press conference',date:zonedDateToUtc(year,month,day,14,0,'America/New_York'),impact:'HIGH',source:'Federal Reserve',region:'United States',link:urls[2]});
+  }
+ }else errors.push('Federal Reserve: '+String(results[2].reason?.message||results[2].reason));
+ const unique=new Map();events.forEach(item=>{const key=item.title+'|'+item.date.toISOString().slice(0,10);if(!unique.has(key))unique.set(key,item)});
+ APP.calendarEvents=[...unique.values()].sort((a,b)=>a.date-b.date);
+ APP.calendarState=APP.calendarEvents.length?'loaded':'unavailable';APP.calendarError=errors.join(' · ');
+ renderMacroCalendar();
+ setText('calendarUpdatedAt',APP.calendarEvents.length?'Updated '+new Date().toLocaleTimeString('en-GB',{timeZone:TZ})+' WIB · BLS / BEA / Fed':APP.calendarError||'Official schedule unavailable');
  renderQuality();
 }
 /* TradingView widgets. Widget content remains provider-controlled and does not feed calculations. */

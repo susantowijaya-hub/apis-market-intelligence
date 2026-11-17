@@ -2340,6 +2340,39 @@ async function fetchInvestingCalendarHtml(){
  }
  throw new Error(lastError);
 }
+function mergeUsCalendarActuals(primary,agencyEvents){
+ const merged=primary.map(item=>({...item}));
+ const normalizeName=name=>calendarEventNameKey(name);
+ const used=new Set();
+ agencyEvents.forEach(agency=>{
+  if(!agency||agency.country!=='USD')return;
+  const a=normalizeName(agency.title);
+  const candidates=merged.map((item,index)=>{
+   if(item.country!=='USD'||item.dateKey!==agency.dateKey||used.has(index))return {index,score:0};
+   const delta=Math.abs(item.date.getTime()-agency.date.getTime())/60000;
+   if(delta>180)return {index,score:0};
+   let score=calendarEventSimilarity(item.title,agency.title);
+   if(score>0)score+=delta<=15?.16:delta<=60?.08:0;
+   return {index,score};
+  }).sort((x,y)=>y.score-x.score);
+  const best=candidates[0],match=best&&best.score>=.52?merged[best.index]:null;
+  if(!match){
+   merged.push({...agency});
+   return;
+  }
+  used.add(best.index);
+  if(agency.previous)match.previous=agency.previous;
+  if(agency.forecast)match.forecast=agency.forecast;
+  if(agency.actual)match.actual=agency.actual;
+  if(agency.periodLabel)match.periodLabel=agency.periodLabel;
+  if(agency.unit)match.unit=agency.unit;
+  const currentSources=String(match.source||'').split(' + ');
+  if(!currentSources.includes(agency.source))match.source=currentSources.concat(agency.source).filter(Boolean).join(' + ');
+  match.sourceLink=agency.sourceLink||match.sourceLink;
+  match.sourceNote='Forex Factory / Investing schedule + U.S. agency previous / actual';
+ });
+ return merged;
+}
 function buildIndonesiaCalendarEvents(){
  const official='https://www.bi.go.id/id/publikasi/Kalender/Default.aspx';
  const rows=[
@@ -2363,7 +2396,10 @@ function buildIndonesiaCalendarEvents(){
 function calendarRefreshStatus(){
  const errors=APP.calendarErrors||[];
  const status=APP.calendarSourcesOK||0;
- setText('calendarUpdatedAt',(status?status+' sources · ':'')+'Updated '+new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit'}).format(new Date())+' WIB');
+ const checked=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date());
+ const counts=APP.calendarSourceCounts||{};
+ const detail=['FF '+(counts.forexFactory||0),'INV '+(counts.investing||0),'XOOMAR '+(counts.xoomar||0),'BI '+(counts.indonesia||0)].join(' · ');
+ setText('calendarUpdatedAt',(status?status+' sources · ':'')+detail+' · Updated '+checked+' WIB');
  if(errors.length)setText('calendarCount', (APP.calendarEvents||[]).length+' releases · partial source coverage');
 }
 function renderMacroCalendar(){

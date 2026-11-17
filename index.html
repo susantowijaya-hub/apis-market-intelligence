@@ -1281,11 +1281,10 @@ async function fetchStooqQuote(item){
  const routes=[
   'https://corsproxy.io/?url='+encodeURIComponent(target),
   'https://api.allorigins.win/raw?url='+encodeURIComponent(target),
-  'https://proxy.cors.dev/'+target
  ];
  const errors=[];
  for(const route of routes){
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),3500);
   try{
    const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'text/csv,text/plain,*/*'}});
    if(!response.ok)throw new Error('HTTP '+response.status);
@@ -1334,15 +1333,7 @@ function selectDailyIndexPreviousClose(dailyBars,cutoff,timeZone){
 async function fetchYahooQuote(item){
  const encoded=encodeURIComponent(item.symbol);
  const isDailyIndex=['^JKSE','^GSPC','^IXIC','^DJI','000001.SS','^TWII','^KS11','^N225','^HSI'].includes(item.symbol);
- const plans=isDailyIndex?[
-  {range:'1mo',interval:'1d'},
-  {range:'5d',interval:'5m'},
-  {range:'1d',interval:'1m'}
- ]:[
-  {range:'1d',interval:'1m'},
-  {range:'5d',interval:'5m'},
-  {range:'1mo',interval:'1d'}
- ];
+ const plans=isDailyIndex?[{range:'1mo',interval:'1d'}]:[{range:'1d',interval:'1m'}];
  const routesFor=target=>[
   'https://corsproxy.io/?url='+encodeURIComponent(target),
   'https://api.allorigins.win/raw?url='+encodeURIComponent(target),
@@ -1352,7 +1343,7 @@ async function fetchYahooQuote(item){
  for(const plan of plans){
   const target='https://query1.finance.yahoo.com/v8/finance/chart/'+encoded+'?range='+plan.range+'&interval='+plan.interval+'&includePrePost=true';
   for(const route of routesFor(target)){
-   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),3500);
    try{
     const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
     if(!response.ok)throw new Error('HTTP '+response.status);
@@ -1479,11 +1470,10 @@ async function fetchTaiwanOfficialQuote(item){
   dailyTarget,
   'https://corsproxy.io/?url='+encodeURIComponent(dailyTarget),
   'https://api.allorigins.win/raw?url='+encodeURIComponent(dailyTarget),
-  'https://proxy.cors.dev/'+dailyTarget
  ];
  let lastError='TWSE dated daily index report unavailable';
  for(const route of dailyRoutes){
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),7500);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),3500);
   try{
    const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}});
    if(!response.ok)throw new Error('HTTP '+response.status);

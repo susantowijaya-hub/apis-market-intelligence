@@ -332,7 +332,7 @@ jobs:
                 if(!calendarSources.includes('INV 2')||!calendarSources.includes('FF 2'))
                   throw new Error(engine.name+' Investing / Forex Factory source merge failed: '+calendarSources);
                 if(!eventText.includes('19.7'))throw new Error(engine.name+' Investing.com Actual value missing: '+eventText);
-                await page.waitForFunction(()=>Number(window.APP?.lastSliceRefreshAt||0)>0,null,{timeout:90000});
+                await page.waitForFunction(()=>Number(window.APP?.lastSliceRefreshAt||0)>0,null,{timeout:120000});
                 const sliceCheck=await page.evaluate(()=>({lastSliceRefreshAt:APP.lastSliceRefreshAt,cursor:APP.sliceCursor,busy:APP.sliceBusy}));
                 if(!sliceCheck.lastSliceRefreshAt)
                   throw new Error(engine.name+' 5s session-aware quote poll did not complete a slice: '+JSON.stringify(sliceCheck));

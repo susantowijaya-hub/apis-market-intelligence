@@ -1439,7 +1439,7 @@ async function fetchXauSpotQuote(item){
   if(historyResponse.ok){
    const series=await historyResponse.json(),points=(series.points||[]).map(point=>({t:Number(point.t),p:Number(point.p)})).filter(point=>Number.isFinite(point.t)&&Number.isFinite(point.p)&&point.p>0).sort((a,b)=>a.t-b.t);
    historyCoverage=Number(series.coverage_seconds)||0;
-   if(points.length>=3){sparkline=points.slice(-36).map(point=>point.p);if(historyCoverage>=20*3600){const first=points[0].p;changePct=(price/first-1)*100}}
+   if(points.length>=3){sparkline=points.slice(-36).map(point=>point.p);if(historyCoverage>=23*3600){const first=points[0].p;changePct=(price/first-1)*100}}
   }
  }catch(_){}
  const marketOpen=goldSpotSessionOpen();
@@ -1574,15 +1574,21 @@ function buildStockSparkline(values,changePct){
 function marketSessionLabel(quote,item){
  if(!quote)return 'FEED UNAVAILABLE';
  if(item?.symbol==='XAUUSD=X'){
-  if(quote.status==='STALE_OBSERVATION')return goldSpotSessionOpen()?'STALE · SPOT':'MARKET CLOSE · STALE';
-  return goldSpotSessionOpen()?'LIVE · SPOT':'MARKET CLOSE';
+  if(!goldSpotSessionOpen())return quote.status==='STALE_OBSERVATION'?'MARKET CLOSE · STALE':'MARKET CLOSE';
+  return quote.status==='STALE_OBSERVATION'?'STALE · SPOT':'LIVE · SPOT';
  }
- if(quote.status==='STALE_OBSERVATION')return (quote.marketState==='CLOSED'||quote.marketState==='PUBLIC CSV SNAPSHOT')?'MARKET CLOSE · STALE':'STALE OBSERVATION';
- if(quote.marketState==='CLOSED'||quote.status==='LAST_AVAILABLE_CLOSE'||quote.marketState==='PUBLIC CSV SNAPSHOT')return 'MARKET CLOSE';
  if(quote.transport==='WEBSOCKET')return 'LIVE';
- if(quote.marketState==='REGULAR')return quote.status==='DELAYED_PROVIDER'?'SESSION OPEN · DELAYED':'LIVE';
- if(quote.marketState==='PRE')return 'PRE-MARKET';
- if(quote.marketState==='POST')return 'AFTER-HOURS';
+ const marketState=String(quote.marketState||'').toUpperCase();
+ if(marketState==='PRE')return 'PRE-MARKET';
+ if(marketState==='POST')return 'AFTER-HOURS';
+ if(marketState==='REGULAR'){
+  if(quote.status==='STALE_OBSERVATION'||quote.status==='LAST_AVAILABLE_CLOSE')return 'SESSION OPEN · STALE';
+  return quote.status==='DELAYED_PROVIDER'?'SESSION OPEN · DELAYED':'LIVE';
+ }
+ if(marketState==='CLOSED')return quote.status==='STALE_OBSERVATION'?'MARKET CLOSE · STALE':'MARKET CLOSE';
+ if(marketState==='PUBLIC CSV SNAPSHOT')return 'MARKET CLOSE · PUBLIC SNAPSHOT';
+ if(quote.status==='STALE_OBSERVATION')return 'STALE OBSERVATION';
+ if(quote.status==='LAST_AVAILABLE_CLOSE')return 'MARKET CLOSE';
  return quote.status==='DELAYED_PROVIDER'?'SESSION OPEN · DELAYED':'MARKET STATUS · PROVIDER';
 }
 function goldSpotSessionOpen(){

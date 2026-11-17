@@ -116,53 +116,48 @@ jobs:
                 page.on('pageerror', error => errors.push(error.message));
                 await page.route('https://**/*', route => route.abort());
                 await page.goto('http://127.0.0.1:4173/', {waitUntil:'domcontentloaded'});
-                await page.waitForTimeout(900);
-                const boot = await page.evaluate(() => ({
+                await page.waitForTimeout(700);
+                const home = await page.evaluate(() => ({
                   booted:window.__APIS_BOOTED__===true,
-                  rows:document.querySelectorAll('#featuredQuotes .market-pulse-row').length,
+                  rows:document.querySelectorAll('#featuredQuotes .ios-stock-item').length,
                   refresh:!!document.getElementById('refreshTop')?.onclick,
-                  routes:document.querySelectorAll('[data-page]').length
+                  routes:document.querySelectorAll('[data-page]').length,
+                  btc:!!document.getElementById('btcPrice'),
+                  fx:!!document.getElementById('fxValue'),
+                  pageWidth:document.documentElement.clientWidth,
+                  documentWidth:document.documentElement.scrollWidth,
+                  date:document.getElementById('homeDate')?.textContent || ''
                 }));
-                if (!boot.booted || boot.rows < 8 || !boot.refresh || boot.routes < 8)
-                  throw new Error(engine.name+' '+viewport.name+' boot failed: '+JSON.stringify({boot,errors}));
+                if (!home.booted || home.rows < 27 || !home.refresh || home.routes < 8 || !home.btc || !home.fx)
+                  throw new Error(engine.name+' '+viewport.name+' Home boot failed: '+JSON.stringify({home,errors}));
+                if (home.documentWidth > home.pageWidth + 1)
+                  throw new Error(engine.name+' '+viewport.name+' Home horizontal overflow: '+JSON.stringify(home));
+                await page.locator('#homeSearchToggle').click();
+                await page.locator('#homeSearch').fill('Brent');
+                if (await page.locator('#featuredQuotes .ios-stock-item').count() !== 1)
+                  throw new Error(engine.name+' Home watchlist search failed');
+                await page.locator('#homeSearchClear').click();
+                await page.locator('#homeSearchToggle').click();
                 await page.locator('[data-page="markets"]').click();
                 if (!(await page.locator('#markets').evaluate(el=>el.classList.contains('active'))))
-                  throw new Error(engine.name+' Markets navigation failed before layout measurement');
-                const layout = await page.evaluate(() => {
-                  const summary=document.getElementById('marketSnapshotGrid');
-                  const summaryCard=document.querySelector('.market-snapshot-card');
-                  const firstGroup=summary?.querySelector('.snapshot-group');
-                  const innerGrid=firstGroup?.querySelector('.snapshot-grid');
-                  const instrument=innerGrid?.querySelector('.snapshot-item');
-                  const watch=document.getElementById('watchlistPanel');
-                  const wrap=watch?.querySelector('.table-wrap');
-                  const table=watch?.querySelector('table');
-                  const row=watch?.querySelector('tbody tr');
-                  const head=watch?.querySelector('thead');
-                  const summaryStyle=summary?getComputedStyle(summary):null;
-                  const rowStyle=row?getComputedStyle(row):null;
-                  return {
-                    summaryDisplay:summaryStyle?.display,
-                    summaryDirection:summaryStyle?.flexDirection,
-                    summaryWidth:summary?.clientWidth||0,
-                    groupWidth:firstGroup?.clientWidth||0,
-                    instrumentWidth:instrument?.clientWidth||0,
-                    summaryOverflow:!!(summary&&summary.scrollWidth>summary.clientWidth+1),
-                    watchWidth:watch?.clientWidth||0,
-                    tableWidth:table?.scrollWidth||0,
-                    wrapWidth:wrap?.clientWidth||0,
-                    tableOverflow:!!(wrap&&table&&table.scrollWidth>wrap.clientWidth+1),
-                    rowDisplay:rowStyle?.display,
-                    headerDisplay:head?getComputedStyle(head).display:'missing',
-                    hasFieldLabels:!!row?.querySelector('[data-label]')
-                  };
-                });
-                if (layout.summaryDisplay!=='flex' || layout.summaryDirection!=='column' ||
-                    !layout.summaryWidth || layout.groupWidth>layout.summaryWidth+1 ||
-                    !layout.instrumentWidth || layout.summaryOverflow ||
-                    layout.tableOverflow || layout.rowDisplay!=='grid' ||
-                    layout.headerDisplay!=='none' || !layout.hasFieldLabels)
-                  throw new Error(engine.name+' '+viewport.name+' mobile layout failed: '+JSON.stringify(layout));
+                  throw new Error(engine.name+' Markets navigation failed');
+                await page.locator('[data-market-filter="commodities"]').click();
+                const commodities = await page.locator('#marketSnapshotGrid .ios-stock-item').count();
+                const commodityLabels = await page.locator('#marketSnapshotGrid').innerText();
+                if (commodities !== 5 || !commodityLabels.includes('XAU/USD') || !commodityLabels.includes('WTI Crude') ||
+                    !commodityLabels.includes('Brent') || !commodityLabels.includes('Copper'))
+                  throw new Error(engine.name+' commodity segment failed: '+commodities+' rows · '+commodityLabels);
+                if (await page.locator('#mainChart').count() !== 0)
+                  throw new Error(engine.name+' broken chart embed should have been removed');
+                const marketOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
+                if (marketOverflow) throw new Error(engine.name+' '+viewport.name+' Markets horizontal overflow');
+                await page.locator('#marketSnapshotGrid .ios-stock-item summary').first().click();
+                if (!(await page.locator('#marketSnapshotGrid .ios-stock-item').first().evaluate(el=>el.open)))
+                  throw new Error(engine.name+' market row expansion failed');
+                await page.locator('[data-market-filter="fx-crypto"]').click();
+                const fxCrypto=await page.locator('#marketSnapshotGrid').innerText();
+                if (!fxCrypto.includes('Bitcoin') || !fxCrypto.includes('USD/IDR'))
+                  throw new Error(engine.name+' FX/Crypto segment failed: '+fxCrypto);
                 await page.locator('[data-page="news"]').click();
                 if (!(await page.locator('#research').evaluate(el=>el.classList.contains('active'))))
                   throw new Error(engine.name+' News navigation failed');
@@ -173,10 +168,12 @@ jobs:
                 await page.locator('[data-theme-choice="dark"]').click();
                 if (await page.locator('html').getAttribute('data-theme')!=='dark')
                   throw new Error(engine.name+' dark theme control failed');
+                const transition=await page.locator('.theme-menu-items button').first().evaluate(el=>getComputedStyle(el).transitionDuration);
+                if (!transition || transition==='0s') throw new Error(engine.name+' theme toggle animation missing');
                 await page.locator('[data-page="home"]').click();
                 await page.locator('#refreshTop').click();
-                if (errors.length)throw new Error(engine.name+' runtime errors: '+errors.join(' | '));
-                console.log(engine.name+' '+viewport.name+' PASS · boot · 8 pulse rows · one-column groups · no sideways table · News/Macro navigation · theme · refresh');
+                if (errors.length) throw new Error(engine.name+' runtime errors: '+errors.join(' | '));
+                console.log(engine.name+' '+viewport.name+' PASS · '+home.rows+' Home watchlist rows · search · BTC/USDIDR · commodity tabs · no chart embed · row expansion · no horizontal overflow · News/Macro · theme animation · refresh');
                 await page.close();
               }
               await browser.close();

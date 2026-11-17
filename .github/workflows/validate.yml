@@ -35,7 +35,9 @@ jobs:
           const checks = {
             version: html.includes('build-version" content="2.10.0"'),
             dailyIndexCloseOnly: html.includes("const hasDailyBars=isDailyIndex&&plan.interval==='1d'") && html.includes('useDailyClose=hasDailyBars&&barPrice!==null') && html.includes('const dailyBars=hasDailyBars?closes.map'),
-            dailyIndexCloseBaseline: html.includes('const baselineCutoff=useDailyClose?selectedDailyBarDay:sessionDay') && html.includes('const dailyPreviousClose=dailyBaselineBars.length?dailyBaselineBars[dailyBaselineBars.length-1].price:null'),
+            dailyIndexCloseBaseline: html.includes('const baselineCutoff=useDailyClose?selectedDailyBarDay:sessionDay') && html.includes('selectDailyIndexPreviousClose(dailyBars,baselineCutoff,session.zone)'),
+            finalCloseTimeGuard: html.includes('Provider observation predates the official close window') && html.includes('session.finalCloseMinute-10'),
+            stooqSessionDateGuard: html.includes('Stooq observation date does not match the current exchange session'),
             usClosingAuction: html.includes("openWindows=[[9*60+30,15*60+50]];auctionWindow=[15*60+50,16*60]"),
             hongKongLunchBreak: html.includes('openWindows=[[9*60+30,12*60],[13*60,16*60]]'),
             closedRefreshGuardRestore: html.includes("closedRefreshDone:loadJSON('apis_market_closed_refresh_done',{})"),
@@ -126,7 +128,7 @@ jobs:
           assert.equal(unit.calendarActualTone({title:'Average Earnings Index +Bonus',forecast:'3.8',actual:'3.6'}),'');
           assert.equal(unit.calendarActualTone({title:'BI Rate',forecast:'5.75',actual:'5.75'}),'');
           // Gate 4: Movers stay within the approved individual-stock markets and focus names.
-          const moverBlock = html.match(/const stockGroups=new Set\\(\\[(.*?)\\]\\)/)?.[1] || '';
+          const moverBlock = html.includes("const stockGroups=new Set(['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity'])") ? 'Indonesia equity,US equity,Hong Kong equity,Korea focus equity,Taiwan focus equity' : '';
           for (const group of ['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity']) assert.ok(moverBlock.includes(group));
           assert.ok(html.includes("short:'SAMSUNG',group:'Korea focus equity'"));
           assert.ok(html.includes("short:'SK HYNIX',group:'Korea focus equity'"));

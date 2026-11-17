@@ -43,7 +43,9 @@ jobs:
             treasury: html.includes('function loadTreasuryCurve'),
             macro: html.includes('async function loadMacroCalendar'),
             news: html.includes('const feeds=['),
-            responsiveWatchlist: html.includes('.watchlist-panel tbody tr{display:grid'),
+            responsiveWatchlist: html.includes('#watchlistPanel tbody tr{display:grid'),
+            touchMarketGroups: html.includes('#marketSnapshotGrid>.snapshot-group'),
+            touchPointerLayout: html.includes('(hover:none) and (pointer:coarse)'),
             noTwelveData: !html.includes('fetchTwelveDataQuote') && !html.includes('twelveDataKey'),
             noFmp: !html.includes('fetchFmpQuote') && !html.includes('fmpKey'),
             noPaidSettings: !html.includes('initProviderSettings') && !html.includes('marketProviderKeys')

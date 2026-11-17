@@ -1723,6 +1723,7 @@ function renderMovers(){
 }
 function stockChangePct(quote){
  if(!quote)return null;
+ if(quote.symbol==='^TWII'&&!String(quote.source||'').toUpperCase().includes('TWSE'))return null;
  if(num(quote.changePct)!==null)return Number(quote.changePct);
  if(num(quote.previousClose)!==null&&quote.previousClose>0&&num(quote.price)!==null)return (quote.price/quote.previousClose-1)*100;
  return null;

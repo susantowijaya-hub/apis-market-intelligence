@@ -727,9 +727,9 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
 html[data-theme="dark"] .calendar-event-metric.actual.good,html[data-theme="dark"] .calendar-event-metric.actual.bad{background:var(--surface-2)}
 @media(max-width:720px){
  .topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:7px 10px;padding:9px 12px;min-height:56px}
- .brand{flex:0 1 auto;min-width:0;max-width:calc(100% - 54px);font-size:17px;white-space:nowrap}
+ .brand{flex:0 1 auto;min-width:0;max-width:calc(100% - 86px);font-size:17px;white-space:nowrap}
  .brand>span:last-child{overflow:hidden;text-overflow:ellipsis}
- .top-right{display:flex;flex:0 0 auto;min-width:0;max-width:54px;margin-left:auto;justify-content:flex-end;gap:6px}
+ .top-right{display:flex;flex:0 0 auto;min-width:0;max-width:82px;width:82px;margin-left:auto;justify-content:flex-end;gap:6px}
  .top-right .clock,.top-right .feed-state,.top-right .refresh-hint,.top-right .after-hours,.top-right .market-session-stamp{display:none!important}
  .top-right .theme-menu{flex:0 0 auto}
  .top-right .icon-button{width:36px;height:36px}
@@ -2529,8 +2529,8 @@ function calendarRefreshStatus(){
 }
 function calendarNumericValue(value){
  if(value===null||value===undefined||value==='')return null;
- const text=String(value).replace(/\\s/g,'').replace(/,/g,'');
- const match=text.match(/[+-]?(?:\\d+\\.?\\d*|\\.\\d+)/);
+ const text=String(value).replace(/\s/g,'').replace(/,/g,'');
+ const match=text.match(/[+-]?(?:\d+\.?\d*|\.\d+)/);
  return match?Number(match[0]):null;
 }
 function calendarActualTone(item){
@@ -2690,7 +2690,7 @@ async function loadMacroCalendar(force=false){
   APP.calendarError=errors.join(' · ');
   APP.calendarSourceCounts={forexFactory:factory.length,investing:investing.length,xoomar:agency.length,tradingEconomicsIndonesia:indonesiaTe.length,indonesia:bi.length};
   const serializable=APP.calendarEvents.map(item=>({...item,date:item.date.toISOString()}));
-  saveJSON('apis_browser_calendar_cache',{version:'2.9.3',events:serializable,savedAt:Date.now(),errors,sourcesOK:APP.calendarSourcesOK,counts:APP.calendarSourceCounts});
+  saveJSON('apis_browser_calendar_cache',{version:'2.10.0',events:serializable,savedAt:Date.now(),errors,sourcesOK:APP.calendarSourcesOK,counts:APP.calendarSourceCounts});
   saveJSON('apis_calendar_last_success',Date.now());
   renderMacroCalendar();calendarRefreshStatus();renderQuality();
  })();

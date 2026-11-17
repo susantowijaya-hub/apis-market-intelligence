@@ -272,7 +272,8 @@ jobs:
                   throw new Error(engine.name+' Home watchlist search failed');
                 await page.locator('#homeSearchClear').click();
                 await page.locator('#homeSearchToggle').click();
-                await page.locator('[data-page="markets"]').click();
+                await page.locator('[data-page="markets"]').click({force:true});
+                await page.waitForFunction(()=>document.getElementById('markets')?.classList.contains('active'),null,{timeout:5000});
                 if (!(await page.locator('#markets').evaluate(el=>el.classList.contains('active'))))
                   throw new Error(engine.name+' Markets navigation failed');
                 await page.locator('[data-market-filter="indices"]').click();

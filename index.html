@@ -1679,6 +1679,12 @@ function exchangeSession(item,now=new Date()){
  if(openWindows.length===2&&minute>=openWindows[0][1]&&minute<openWindows[1][0])return {state:'BREAK',label:'LUNCH BREAK',zone,closeTime,closeZone,tradeDate:p};
  return {state:'CLOSED',label:'MARKET CLOSE',zone,closeTime,closeZone,tradeDate:p};
 }
+function marketQuoteDayKey(quote,session){
+ if(!quote||!session)return '';
+ if(quote.observationDate)return String(quote.observationDate);
+ if(num(quote.observedAt)!==null)return new Intl.DateTimeFormat('en-CA',{timeZone:session.zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(quote.observedAt*1000));
+ return '';
+}
 function marketSessionLabel(quote,item){
  if(!quote)return 'FEED UNAVAILABLE';
  if(item?.symbol==='XAUUSD=X'){
@@ -1689,8 +1695,10 @@ function marketSessionLabel(quote,item){
  const session=exchangeSession(item);
  if(session){
   if(session.state==='OPEN'){
+   const observedDay=marketQuoteDayKey(quote,session);
+   const marketDay=new Intl.DateTimeFormat('en-CA',{timeZone:session.zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
    if(quote.marketState==='PUBLIC CSV SNAPSHOT')return 'SESSION OPEN · SNAPSHOT';
-   if(quote.status==='STALE_CACHE'||quote.status==='STALE_OBSERVATION'||quote.status==='LAST_AVAILABLE_CLOSE')return 'SESSION OPEN · STALE';
+   if(quote.status==='STALE_CACHE'||quote.status==='STALE_OBSERVATION'||quote.status==='LAST_AVAILABLE_CLOSE'||(observedDay&&observedDay<marketDay))return 'SESSION OPEN · STALE';
    return quote.status==='DELAYED_PROVIDER'?'SESSION OPEN · DELAYED':'SESSION OPEN';
   }
   if(session.state==='PRECLOSE')return 'PRE-CLOSE';
@@ -2214,7 +2222,7 @@ async function fetchInvestingCalendar(){
  const endDay=new Date(Date.UTC(year,month-1,day+7));
  const end=zonedDateToUtc(endDay.getUTCFullYear(),endDay.getUTCMonth()+1,endDay.getUTCDate(),23,59,TZ);
  const params=new URLSearchParams({
-  domain_id:'1',limit:'300',start_date:start.toISOString().replace('.000Z','Z'),
+  domain_id:'1',limit:'200',start_date:start.toISOString().replace('.000Z','Z'),
   end_date:end.toISOString().replace('.000Z','Z')
  });
  const target='https://endpoints.investing.com/pd-instruments/v1/calendars/economic/events/occurrences?'+params.toString();

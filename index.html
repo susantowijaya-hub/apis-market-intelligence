@@ -716,6 +716,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
 }
 
 .ios-stock-item .ios-stock-price,.ios-stock-item .ios-stock-change,.mover-row .mover-value,.mover-row .mover-change{transition:color .28s ease,opacity .28s ease,transform .28s ease}.ios-stock-item.is-updating{animation:apis-quote-refresh .52s cubic-bezier(.2,.75,.25,1)}.mover-row{animation:apis-mover-in .32s ease both}@keyframes apis-quote-refresh{0%{background-color:rgba(74,144,226,.12)}100%{background-color:transparent}}@keyframes apis-mover-in{from{opacity:.55;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+.impact-swatch.low{background:#94a3b8}.calendar-event-card.impact-low{border-left-color:#94a3b8}
 </style>
 </head>
 <body>
@@ -1493,7 +1494,11 @@ async function fetchXauSpotQuote(item){
 async function fetchMarketQuote(item){
  const errors=[];
  if(item.symbol==='XAUUSD=X')return fetchXauSpotQuote(item);
- if(item.symbol==='^TWII')return fetchTaiwanOfficialQuote(item);
+ if(item.symbol==='^TWII'){
+  const taiwanSession=exchangeSession(item);
+  if(taiwanSession?.state==='OPEN'||taiwanSession?.state==='PRECLOSE')return fetchYahooQuote(item);
+  return fetchTaiwanOfficialQuote(item);
+ }
  const session=exchangeSession(item);
  if((!session||session.state==='CLOSED'||session.state==='PREOPEN')&&(item.stooqSymbol||STOOQ_SYMBOLS[item.symbol])){
   try{return await fetchStooqQuote(item)}
@@ -1638,7 +1643,6 @@ function renderMovers(){
 }
 function stockChangePct(quote){
  if(!quote)return null;
- if(quote.symbol==='^TWII'&&(!quote.source||!String(quote.source).includes('Taiwan Stock Exchange')||quote.providerQuoteVerified!==true))return null;
  if(num(quote.changePct)!==null)return Number(quote.changePct);
  if(num(quote.previousClose)!==null&&quote.previousClose>0&&num(quote.price)!==null)return (quote.price/quote.previousClose-1)*100;
  return null;

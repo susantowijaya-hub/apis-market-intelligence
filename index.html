@@ -797,35 +797,113 @@ function mountWidget(id,src,config){
  script.onload=()=>{setTimeout(()=>{if(!host.querySelector('iframe'))fallback();else settled=true},10000)};
  wrap.append(script);host.append(wrap);setTimeout(()=>{if(!host.querySelector('iframe'))fallback()},18000);
 }
+function classifyNews(title,source){
+ const t=(title+' '+source).toLowerCase();
+ if(/federal reserve|fomc|ecb|european central bank|bank of japan|boj|bank of england|bank indonesia|pboc|central bank|monetary policy|interest rate decision/.test(t))return 'Central Banks';
+ if(/forex|currency|exchange rate|dollar|yen|euro|rupiah|sterling|usd\/|fx market/.test(t))return 'Forex';
+ if(/oil|crude|brent|wti|gold|silver|copper|commodity|commodities|opec|natural gas/.test(t))return 'Commodities';
+ if(/war |war:|sanction|tariff|geopolit|attack|ceasefire|conflict|iran|ukraine|middle east|trade tension/.test(t))return 'Geopolitical';
+ if(/cpi|inflation|gdp|pce|employment|jobs report|unemployment|payroll|pmi|retail sales|recession|economic growth|producer price|consumer price|trade deficit/.test(t))return 'Economy';
+ return 'Markets';
+}
+function renderNewsFeed(){
+ const host=document.getElementById('newsFeedList');if(!host)return;
+ const filter=APP.newsFilter||'All',query=(document.getElementById('newsSearch')?.value||'').trim().toLowerCase();
+ const items=(APP.newsItems||[]).filter(item=>{
+  const recent=item.publishedAt&&Date.now()-item.publishedAt<=3*60*60*1000&&Date.now()>=item.publishedAt-5*60*1000;
+  const matches=filter==='All'||(filter==='Breaking'?recent:item.category===filter);
+  return matches&&(!query||(item.title+' '+item.source).toLowerCase().includes(query));
+ });
+ host.replaceChildren();
+ if(!items.length){
+  const empty=document.createElement('div');empty.className='empty-state';
+  empty.textContent=(APP.newsItems||[]).length?'No headlines match this filter or search.':'No publisher headlines were received. Check source status and retry.';
+  host.append(empty);
+ }
+ items.slice(0,35).forEach(item=>{
+  const row=document.createElement('article');row.className='news-item';
+  const time=document.createElement('div');time.className='news-time';
+  time.textContent=item.publishedAt?new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'}).format(new Date(item.publishedAt))+' WIB':'Time unavailable';
+  const main=document.createElement('div');main.className='news-item-main';
+  const link=document.createElement('a');link.href=item.link;link.target='_blank';link.rel='noopener';link.textContent=item.title;
+  const meta=document.createElement('div');meta.className='news-meta';
+  const source=document.createElement('span');source.textContent=item.source;
+  const tag=document.createElement('span');tag.className='news-tag';tag.textContent=item.category;
+  meta.append(source,tag);main.append(link,meta);row.append(time,main);host.append(row);
+ });
+ setText('newsResultsCount',items.length+' headlines');
+}
 async function loadPublicNews(){
  const host=document.getElementById('newsFeedList');if(!host)return;
- const target='https://news.google.com/rss/search?q='+encodeURIComponent('(global markets OR stock market OR central banks)')+'&hl=en-US&gl=US&ceid=US:en';
- const routes=['https://proxy.cors.dev/'+target,'https://corsproxy.io/?url='+encodeURIComponent(target),'https://api.allorigins.win/raw?url='+encodeURIComponent(target)];
- let error='Public RSS is unavailable';
- for(const url of routes){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);try{
-  const r=await fetch(url,{cache:'no-store',credentials:'omit',signal:controller.signal});if(!r.ok)throw new Error('HTTP '+r.status);
-  const xmlText=await r.text(),xml=new DOMParser().parseFromString(xmlText,'application/xml');
-  if(xml.querySelector('parsererror'))throw new Error('RSS parse error');
-  const items=[...xml.querySelectorAll('item')].slice(0,12);if(!items.length)throw new Error('No RSS items');
-  host.replaceChildren();items.forEach(item=>{
-   const title=item.querySelector('title')?.textContent?.trim()||'Untitled';
-   const link=item.querySelector('link')?.textContent?.trim()||'';
-   const source=item.querySelector('source')?.textContent?.trim()||'Google News';
-   const pub=item.querySelector('pubDate')?.textContent||'';
-   const row=document.createElement('div');row.className='news-item';
-   const a=document.createElement('a');a.textContent=title;a.href=link;a.target='_blank';a.rel='noopener';
-   const meta=document.createElement('div');meta.className='news-meta';
-   const s=document.createElement('span');s.textContent=source;
-   const t=document.createElement('time');t.textContent=pub?new Date(pub).toLocaleString('en-GB',{timeZone:TZ,dateStyle:'medium',timeStyle:'short'})+' WIB':'Publication time unavailable';
-   meta.append(s,t);row.append(a,meta);host.append(row);
-  });
-  APP.newsState='loaded';APP.newsError='';renderQuality();return;
- }catch(e){error=String(e?.message||e).slice(0,90)}finally{clearTimeout(timer)}}
- APP.newsState='unavailable';APP.newsError=error;
- host.innerHTML='<div class="empty-state">News feed unavailable on this network. Open the original provider to view current headlines. No sample headlines are inserted.</div>';
+ const feeds=[
+  {source:'CNBC Markets',url:'https://www.cnbc.com/id/100003114/device/rss/rss.html',direct:true},
+  {source:'BBC Business',url:'https://feeds.bbci.co.uk/news/business/rss.xml'},
+  {source:'The Guardian Business',url:'https://www.theguardian.com/business/rss'},
+  {source:'Federal Reserve',url:'https://www.federalreserve.gov/feeds/press_monetary.xml'},
+  {source:'BIS',url:'https://www.bis.org/rss/press.xml'}
+ ];
+ const readFeed=async feed=>{
+  const routes=feed.direct?[feed.url,'https://proxy.cors.dev/'+feed.url]:['https://proxy.cors.dev/'+feed.url];
+  let error='unavailable';
+  for(const route of routes){
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9500);
+   try{
+    const response=await fetch(route,{cache:'no-store',credentials:'omit',signal:controller.signal});
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    const text=await response.text(),doc=new DOMParser().parseFromString(text,'application/xml');
+    if(doc.querySelector('parsererror'))throw new Error('Feed XML parse error');
+    const nodes=[...doc.querySelectorAll('item, entry')];if(!nodes.length)throw new Error('No RSS entries');
+    const readChild=(node,names)=>{for(const child of [...node.children])if(names.includes(child.localName.toLowerCase()))return child.textContent?.trim()||'';return ''};
+    return nodes.slice(0,20).map(node=>{
+     const title=readChild(node,['title'])||'Untitled';
+     const linkNode=[...node.children].find(child=>child.localName.toLowerCase()==='link');
+     const link=(linkNode?.getAttribute('href')||linkNode?.textContent||'').trim();
+     const pub=readChild(node,['pubdate','published','updated','date']),parsed=pub?Date.parse(pub):NaN;
+     return {title,link,source:feed.source,publishedAt:Number.isFinite(parsed)?parsed:null,category:classifyNews(title,feed.source)};
+    }).filter(item=>item.title&&item.link);
+   }catch(e){error=e?.name==='AbortError'?'timeout':String(e?.message||e).slice(0,70)}
+   finally{clearTimeout(timer)}
+  }
+  return {error,source:feed.source};
+ };
+ const results=await Promise.allSettled(feeds.map(readFeed));let items=[],failures=[];
+ results.forEach((result,i)=>{
+  if(result.status==='fulfilled'&&Array.isArray(result.value))items.push(...result.value);
+  else failures.push(feeds[i].source+': '+(result.reason?.message||'failed'));
+ });
+ const seen=new Set();
+ items=items.filter(item=>{const key=(item.link||item.title).toLowerCase();if(seen.has(key))return false;seen.add(key);return true}).sort((a,b)=>(b.publishedAt||0)-(a.publishedAt||0));
+ APP.newsItems=items;APP.newsState=items.length?'loaded':'unavailable';APP.newsError=failures.join(' · ');APP.newsSourcesOK=feeds.length-failures.length;
+ renderNewsFeed();
+ setText('newsFeedStatus',items.length?items.length+' headlines · '+APP.newsSourcesOK+'/'+feeds.length+' sources':'NEWS FEED UNAVAILABLE');
+ setText('newsUpdatedAt',items.length?'Updated '+new Date().toLocaleTimeString('en-GB',{timeZone:TZ})+' WIB':failures.slice(0,2).join(' · ')||'No publisher response');
+ if(items.length&&APP.newsAlertsOn&&'Notification'in window&&Notification.permission==='granted'){
+  const fresh=items.filter(item=>item.publishedAt&&Date.now()-item.publishedAt<8*60*1000&&!APP.newsNotified.has(item.link));
+  fresh.slice(0,2).forEach(item=>{new Notification('APIS · '+item.source,{body:item.title});APP.newsNotified.add(item.link)});
+ }
  renderQuality();
 }
-
+function initNewsControls(){
+ APP.newsFilter='All';APP.newsNotified=APP.newsNotified||new Set();
+ const filters=document.getElementById('newsFilters');
+ if(filters)filters.addEventListener('click',event=>{
+  const button=event.target.closest('[data-news-filter]');if(!button)return;
+  APP.newsFilter=button.dataset.newsFilter;
+  filters.querySelectorAll('[data-news-filter]').forEach(node=>node.classList.toggle('active',node===button));
+  renderNewsFeed();
+ });
+ const search=document.getElementById('newsSearch');if(search)search.addEventListener('input',renderNewsFeed);
+ const refresh=document.getElementById('refreshNewsBtn');if(refresh)refresh.onclick=loadPublicNews;
+ const toggle=document.getElementById('newsAlertsToggle');
+ if(toggle)toggle.addEventListener('change',async()=>{
+  if(!toggle.checked){APP.newsAlertsOn=false;saveJSON('apis_browser_news_alerts',false);return}
+  if(!('Notification'in window)){toggle.checked=false;toast('Notifications are not supported in this browser.');return}
+  const permission=Notification.permission==='granted'?'granted':await Notification.requestPermission();
+  APP.newsAlertsOn=permission==='granted';toggle.checked=APP.newsAlertsOn;saveJSON('apis_browser_news_alerts',APP.newsAlertsOn);
+  if(!APP.newsAlertsOn)toast('Notification permission was not granted.');
+ });
+ APP.newsAlertsOn=loadJSON('apis_browser_news_alerts',false);if(toggle)toggle.checked=!!APP.newsAlertsOn;
+}
 async function loadEdgarFilings(){
  const host=document.getElementById('filingsFeedList');if(!host)return;
  const companies=[

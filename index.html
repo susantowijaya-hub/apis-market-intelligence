@@ -1401,7 +1401,7 @@ function renderQuality(){
   const rows=[
     ['Browser network context',browserDetail,browserStatus,browserStatus==='ONLINE'?'good':'warn'],
     ['Multi-provider market quotes',updated+' of '+total+' validated observations; Stooq public CSV where mapped, Yahoo public chart fallback otherwise.',APP.yahooState==='ready'?'UPDATED':APP.yahooState==='partial'?'PARTIAL':APP.yahooState==='loading'?'FETCHING':'UNAVAILABLE',APP.yahooState==='ready'?'good':'warn'],
-    ['Price mini-charts','Sparkline is shown only when a provider returns historical price observations. Snapshot-only rows do not get a fabricated chart.','PROVIDER HISTORY','good']
+    ['Price mini-charts','Sparkline is shown only when a provider returns historical price observations. Snapshot-only rows do not get a fabricated chart.','PROVIDER HISTORY','good'],
     ['Binance WebSocket',cryptoLive?'Timestamped BTC/USDT trade stream is fresh':cryptoRest?'BTC/USDT REST observation is fresh; not a live stream':cryptoCached?'Only a previously saved BTC observation is available':APP.btcError||'BTC/USDT unavailable',cryptoLive?'LIVE STREAM':cryptoRest?'REST UPDATE':cryptoCached?'STALE CACHE':'NOT LIVE',cryptoLive?'good':'warn'],
     ['Frankfurter FX',APP.fxState==='loaded'?'Daily reference-rate response received':APP.fxState==='cached'?'Saved dated reference rate; refresh failed':APP.fxError||'Reference-rate response unavailable',APP.fxState==='loaded'?'DAILY':APP.fxState==='cached'?'STALE':'UNAVAILABLE',APP.fxState==='loaded'?'good':'warn'],
     ['U.S. Treasury yield curve',APP.tsyState==='loaded'?(APP.tsySource||'Official daily Treasury par-yield curve'):APP.tsyError||'No daily Treasury response',APP.tsyState==='loaded'?'DAILY':'UNAVAILABLE',APP.tsyState==='loaded'?'good':'warn'],
@@ -1409,8 +1409,8 @@ function renderQuality(){
     ['Official macro calendar',APP.calendarState==='loaded'?(APP.calendarEvents?.length||0)+' major releases from BLS / BEA / Fed':APP.calendarError||'Calendar unavailable',APP.calendarState==='loaded'?'UPDATED':'UNAVAILABLE',APP.calendarState==='loaded'?'good':'warn'],
     ['SEC EDGAR submissions',APP.filingsState==='loaded'?'Recent public company filings loaded':APP.filingsError||'SEC filing feed not yet available',APP.filingsState==='loaded'?'UPDATED':'UNAVAILABLE',APP.filingsState==='loaded'?'good':'warn']
   ];
-  const container=document.getElementById('sourceHealth');container.replaceChildren();
-  rows.forEach(([name,detail,status,kind])=>{const r=document.createElement('div');r.className='source-row';const l=document.createElement('div');const strong=document.createElement('strong');strong.textContent=name;const small=document.createElement('small');small.textContent=detail;l.append(strong,small);const badge=document.createElement('span');badge.className='badge '+kind;badge.textContent=status;r.append(l,badge);container.append(r)});
+  const container=document.getElementById('sourceHealth');if(container)container.replaceChildren();
+  rows.forEach(row=>{if(!Array.isArray(row)||row.length!==4)return;const [name,detail,status,kind]=row;const r=document.createElement('div');r.className='source-row';const l=document.createElement('div');const strong=document.createElement('strong');strong.textContent=name;const small=document.createElement('small');small.textContent=detail;l.append(strong,small);const badge=document.createElement('span');badge.className='badge '+kind;badge.textContent=status;r.append(l,badge);if(container)container.append(r)});
 }
 
 /* Binance public real-time BTC/USDT trade ticker. Market data only; no credentials. */

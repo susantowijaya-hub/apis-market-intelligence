@@ -1493,7 +1493,7 @@ async function fetchTaiwanOfficialQuote(item){
    const observation=parseTwseIndexReport(payload);
    if(!observation)throw new Error('No valid TAIEX close / signed change row in official report');
    if(observation.dayKey!==tradeDate.slice(0,4)+'-'+tradeDate.slice(4,6)+'-'+tradeDate.slice(6,8))throw new Error('TWSE report row date mismatch');
-   return twseObservationQuote(item,observation,'Taiwan Stock Exchange · official dated daily close','https://www.twse.com.tw/en/afterTrading/MI_INDEX');
+   return twseObservationQuote(item,observation,'TWSE · Taiwan Stock Exchange · official dated daily close','https://www.twse.com.tw/en/afterTrading/MI_INDEX');
   }catch(error){lastError=error?.name==='AbortError'?'TWSE daily report timed out':String(error?.message||error).slice(0,120)}
   finally{clearTimeout(timer)}
  }

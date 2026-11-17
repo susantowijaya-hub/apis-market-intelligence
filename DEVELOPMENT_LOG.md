@@ -68,3 +68,31 @@
 - Static checks pass for free-only mode, no paid-provider names/adapters/key fields, 22 watchlist instruments, Stooq-first waterfall, Yahoo fallback, BTC, FX, Treasury, Macro, News, and responsive watchlist.
 - Latest index content blob: `73a89db42a989c503ab55d066b2df7556918ca4a`.
 - External live-feed connectivity and GitHub Pages browser rendering remain unverified from this execution environment; the new Actions workflow is the repository-side syntax/wiring gate.
+
+
+## 2026-11-17 — v2.4.2 Touch-first visual correction
+
+### User-reported defects from iPhone screenshots
+- The market overview rendered two regional groups side by side, which forced nested quote tiles into extremely narrow widths and split names vertically (for example S&P 500 and NIFTY 50).
+- The watchlist retained a wide seven-column HTML table, requiring horizontal scrolling and clipping columns.
+
+### Root cause
+- Mobile layout depended primarily on a 720px viewport breakpoint.
+- iOS Safari can retain/request a desktop-width layout, so a touch device may not enter that breakpoint.
+- The market summary reused the same .snapshot-grid class for both the outer group container and each nested instrument collection; old two-column rules therefore narrowed the nested cards.
+
+### Changes
+- Added high-specificity touch-first CSS targeting the market summary container by ID, forcing region groups into one full-width vertical stack.
+- Instrument rows now use a two-line information hierarchy: instrument and price on line one; move, source state, and observation time on line two.
+- Names use normal wrapping and prices use no-wrap/tabular alignment to prevent character-by-character stacking.
+- Added a coarse-pointer media query in addition to width-based breakpoints, so iPhone layout remains responsive even when Safari requests desktop site.
+- Forced the seven-column watchlist into full-width labelled stacked rows on touch devices; table headers are hidden and each value retains its own field label.
+- No horizontal scrolling is required to read the watchlist on touch devices.
+- Updated market snapshot wording to say “Free public-data snapshot”, avoiding a live-feed implication for delayed/EOD public feeds.
+- Updated GitHub Actions checks for v2.4.2, touch-pointer layout rules, full-width market groups, and stacked watchlist.
+- All 22 instruments remain in the same central watchlist; no data source or price logic was changed in this UI-only release.
+
+### Validation
+- Both inline JavaScript scripts compile after the CSS update.
+- Static checks confirm v2.4.2, coarse-pointer media rules, full-width group container, nested one-column market rows, and touch-device stacked watchlist.
+- A live iPhone screenshot/browser execution has not been available in this session; verify the deployed page after GitHub Pages publishes the commit.

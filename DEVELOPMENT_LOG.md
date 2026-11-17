@@ -127,3 +127,47 @@
 - User constraint remains: free public data only; no paid quote API or API key.
 - Market-data source caveats remain unchanged: public feeds may be delayed, rate-limited, blocked by browser CORS, or omit instruments.
 - Current visual release: v2.4.3.
+
+## 2026-11-17 — v2.5.0 iOS Stocks-style experience
+
+### Product changes
+- Rebuilt Home as a compact iOS Stocks-inspired screen: Stocks/date heading, searchable 27-instrument watchlist, actual provider sparkline when historical closes are returned, right-aligned last price and green/red move badge, and expandable source/status/observation details.
+- Moved the primary market watchlist and data quality summary to Home.
+- Added Home cross-asset pulse cards for BTC/USD and USD/IDR.
+- Added Markets category tabs: Indices, Commodities, FX & Crypto, Equities.
+- Added commodity instruments: XAU/USD spot, WTI crude futures, Brent crude futures, copper futures, plus COMEX gold futures. The commodity segment contains five instruments.
+- Added IDX LQ45 and Hang Seng to the instrument set. Total watchlist is 27.
+- Bitcoin appears in FX & Crypto even before a fresh public price arrives; it remains unavailable until a real exchange observation is received.
+- Removed the TradingView embed HTML, widget loader, chart functions, and bootstrap dependency. No non-working chart embed remains.
+- Added animated page transitions, expandable stock rows, sparkline drawing, search expansion, tab press/selection feedback, theme controls and checkbox switch behavior.
+- Dark appearance is the first-run default; user-selected theme is retained.
+
+### Data integrity
+- No paid API keys or subscriptions added.
+- Public source path remains Stooq public CSV where mapped, then Yahoo Finance public chart fallback.
+- BTC uses public exchange streams/REST; only a fresh WebSocket message is labelled LIVE TICK.
+- USD/IDR uses Frankfurter's daily reference rate and is not shown as intraday/executable FX.
+- Sparklines use actual quote close history only. Snapshot-only instruments get no invented line.
+- Unavailable or failed provider values remain unavailable; no synthetic quotes are generated.
+- XAU/USD, WTI and copper currently rely on Yahoo public fallback where Stooq does not have a mapped symbol; coverage/delay is not guaranteed.
+
+### Runtime defect found and fixed
+- Chromium/WebKit initially exposed a missing comma in the source-health rows array after the Price mini-charts entry.
+- The row destructuring inside renderQuality then received an undefined array entry and raised TypeError: undefined is not iterable on every quote/news/macro refresh.
+- Added the missing array separator and a defensive four-field row guard. This was not hidden or suppressed.
+
+### Verified browser and deployment results
+- Static validation: SUCCESS.
+- Chromium at 390px iPhone viewport: SUCCESS.
+- Chromium at 826px touch/desktop-width viewport: SUCCESS.
+- WebKit at 390px iPhone viewport: SUCCESS.
+- WebKit at 826px touch/desktop-width viewport: SUCCESS.
+- Each browser verified 27 Home rows, search filtering, BTC/USDIDR cards, five commodity rows, no external chart embed, expandable instrument details, no horizontal overflow, News/Macro navigation, animated theme control, refresh, and no JavaScript page errors.
+- GitHub Pages deployment: SUCCESS for commit 5bf128f682f310225dfb4f497f816a2f74230a4a.
+- Deployment run: https://github.com/susantowijaya-hub/apis-market-intelligence/actions/runs/44034875955
+
+### Current operating constraints
+- Free public data only; no paid data APIs or keys.
+- Free price sources are not guaranteed to be real-time, complete, or continuously available.
+- Do not call stale, delayed or daily-reference data live.
+- Current product release: APIS v2.5.0.

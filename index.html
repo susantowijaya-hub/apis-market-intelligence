@@ -1768,12 +1768,12 @@ function exchangeSession(item,now=new Date()){
  const symbol=item?.symbol||'',group=item?.group||'';
  let zone='',openWindows=[],closeTime='',closeZone='',finalCloseMinute=0,auctionWindow=null;
  if(symbol==='^JKSE'||symbol==='^JKLQ45'||group==='Indonesia equity'){
-  zone='Asia/Jakarta';closeTime='16:02';closeZone='WIB';finalCloseMinute=16*60+2;
+  zone='Asia/Jakarta';closeTime='16:00';closeZone='WIB';finalCloseMinute=16*60;
   const p=exchangeWallClock(now,zone),minute=p.hour*60+p.minute;
   if(p.weekday==='Sat'||p.weekday==='Sun')return {state:'CLOSED',label:'MARKET CLOSE',zone,closeTime,closeZone,finalCloseMinute,tradeDate:p};
   const friday=p.weekday==='Fri';
   openWindows=friday?[[9*60,11*60+30],[14*60,15*60+50]]:[[9*60,12*60],[13*60+30,15*60+50]];
-  auctionWindow=[15*60+50,16*60+2];
+  auctionWindow=[15*60+50,16*60];
   return sessionState(p,minute,{zone,closeTime,closeZone,finalCloseMinute,openWindows,auctionWindow});
  }
  if(symbol==='^TWII'||group==='Taiwan focus equity'){zone='Asia/Taipei';closeTime='13:30';closeZone='TST';finalCloseMinute=13*60+30;openWindows=[[9*60,13*60+30]]}

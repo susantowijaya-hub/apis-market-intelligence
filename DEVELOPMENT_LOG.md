@@ -405,3 +405,12 @@
 - Google Finance's own data disclaimer lists different exchange delays: Taiwan index source is listed as real-time, IDX indices 15 minutes, Shanghai 1 minute, KRX 20 minutes, and Nikkei 20 minutes. Therefore APIS labels the provider source and does not call every index tick-by-tick live.
 - CI now checks Google Finance symbol coverage, parser wiring, timestamp guards, and a deterministic parser fixture. Browser regression's Taiwan previous-close check now allows a 0.10 point tolerance because the TWSE signed-change arithmetic yields 41,040.137... while the display rounds to 41,040.14.
 - Static validation and deployment browser smoke tests remain required before declaring the release live. A parser fixture does not prove that public Google Finance pages or CORS relays are reachable from every user's network.
+
+
+### Google Finance integration status — verification correction (17 Nov 2026)
+- The public-page HTML parser fixture passes, but this is only a deterministic test fixture; it does not prove that the live Google Finance page can be parsed.
+- The attempted GitHub Actions snapshot collector was removed after its live parser failed to extract a stable quote payload from Google's page markup. No scheduled Google Finance collector is currently deployed.
+- `google-finance-quotes.json` currently has `quoteCount: 0`, null generation timestamps, and an empty `quotes` object. It is not a live feed.
+- The browser adapter attempts to read that snapshot first for mapped indices. When no quote exists, the runtime falls back to its existing verified source path (TWSE for Taiwan after close; Stooq/Yahoo where applicable). Do not label those fallback observations as Google Finance.
+- Therefore v2.10.1 contains Google Finance symbol mappings and a dormant snapshot consumer, but Google Finance has **not** been verified as the active primary provider. Do not advertise the Google Finance feed as live until a collector produces timestamped, schema-valid quotes and a deployed browser test confirms the rendered source and backup comparison.
+- Deployment smoke-test correction: the app's actual quote poll status is `Feed … · session-aware queue` / internal `APP.lastSliceRefreshAt`, not the obsolete phrase `rotating watchlist`. The deploy workflow now asserts the actual session-aware polling timestamp and that an in-place refresh preserves an expanded quote row.

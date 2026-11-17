@@ -315,8 +315,10 @@ jobs:
                 if(!calendarSources||calendarSources.investing<2||calendarSources.forexFactory<2)
                   throw new Error(engine.name+' Investing / Forex Factory source merge failed: '+JSON.stringify(calendarSources));
                 if(!eventText.includes('19.7'))throw new Error(engine.name+' Investing.com Actual value missing: '+eventText);
-                await page.waitForFunction(()=>Number(APP.lastSliceRefreshAt)>0,{timeout:12000});
-                if(!APP.sliceCursor||APP.sliceBusy)throw new Error(engine.name+' 5s rotating quote poll did not complete a slice');
+                await page.waitForFunction(()=>Number(APP.lastSliceRefreshAt)>0,null,{timeout:12000});
+                const sliceCheck=await page.evaluate(()=>({cursor:APP.sliceCursor,busy:APP.sliceBusy,updatedAt:APP.lastSliceRefreshAt}));
+                if(!sliceCheck.cursor||sliceCheck.busy||!sliceCheck.updatedAt)
+                  throw new Error(engine.name+' 5s rotating quote poll did not complete a slice: '+JSON.stringify(sliceCheck));
                 await page.locator('[data-cal-range="7"]').click();
                 if (await page.locator('[data-cal-range="7"]').getAttribute('aria-pressed')!=='true')
                   throw new Error(engine.name+' 7D calendar range button failed');

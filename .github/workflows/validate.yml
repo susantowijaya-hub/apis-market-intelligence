@@ -33,7 +33,7 @@ jobs:
             catch (error) { throw new Error('Inline script ' + (index + 1) + ': ' + error.message); }
           });
           const checks = {
-            version: html.includes('build-version" content="2.10.1"'),
+            version: html.includes('build-version" content="2.10.2"'),
             dailyIndexCloseOnly: html.includes("const hasDailyBars=isDailyIndex&&plan.interval==='1d'") && html.includes('useDailyClose=hasDailyBars&&barPrice!==null') && html.includes('const dailyBars=hasDailyBars?closes.map'),
             dailyIndexCloseBaseline: html.includes('const baselineCutoff=useDailyClose?selectedDailyBarDay:sessionDay') && html.includes('selectDailyIndexPreviousClose(dailyBars,baselineCutoff,session.zone)'),
             finalCloseTimeGuard: html.includes('Provider observation predates the official close window') && html.includes('session.finalCloseMinute-10'),
@@ -52,7 +52,7 @@ jobs:
             twseOfficialRwd: html.includes('/rwd/zh/afterTrading/MI_INDEX?date=') && html.includes('function parseTwseIndexReport'),
             twseGregorianDate: html.includes('if(raw.length===8)'),
             twsePreviousCloseValidation: html.includes('const signedText=value=>') && html.includes('previousClose=price/(1+changePct/100)'),
-            taiwanPercentSourceGuard: html.includes('async function fetchTaiwanOfficialQuote') && html.includes("if(item.symbol==='^TWII')") && html.includes('return fetchYahooQuote(item)'),
+            taiwanPercentSourceGuard: html.includes('async function fetchTaiwanOfficialQuote') && html.includes("if(item.symbol==='^TWII')") && html.includes('return await fetchYahooQuote(item)'),
             yahooTaiwanPercentSuppression: html.includes("quote.symbol==='^TWII'&&!['TWSE'].some(token=>String(quote.source||'').toUpperCase().includes(token))"),
             regionalGroups: html.includes('function renderGroupedStockRows') && html.includes("region:'Greater China'"),
             homeExcludesStocks: html.includes("!['Indonesia equity','US equity','Hong Kong equity','Korea focus equity','Taiwan focus equity'].includes(item.group)"),

@@ -717,6 +717,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--green);outlin
 
 .ios-stock-item .ios-stock-price,.ios-stock-item .ios-stock-change,.mover-row .mover-value,.mover-row .mover-change{transition:color .28s ease,opacity .28s ease,transform .28s ease}.ios-stock-item.is-updating{animation:apis-quote-refresh .52s cubic-bezier(.2,.75,.25,1)}.mover-row{animation:apis-mover-in .32s ease both}@keyframes apis-quote-refresh{0%{background-color:rgba(74,144,226,.12)}100%{background-color:transparent}}@keyframes apis-mover-in{from{opacity:.55;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 .impact-swatch.low{background:#94a3b8}.calendar-event-card.impact-low{border-left-color:#94a3b8}
+.ios-detail-schedule{display:block;color:var(--secondary);font-size:10px;line-height:1.4;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -1721,7 +1722,9 @@ function exchangeSession(item,now=new Date()){
  return sessionState(p,minute,{zone,closeTime,closeZone,finalCloseMinute,openWindows,auctionWindow});
 }
 function sessionState(p,minute,config){
- const {zone,closeTime,closeZone,finalCloseMinute,openWindows,auctionWindow}=config,base={zone,closeTime,closeZone,finalCloseMinute,tradeDate:p};
+ const {zone,closeTime,closeZone,finalCloseMinute,openWindows,auctionWindow}=config;
+ const timeLabel=value=>String(Math.floor(value/60)).padStart(2,'0')+':'+String(value%60).padStart(2,'0');
+ const base={zone,closeTime,closeZone,finalCloseMinute,tradeDate:p,sessionHours:openWindows.map(([a,b])=>timeLabel(a)+'–'+timeLabel(b)).join(' / '),auctionHours:auctionWindow?timeLabel(auctionWindow[0])+'–'+timeLabel(auctionWindow[1]):''};
  if(p.weekday==='Sat'||p.weekday==='Sun')return {...base,state:'CLOSED',label:'MARKET CLOSE'};
  if(openWindows.some(([a,b])=>minute>=a&&minute<b))return {...base,state:'OPEN',label:'SESSION OPEN'};
  if(auctionWindow&&minute>=auctionWindow[0]&&minute<auctionWindow[1])return {...base,state:'PRECLOSE',label:'CLOSING AUCTION'};
@@ -1750,6 +1753,10 @@ function marketQuoteDayKey(quote,session){
  if(quote.observationDate)return String(quote.observationDate);
  if(num(quote.observedAt)!==null)return new Intl.DateTimeFormat('en-CA',{timeZone:session.zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(quote.observedAt*1000));
  return '';
+}
+function marketSessionScheduleLabel(item){
+ const session=exchangeSession(item);if(!session)return '';
+ return 'Regular '+session.sessionHours+' '+session.closeZone+' · Close '+session.closeTime+' '+session.closeZone+(session.auctionHours?' · Auction '+session.auctionHours+' '+session.closeZone:'');
 }
 function marketSessionLabel(quote,item,now=new Date()){
  if(!quote)return 'FEED UNAVAILABLE';
@@ -1838,6 +1845,7 @@ function createStockRow(item,quote,opts={}){
  const extra=document.createElement('div');extra.className='ios-stock-detail';
  const status=document.createElement('span');status.className='ios-detail-chip';status.textContent=quote?(quote.transport==='WEBSOCKET'?'LIVE TICK':quoteStatusLabel(quote.status)):'UNAVAILABLE';
  const observed=document.createElement('span');observed.className='ios-detail-time';
+ const schedule=document.createElement('small');schedule.className='ios-detail-schedule';schedule.textContent=marketSessionScheduleLabel(item);
  let observedSeconds=quote?Number(quote.observedAt):null;
  if(quote&&(quote.transport==='WEBSOCKET'||quote.transport==='REST'||quote.transport==='CACHE'))observedSeconds=observedSeconds/1000;
  observed.textContent=quote&&Number.isFinite(observedSeconds)?'Observed '+fmtTime(observedSeconds):'No validated observation';
@@ -1845,7 +1853,7 @@ function createStockRow(item,quote,opts={}){
  if(!quote){source.removeAttribute('target');source.addEventListener('click',event=>event.preventDefault())}
  const providerError=document.createElement('small');providerError.className='ios-detail-error';
  providerError.textContent=quote?.lastError||APP.failures.get(item.symbol)||'';
- extra.append(status,observed,source,providerError);
+ extra.append(status,observed);if(schedule.textContent)extra.append(schedule);extra.append(source,providerError);
  detail.append(summary,extra);
  return detail;
 }

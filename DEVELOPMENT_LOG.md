@@ -265,3 +265,43 @@
 ### Verification boundary
 - Source updated on main; GitHub Actions / Pages deployment must complete before the public page reflects the change.
 - No claim of live provider connectivity is made by source-level changes. Public feeds remain subject to CORS, rate limits, provider delay and endpoint availability.
+
+
+## 2026-11-17 — v2.9.0 exchange-session scheduler, index baselines, movers and Indonesia calendar
+
+### Index close / percentage integrity
+- Yahoo quote normalization now uses Yahoo's own `regularMarketChangePercent` when its `regularMarketPrice` observation is selected, then derives a consistent previous-close baseline from that exact price / percentage pair. If the native percentage is absent, it falls back to the provider previous-close field.
+- `stockChangePct()` now prioritizes the normalized provider percentage and uses the same calculation for movers and index rows.
+- Nikkei 225 was removed from the Stooq-first route because its previous snapshot mapping could mismatch the index close; it now uses Yahoo chart observations.
+- Taiwan Weighted uses Yahoo during the live session and the official TWSE daily index report after the close. TWSE parsing normalizes ASCII / full-width signs and up/down arrows, recognizes alternative percentage / point field labels, and derives the previous close from the official signed percentage when present.
+
+### Official session schedules (local exchange time)
+- IDX: Mon–Thu 09:00–12:00 and 13:30–15:49:59; Friday 09:00–11:30 and 14:00–15:49:59; closing auction / matching through 16:01:59; post-close through 16:15. APIS marks final close at 16:02 WIB.
+- Shanghai: 09:30–11:30 and 13:00–14:57; closing auction 14:57–15:00.
+- Hong Kong: continuous sessions 09:30–12:00, extended morning 12:00–13:00 and afternoon 13:00–16:00; closing auction random close 16:08–16:10.
+- Tokyo: 09:00–11:30 and 12:30–15:30; closing auction 15:25–15:30.
+- Taiwan: 09:00–13:30.
+- Korea: regular session 09:00–15:30; closing auction 15:20–15:30.
+- US core session: 09:30–16:00 ET.
+- These are weekday regular-session schedules; exchange holidays and exceptional half-days still depend on each exchange calendar / provider state and are not inferred from weekday alone.
+
+### Session-aware polling and performance
+- The 5-second quote cycle now selects only instruments in an open session / closing auction, plus one final post-close snapshot per instrument per exchange date.
+- Closed-session completion is persisted in local browser storage so reopening the dashboard does not repeatedly refetch closed markets. The scheduler waits until the exchange's close snapshot is expected to be published before that one final request.
+- Increased rotating quote slice size from 3 to 6 while retaining overlap guards; UI / market status refresh remains 4 seconds.
+- Price changes receive a short, low-amplitude transition rather than a full-screen redraw. Row updates remain in place.
+
+### Movers universe
+- Movers now exclude index / ETF / commodity / FX instruments and rank individual stocks only.
+- Added a broader liquid-stock watch universe for Indonesia, US and Hong Kong. Korea focus is limited to Samsung Electronics and SK Hynix; Taiwan focus is limited to TSMC.
+- The equities market segment now includes these selected stocks; Home remains index / macro focused.
+
+### Indonesia economic calendar
+- Added Trading Economics Indonesia calendar API (guest endpoint) as an additional country-specific source, in parallel with Forex Factory, Investing.com and XOOMAR.
+- Forex Factory / Investing normalization now retains Low-impact events, and the UI includes a Low filter enabled by default so IDR releases are not silently discarded for being below Medium impact.
+- BI calendar coverage includes the 17 Nov SULNI listing and RDG day 1, and the 18 Nov BI Rate decision / RDG day 2. BCA Economics research values are labelled as research estimates (BI Rate previous 5.75%, forecast 6.00%); actual remains pending official publication. Other values are left blank where the source does not publish them.
+- A blank Previous / Forecast / Actual field is intentional when no provider supplies a numeric value; the BI calendar listing itself is a schedule and does not contain those numeric fields for every event.
+
+### Verification
+- Static JS compilation and wiring checks are defined in `.github/workflows/validate.yml` for v2.9.0. The final run must pass before release is called complete.
+- GitHub Pages deployment is tied to the final main-branch commit; public runtime feed quality still depends on provider / proxy availability, exchange holidays and quote latency.

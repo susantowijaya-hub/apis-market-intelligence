@@ -550,14 +550,51 @@ function exportEvidence(){if(!APP.ledger.length){toast('Buku bukti is empty.');r
 function tickClock(){setText('clock',new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date())+' WIB');const hint=document.getElementById('autoRefreshLabel');if(hint){const left=APP.nextRefreshAt?Math.max(0,Math.ceil((APP.nextRefreshAt-Date.now())/1000)):60;hint.textContent=document.hidden?'AUTO · PAUSED':('AUTO · '+left+'s')}}
 const navLinks=[...document.querySelectorAll('.nav a')];const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){navLinks.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+entry.target.id))}})},{rootMargin:'-25% 0px -65% 0px'});['overview','markets','research','workbench','sources'].forEach(id=>{const e=document.getElementById(id);if(e)observer.observe(e)});
 document.getElementById('refreshBtn').onclick=()=>fetchQuoteBatch();document.getElementById('refreshTop').onclick=()=>fetchQuoteBatch();document.getElementById('reloadChart').onclick=loadChart;document.getElementById('chartSymbol').onchange=loadChart;
-function bootstrap(){restoreQuoteCache();restoreAuxCache();addAlertOptions();renderLedger();renderAlerts();tickClock();setInterval(tickClock,1000);renderQuoteViews();renderQuality();if(QUOTES.size){setText('lastRefresh','Restored '+QUOTES.size+' cached observations · stale until refreshed');}APP.staleTimer=setInterval(()=>{if(APP.btc&&!btcIsFresh()){setText('btcStatus','STALE · last provider observation retained');updateFeedState();renderQuality()}},3000);APP.btcRestTimer=setInterval(()=>{if(!btcIsFresh()||APP.btc?.transport!=='WEBSOCKET')fetchBitcoinRest()},30000);loadWidgets();connectBitcoinStream();fetchBitcoinRest();loadFxReference();fetchQuoteBatch();APP.nextRefreshAt=Date.now()+60000;
+function safeInit(label,fn){
+  try{fn();return true}
+  catch(error){
+    const message=label+': '+String(error?.message||error).slice(0,150);
+    console.error('[APIS init]',message);
+    if(label==='Market data'||label==='Chart widgets'||label==='BTC stream'||label==='USD/IDR')setText('feedState','INIT ERROR · '+message);
+    if(label==='Market data')setText('lastRefresh','Startup error · '+message);
+    return false;
+  }
+}
+function bootstrap(){
+  /* Critical market services start first. A broken local workbench record must
+     never prevent public market feeds, chart widgets, or refresh timers. */
+  safeInit('Quote cache',restoreQuoteCache);
+  safeInit('Auxiliary cache',restoreAuxCache);
+  safeInit('Clock',()=>{tickClock();APP.clockTimer=setInterval(tickClock,1000)});
+  safeInit('Chart widgets',loadWidgets);
+  safeInit('BTC stream',connectBitcoinStream);
+  safeInit('BTC REST fallback',fetchBitcoinRest);
+  safeInit('USD/IDR',loadFxReference);
+  safeInit('Market data',fetchQuoteBatch);
+  APP.nextRefreshAt=Date.now()+60000;
+  APP.staleTimer=setInterval(()=>{if(APP.btc&&!btcIsFresh()){setText('btcStatus','STALE · last provider observation retained');updateFeedState();safeInit('Data quality',renderQuality)}},3000);
+  APP.btcRestTimer=setInterval(()=>{if(!btcIsFresh()||APP.btc?.transport!=='WEBSOCKET')fetchBitcoinRest()},30000);
   APP.timer=setInterval(()=>{if(!document.hidden&&navigator.onLine&&APP.yahooState!=='loading')fetchQuoteBatch()},60000);
   APP.fxTimer=setInterval(()=>{if(!document.hidden&&navigator.onLine)loadFxReference()},60*60*1000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(!btcIsFresh())connectBitcoinStream();if(navigator.onLine&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>30000))fetchQuoteBatch();if(APP.fxState==='unavailable'||APP.fxState==='cached')loadFxReference()}});
   window.addEventListener('online',()=>{fetchQuoteBatch();loadFxReference();if(!btcIsFresh())connectBitcoinStream()});
   window.addEventListener('focus',()=>{if(navigator.onLine&&!document.hidden&&(!APP.lastRefresh||Date.now()-APP.lastRefresh>45000))fetchQuoteBatch()});
+  /* Optional/local modules are isolated: malformed localStorage data or a
+     missing workbench element cannot abort the market terminal. */
+  safeInit('Alert options',addAlertOptions);
+  safeInit('Evidence ledger',renderLedger);
+  safeInit('Alert rules',renderAlerts);
+  safeInit('Quote views',renderQuoteViews);
+  safeInit('Data quality',renderQuality);
+  if(QUOTES.size)setText('lastRefresh','Restored '+QUOTES.size+' cached observations · stale until refreshed');
+  const previousOnError=window.onerror;
+  window.onerror=function(message,source,line,column,error){
+    console.error('[APIS runtime]',message,source,line,column,error);
+    setText('feedState','RUNTIME ERROR · '+String(message).slice(0,100));
+    if(typeof previousOnError==='function')return previousOnError.apply(this,arguments);
+    return false;
+  };
 }
-bootstrap();
-</script>
+bootstrap();</script>
 </body>
 </html>

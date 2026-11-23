@@ -1,405 +1,94 @@
-name: Deploy APIS to GitHub Pages
+name: Free Stocks Terminal
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: free-stocks-pages
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  publish:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Validate APIS terminal structure and functionality
+
+      - name: Restore Stocks source bundle (first deployment only)
+        shell: bash
         run: |
-          node <<'NODE'
-          const fs = require('fs');
-          const html = fs.readFileSync('index.html', 'utf8');
-          const scriptPaths = ['assets/js/compat.js','assets/js/core.js','assets/js/market-data.js','assets/js/realtime-data.js','assets/js/workspace.js','assets/js/bootstrap.js'];
-          const scripts = scriptPaths.map(file => fs.readFileSync(file, 'utf8'));
-          const diagnostic = scripts[0];
-          const js = scripts.slice(1).join('\n');
-          if (!diagnostic.includes('__APIS_REPORT_ERROR__') || !js.includes('function bootstrap(){')) throw new Error('Diagnostic or application source missing.');
-          scripts.forEach((script,index) => { try { new Function(script); } catch (error) { throw new Error(scriptPaths[index] + ': ' + error.message); } });
-          const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m => m[1]);
-          const duplicates = ids.filter((id, i) => ids.indexOf(id) !== i);
-          if (duplicates.length) throw new Error('Duplicate HTML IDs: ' + [...new Set(duplicates)].join(', '));
-          const idSet = new Set(ids);
-          const requiredIds = [
-            'refreshBtn','refreshTop','marketSnapshotGrid','snapshotStamp',
-            'newsSearch','newsFilters','newsFeedList','newsFeedStatus','refreshNewsBtn',
-            'macroView','tsy2','tsy5','tsy10','tsy30','tsy30Date','tsySpread','calendarFilterDrawer','calendarFilterSummary','calendarEvents','calendarUpdatedAt','calendarCount','refreshCalendarBtn',
-            'moversView','gainersList','losersList','filingsView','filingsFeedList',
-            'workbench','toolPrompt','toolDcf','toolBond','toolRisk','toolEvidence','toolData','toolAlerts',
-            'sources','sourceHealth'
-          ];
-          const missing = requiredIds.filter(id => !idSet.has(id));
-          if (missing.length) throw new Error('Required terminal elements missing: ' + missing.join(', '));
-          const refs = [...js.matchAll(/getElementById\(['"]([^'"]+)['"]\)/g)].map(m => m[1]);
-          const unresolved = [...new Set(refs.filter(id => !idSet.has(id)))];
-          if (unresolved.length) throw new Error('JavaScript references absent DOM IDs: ' + unresolved.join(', '));
-          const requiredFunctions = [
-            'fetchQuoteBatch','fetchBitcoinRest','connectBitcoinStream','loadFxReference',
-            'loadTreasuryCurve','loadMacroCalendar','renderMacroCalendar','loadPublicNews',
-            'renderNewsFeed','initNewsControls','initCalendarControls','initPageRouter',
-            'initThemeControls','renderMarketOverview','loadEdgarFilings','renderMovers'
-          ];
-          for (const fn of requiredFunctions) {
-            if (!js.includes('function ' + fn + '(') && !js.includes('async function ' + fn + '('))
-              throw new Error('Required terminal function missing: ' + fn);
-          }
-          const sectionTags = [...html.matchAll(/<section\b[^>]*>/gi)].map(m => m[0]);
-          const pageIds = new Set(sectionTags.filter(tag => /\bclass="[^"]*\bpage-view\b/.test(tag)).map(tag => tag.match(/\bid="([^"]+)"/)?.[1]).filter(Boolean));
-          const routes = [...html.matchAll(/data-page="([^"]+)"/g)].map(m => m[1]);
-          if (!['home','markets','news','macro','movers','filings','tools','research'].every(x => routes.includes(x)))
-            throw new Error('A primary navigation route is missing.');
-          for (const id of ['overview','markets','research','macroView','moversView','filingsView','workbench','sources'])
-            if (!pageIds.has(id)) throw new Error('Page view missing: ' + id);
-          if (!html.includes('data-theme-choice="dark"') || !html.includes('data-theme-choice="light"') || !html.includes('data-theme-choice="system"'))
-            throw new Error('Light/Dark/System theme controls are incomplete.');
-          if (html.includes('embed-widget-market-overview.js') || html.includes('embed-widget-events.js') || html.includes('embed-widget-timeline.js'))
-            throw new Error('Disabled TradingView overview/news/calendar embeds remain in the page.');
-          scripts.forEach((script,index)=>fs.writeFileSync('/tmp/apis-module-'+index+'.js',script));
-          console.log('APIS QA passed: pages, controls, IDs, required functions, themes and error reporting; IDs=' + ids.length + '; modular JS bytes=' + js.length);
-          NODE
-          for file in /tmp/apis-module-*.js; do node --check "$file"; done
-      - name: Install Chromium and WebKit test browsers
-        run: |
-          npm install --no-save playwright
-          npx playwright install --with-deps chromium webkit
-      - name: Browser smoke tests (Chromium / WebKit)
-        run: |
-          node <<'NODE'
-          const fs = require('fs');
-          const http = require('http');
-          const path = require('path');
-          const { chromium, webkit } = require('playwright');
-          const server = http.createServer((req, res) => {
-            const url = new URL(req.url, 'http://127.0.0.1:4173');
-            const requested = url.pathname === '/' ? '/index.html' : url.pathname;
-            const file = path.join(process.cwd(), requested.replace(/^\/+/, ''));
-            if (!file.startsWith(process.cwd()) || !fs.existsSync(file)) {
-              res.writeHead(404); res.end('Not found'); return;
-            }
-            const mime = file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.js') ? 'text/javascript; charset=utf-8' : file.endsWith('.css') ? 'text/css; charset=utf-8' : 'application/octet-stream';
-            res.writeHead(200, { 'content-type': mime });
-            fs.createReadStream(file).pipe(res);
-          });
-          const isoDay = date => date.toISOString().slice(0,10);
-          const today = isoDay(new Date());
-          const todayPastUtc = today + 'T01:00:00.000Z';
-          const todayNextUtc = today + 'T02:30:00.000Z';
-          const headers = {'access-control-allow-origin':'*','content-type':'application/json; charset=utf-8'};
-          const json = (route, body) => route.fulfill({status:200,headers,body:JSON.stringify(body)});
-          (async () => {
-            await new Promise(resolve => server.listen(4173, '127.0.0.1', resolve));
-            const viewports = [
-              {name:'iPhone-width',width:390,height:844},
-              {name:'iPhone-touch-desktop-width',width:826,height:1190}
-            ];
-            for (const engine of [{name:'Chromium',type:chromium},{name:'WebKit',type:webkit}]) {
-              const browser = await engine.type.launch({headless:true});
-              for (const viewport of viewports) {
-                const page = await browser.newPage({
-                  viewport:{width:viewport.width,height:viewport.height},
-                  isMobile:true,hasTouch:true,deviceScaleFactor:2
-                });
-                const errors = [];
-                page.on('pageerror', error => errors.push(error.stack || error.message));
-                await page.route('https://**/*', async route => {
-                  const url = new URL(route.request().url());
-                  if (url.hostname === 'xaus.com' && url.pathname === '/api/v1/spot') {
-                    const now = new Date().toISOString();
-                    return json(route,{
-                      xau:{price:4000,currency:'USD',unit:'troy_oz'},
-                      spot_usd_oz:4000,price_as_of:now,updated_at:now,
-                      data_state:{status:'fresh',as_of:now,source:'upstream',age_seconds:20}
-                    });
-                  }
-                  if (url.hostname === 'xaus.com' && url.pathname === '/api/v1/intraday') {
-                    const now = Math.floor(Date.now()/1000);
-                    return json(route,{
-                      symbol:'XAUUSD',coverage_seconds:86400,
-                      points:[{t:now-86400,p:3950},{t:now-43200,p:3975},{t:now,p:4000}],
-                      data_state:{status:'fresh',source:'upstream',age_seconds:20}
-                    });
-                  }
-                  if (url.hostname === 'www.idx.co.id' && url.pathname.endsWith('/primary/TradingSummary/GetIndexSummary')) {
-                    const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
-                    const part=type=>parts.find(value=>value.type===type)?.value||'';
-                    const day=part('year')+'-'+part('month')+'-'+part('day');
-                    return json(route,{data:[{IndexCode:'LQ45',Date:day+'T00:00:00',Close:553.071,Previous:551.065,Change:2.006}]});
-                  }
-                  if (url.hostname === 'www.twse.com.tw' && url.pathname.endsWith('/afterTrading/MI_INDEX')) {
-                    const gregorianDate=url.searchParams.get('date');
-                    return json(route,{
-                      stat:'OK',date:gregorianDate,
-                      tables:[{
-                        fields:['指數','收盤指數','漲跌(+/-)','漲跌點數','漲跌百分比(%)'],
-                        data:[
-                          ['發行量加權股價指數','40092.11','-','947.97','-2.31'],
-                          ['寶島股價指數','44101.62','-','1089.24','-2.41']
-                        ]
-                      }]
-                    });
-                  }
-                  if (url.hostname === 'openapi.twse.com.tw' && url.pathname.endsWith('/MI_5MINS_HIST')) {
-                    return json(route,[
-                      {Date:'1151116',ClosingIndex:'41040.08'}
-                    ]);
-                  }
-                  if (url.hostname === 'fred.stlouisfed.org' && url.pathname.endsWith('/fredgraph.csv')) {
-                    return route.fulfill({
-                      status:200,
-                      headers:{'access-control-allow-origin':'*','content-type':'text/csv; charset=utf-8'},
-                      body:[
-                        'observation_date,DGS2,DGS5,DGS10,DGS30',
-                        '2026-11-12,4.10,4.30,4.40,5.43',
-                        '2026-11-13,4.20,4.40,4.50,5.47',
-                        '2026-11-16,4.25,4.50,4.60,.'
-                      ].join('\n')
-                    });
-                  }
-                  if (url.hostname === 'nfs.faireconomy.media' && url.pathname.endsWith('/ff_calendar_thisweek.json')) {
-                    return json(route,[
-                      {title:'Retail Sales (Advance)',country:'USD',date:todayPastUtc,impact:'High',previous:'0.8%',forecast:'0.1%'},
-                      {title:'Philly Fed Manufacturing Index',country:'USD',date:todayNextUtc,impact:'Medium',previous:'20.9',forecast:'19.2'}
-                    ]);
-                  }
-                  if (url.hostname === 'endpoints.investing.com' && url.pathname.endsWith('/calendars/economic/events/occurrences')) {
-                    return json(route,{
-                      events:[
-                        {event_id:100,event_translated:'Retail Sales (Advance)',currency:'USD',importance:'High'},
-                        {event_id:101,event_translated:'Philly Fed Manufacturing Index',currency:'USD',importance:'Medium'}
-                      ],
-                      occurrences:[
-                        {event_id:100,occurrence_id:1001,occurrence_time:todayPastUtc,previous:'0.8%',forecast:'0.1%',actual:'0.2%',period:'October 2026'},
-                        {event_id:101,occurrence_id:1002,occurrence_time:todayNextUtc,previous:'20.9',forecast:'19.2',actual:'19.7',period:'November 2026'}
-                      ]
-                    });
-                  }
-                  if (url.hostname === 'xoomar.com' && url.pathname === '/api/markets/calendar') {
-                    const importance=url.searchParams.get('importance');
-                    if (importance==='high') return json(route,{data:[{
-                      source:'census',eventName:'Retail Sales (Advance)',importance:'high',
-                      scheduledAt:todayPastUtc,periodLabel:'October 2026',
-                      previous:'0.8%',forecast:null,actual:'0.2%',unit:'% m/m',
-                      canonicalUrl:'https://xoomar.com/economic-calendar-api'
-                    }]});
-                    return json(route,{data:[{
-                      source:'fed',eventName:'Philly Fed Manufacturing Index',importance:'med',
-                      scheduledAt:todayNextUtc,periodLabel:'November 2026',
-                      previous:'20.9',forecast:null,actual:null,unit:'index',
-                      canonicalUrl:'https://xoomar.com/economic-calendar-api'
-                    }]});
-                  }
-                  return route.abort();
-                });
-                await page.goto('http://127.0.0.1:4173/', {waitUntil:'domcontentloaded'});
-                await page.waitForTimeout(500);
-                const home = await page.evaluate(() => ({
-                  booted:window.__APIS_BOOTED__===true,
-                  rows:document.querySelectorAll('#featuredQuotes .ios-stock-item').length,
-                  refresh:!!document.getElementById('refreshTop')?.onclick,
-                  routes:document.querySelectorAll('[data-page]').length,
-                  btc:!!document.getElementById('btcPrice'),
-                  fx:!!document.getElementById('fxValue'),
-                  pageWidth:document.documentElement.clientWidth,
-                  documentWidth:document.documentElement.scrollWidth,
-                  date:document.getElementById('homeDate')?.textContent || '',
-                  homeText:document.getElementById('featuredQuotes')?.innerText || ''
-                }));
-                if (!home.booted || home.rows !== 20 || !home.refresh || home.routes < 8 || !home.btc || !home.fx)
-                  throw new Error(engine.name+' '+viewport.name+' Home boot failed: '+JSON.stringify({home,errors}));
-                if (['BBCA','BMRI','BBRI','GOTO','AAPL','NVDA','MSFT'].some(code=>home.homeText.includes(code)))
-                  throw new Error(engine.name+' individual equities still appear on Home: '+home.homeText);
-                if (!home.date || home.documentWidth > home.pageWidth + 1)
-                  throw new Error(engine.name+' '+viewport.name+' Home date/width check failed: '+JSON.stringify(home));
-                if(await page.locator('#featuredQuotes .ios-stock-session-line').count()!==20)
-                  throw new Error(engine.name+' live session / feed timestamp lines missing');
-                const idxSession = await page.evaluate(() => {
-                  const item=WATCHLIST.find(row=>row.symbol==='^JKSE');
-                  const at=new Date('2026-11-17T08:14:00.000Z');
-                  const cached={symbol:'^JKSE',price:5337.99,previousClose:5344.40,marketState:'CLOSED',status:'LAST_AVAILABLE_CLOSE',
-                    observedAt:Date.parse('2026-11-16T09:00:00Z')/1000,retrievedAt:Date.parse('2026-11-17T08:14:05Z')};
-                  return {session:exchangeSession(item,at).state,label:marketSessionLabel(cached,item,at),stamp:marketFeedTimestampLabel(cached,item)};
-                });
-                if (idxSession.session!=='OPEN' || idxSession.label!=='SESSION OPEN · STALE' ||
-                    !idxSession.stamp.includes('Last close 16:00 WIB') || !idxSession.stamp.includes('16 Nov'))
-                  throw new Error(engine.name+' IDX session / close timestamp failed: '+JSON.stringify(idxSession));
-                const providerChain=await page.evaluate(()=>{
-                const body=fetchMarketQuote.toString();
-                return {scrapedPageFeed:body.includes('Google Finance')||body.includes('fetchGoogleFinanceQuote'),
-                  stooq:body.includes('fetchStooqQuote'),yahoo:body.includes('fetchYahooQuote'),
-                  twse:body.includes('fetchTaiwanOfficialQuote')};
-              });
-              if(providerChain.scrapedPageFeed||!providerChain.stooq||!providerChain.yahoo||!providerChain.twse)
-                throw new Error(engine.name+' live quote provider waterfall failed: '+JSON.stringify(providerChain));
-              const benchmarkChecks=await page.evaluate(async()=>{
-                const lq=await fetchIdxOfficialIndexQuote(WATCHLIST.find(item=>item.symbol==='^JKLQ45'));
-                return {lqPrice:lq.price,lqPct:lq.changePct,lqSource:lq.source,daily:['^JKLQ45','^NSEI','^GSPC','^IXIC','^DJI'].map(symbol=>isDailyIndexSymbol(symbol))};
-              });
-              if(benchmarkChecks.lqPrice!==553.071||Math.abs(benchmarkChecks.lqPct-((553.071/551.065-1)*100))>1e-10||
-                 !benchmarkChecks.lqSource.includes('official Index Summary')||benchmarkChecks.daily.some(value=>!value))
-                throw new Error(engine.name+' LQ45/NIFTY/US benchmark source validation failed: '+JSON.stringify(benchmarkChecks));
-              const cachedTaiwanPct=await page.evaluate(()=>stockChangePct({
-                  symbol:'^TWII',price:40092.11,previousClose:43666.0,changePct:-8.2,source:'Yahoo Finance · public fallback'
-                }));
-                if(cachedTaiwanPct!==null)throw new Error(engine.name+' unverified Taiwan cache percentage was not suppressed');
-                const xauTwse = await page.evaluate(async () => {
-                  const xau=await fetchXauSpotQuote({symbol:'XAUUSD=X',name:'Gold Spot · XAU/USD',short:'XAU/USD',group:'Commodity'});
-                  const taiwan=await fetchTaiwanOfficialQuote({symbol:'^TWII',name:'Taiwan Weighted',short:'Taiwan',group:'Index',region:'Greater China'});
-                  QUOTES.set('XAUUSD=X',xau);
-                  QUOTES.set('^TWII',taiwan);
-                  APP.marketFilter='commodities';
-                  renderMarketOverview();
-                  return {
-                    xauPrice:xau.price,xauChange:xau.changePct,xauSource:xau.source,xauAge:xau.observedAge,
-                    twPrice:taiwan.price,twPrev:taiwan.previousClose,twChange:taiwan.changePct,twSource:taiwan.source,twDate:taiwan.observationDate
-                  };
-                });
-                if (xauTwse.xauPrice!==4000 || Math.abs(xauTwse.xauChange-1.27)>0.01 || !xauTwse.xauSource.includes('XAUS'))
-                  throw new Error(engine.name+' XAU spot adapter failed: '+JSON.stringify(xauTwse));
-                if (xauTwse.twPrice!==40092.11 || Math.abs(xauTwse.twPrev-41040.08)>0.10 || Math.abs(xauTwse.twChange-(-2.31))>0.01 ||
-                    !xauTwse.twSource.includes('dated daily close'))
-                  throw new Error(engine.name+' official dated Taiwan report failed: '+JSON.stringify(xauTwse));
-                await page.locator('#homeSearchToggle').click();
-                await page.locator('#homeSearch').fill('Brent');
-                if (await page.locator('#featuredQuotes .ios-stock-item').count() !== 1)
-                  throw new Error(engine.name+' Home watchlist search failed');
-                await page.locator('#homeSearchClear').click();
-                await page.locator('#homeSearchToggle').click();
-                await page.locator('[data-page="markets"]').click({force:true});
-                await page.waitForFunction(()=>document.getElementById('markets')?.classList.contains('active'),null,{timeout:5000});
-                if (!(await page.locator('#markets').evaluate(el=>el.classList.contains('active'))))
-                  throw new Error(engine.name+' Markets navigation failed');
-                await page.locator('[data-market-filter="indices"]').click();
-                const regions=await page.locator('#marketSnapshotGrid .ios-market-region-heading h3').allTextContents();
-                if (!['Indonesia','United States','Greater China','North Asia','South Asia'].every(name=>regions.includes(name)))
-                  throw new Error(engine.name+' regional index grouping failed: '+regions.join(', '));
-                await page.locator('[data-market-filter="commodities"]').click();
-                const commodities = await page.locator('#marketSnapshotGrid .ios-stock-item').count();
-                const commodityLabels = await page.locator('#marketSnapshotGrid').innerText();
-                if (commodities !== 5 || !commodityLabels.includes('XAU/USD') || !commodityLabels.includes('WTI Crude') ||
-                    !commodityLabels.includes('Brent') || !commodityLabels.includes('Copper') || !commodityLabels.includes('4.000,00 USD/oz'))
-                  throw new Error(engine.name+' commodity segment failed: '+commodities+' rows · '+commodityLabels);
-                const xauRow=page.locator('#marketSnapshotGrid .ios-stock-item').filter({hasText:'XAU/USD'}).first();
-                if (!(await xauRow.innerText()).includes('1.27%') || !(await xauRow.innerText()).includes('LIVE · SPOT'))
-                  throw new Error(engine.name+' XAU UI price/status failed: '+await xauRow.innerText());
-                const taiwanText=await page.evaluate(()=>{const q=QUOTES.get('^TWII');return q?{price:q.price,pct:((q.price/q.previousClose-1)*100).toFixed(2),status:marketSessionLabel(q,{symbol:'^TWII'})}:null});
-                if (!taiwanText || taiwanText.price!==40092.11 || taiwanText.pct!=='-2.31' || taiwanText.status!=='MARKET CLOSE')
-                  throw new Error(engine.name+' Taiwan display/session label failed: '+JSON.stringify(taiwanText));
-                if (await page.locator('#mainChart').count() !== 0 || await page.locator('#chartSymbol').count() !== 0)
-                  throw new Error(engine.name+' non-working external chart should be removed');
-                const marketOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
-                if (marketOverflow) throw new Error(engine.name+' '+viewport.name+' Markets horizontal overflow');
-                await page.locator('#marketSnapshotGrid .ios-stock-item summary').first().click();
-                if (!(await page.locator('#marketSnapshotGrid .ios-stock-item').first().evaluate(el=>el.open)))
-                  throw new Error(engine.name+' market row expansion failed');
-                await page.locator('[data-market-filter="fx-crypto"]').click();
-                const fxCrypto = await page.locator('#marketSnapshotGrid').innerText();
-                if (!fxCrypto.includes('Bitcoin') || !fxCrypto.includes('USD/IDR'))
-                  throw new Error(engine.name+' FX/Crypto segment failed: '+fxCrypto);
-                await page.locator('[data-page="news"]').click();
-                if (!(await page.locator('#research').evaluate(el=>el.classList.contains('active'))))
-                  throw new Error(engine.name+' News navigation failed');
-                await page.locator('[data-page="macro"]').click();
-                if (!(await page.locator('#macroView').evaluate(el=>el.classList.contains('active'))))
-                  throw new Error(engine.name+' Macro navigation failed');
-                await page.waitForFunction(()=>{
-                  const count=document.querySelectorAll('#calendarEvents .calendar-event-card').length;
-                  const state=document.getElementById('calendarCount')?.textContent||'';
-                  return count>=3||state.includes('partial source coverage')||state.includes('No releases match');
-                },null,{timeout:15000});
-                const calendarDiag=await page.evaluate(()=>({
-                  visible:document.querySelectorAll('#calendarEvents .calendar-event-card').length,
-                  count:document.getElementById('calendarCount')?.textContent||'',
-                  sources:document.getElementById('calendarUpdatedAt')?.textContent||''
-                }));
-                if(calendarDiag.visible<3)throw new Error(engine.name+' economic calendar failed to render: '+JSON.stringify(calendarDiag));
-                await page.evaluate(()=>loadTreasuryCurve());
-                await page.waitForFunction(()=>document.getElementById('tsy30')?.textContent==='5.47%',{timeout:10000});
-                if (!((await page.locator('#tsy30Date').innerText()).includes('13 Nov 2026')))
-                  throw new Error(engine.name+' FRED DGS30 observation date missing: '+await page.locator('#tsy30Date').innerText());
-                const eventText=await page.locator('#calendarEvents').innerText();
-                if (!eventText.includes('Retail Sales (Advance)') || !eventText.includes('0.8%') ||
-                    !eventText.includes('0.1%') || !eventText.includes('0.2%'))
-                  throw new Error(engine.name+' previous/forecast/actual merge failed: '+eventText);
-                if (!eventText.includes('Philly Fed Manufacturing Index'))
-                  throw new Error(engine.name+' medium-impact event missing: '+eventText);
-                const calendarSources=await page.locator('#calendarUpdatedAt').innerText();
-                if(!calendarSources.includes('INV 2')||!calendarSources.includes('FF 2'))
-                  throw new Error(engine.name+' Investing / Forex Factory source merge failed: '+calendarSources);
-                if(!eventText.includes('19.7'))throw new Error(engine.name+' Investing.com Actual value missing: '+eventText);
-                const sliceCheck=await page.evaluate(()=>({
-                  timer:!!APP.timer,cursor:APP.sliceCursor,busy:APP.sliceBusy,
-                  updater:typeof fetchQuoteSlice==='function'
-                }));
-                if(!sliceCheck.timer||!Number.isInteger(sliceCheck.cursor)||!sliceCheck.updater)
-                  throw new Error(engine.name+' session-aware quote poll was not initialized: '+JSON.stringify(sliceCheck));
-                await page.locator('[data-cal-range="7"]').click();
-                if (await page.locator('[data-cal-range="7"]').getAttribute('aria-pressed')!=='true')
-                  throw new Error(engine.name+' 7D calendar range button failed');
-                await page.locator('#calendarFilterDrawer summary').click();
-                await page.locator('[data-cal-none="country"]').click();
-                await page.locator('[data-cal-country="IDR"]').check();
-                await page.locator('[data-cal-none="category"]').click();
-                await page.locator('[data-cal-category="Central Bank"]').check();
-                const idrEvents=await page.locator('#calendarEvents').innerText();
-                if (!idrEvents.includes('Bank Indonesia') || idrEvents.includes('Retail Sales (Advance)'))
-                  throw new Error(engine.name+' IDR / Central Bank filters failed: '+idrEvents);
-                await page.locator('[data-cal-range="3"]').click();
-                if (await page.locator('[data-cal-range="3"]').getAttribute('aria-pressed')!=='true')
-                  throw new Error(engine.name+' 3D calendar range button failed');
-                await page.locator('[data-page="markets"]').click();
-                await page.locator('[data-market-filter="indices"]').click();
-                const expandedRow=page.locator('#marketSnapshotGrid .ios-stock-item').first();
-                await expandedRow.locator('summary').click();
-                await page.evaluate(()=>updateQuoteRowsInPlace());
-                if(!(await page.locator('#marketSnapshotGrid .ios-stock-item').first().evaluate(row=>row.open)))
-                  throw new Error(engine.name+' an in-place quote DOM update closed an expanded market row');
-                await page.locator('.theme-menu summary').click();
-                await page.locator('[data-theme-choice="dark"]').click();
-                if (await page.locator('html').getAttribute('data-theme')!=='dark')
-                  throw new Error(engine.name+' dark theme control failed');
-                const transition = await page.locator('.theme-menu-items button').first().evaluate(el=>getComputedStyle(el).transitionDuration);
-                if (!transition || transition==='0s') throw new Error(engine.name+' theme toggle animation missing');
-                await page.locator('[data-page="home"]').click();
-                await page.locator('#refreshTop').click();
-                if (errors.length) throw new Error(engine.name+' runtime errors: '+errors.join(' | '));
-                console.log(engine.name+' '+viewport.name+' PASS · Home 20 market-only rows · IDX session/last-close timestamps · XAU spot · TWSE daily -2.31% · no stale Yahoo Taiwan percent · regional groups · 5 commodities · FRED 30Y · Investing.com + Forex Factory + XOOMAR · release values · IDR/impact/type filters · 3D/7D · 5s quote slices / 4s display · no horizontal overflow');
-                await page.close();
-              }
-              await browser.close();
-            }
-          })().then(()=>server.close()).catch(error=>{
-            console.error(error);
-            server.close();
-            process.exit(1);
-          });
-          NODE
+          shopt -s nullglob
+          parts=(stocks-free-src-*.part)
+          if ((${#parts[@]})); then
+            : > /tmp/stocks-source.tar.xz
+            for part in "${parts[@]}"; do
+              base64 --decode "$part" >> /tmp/stocks-source.tar.xz
+            done
+            mkdir -p /tmp/stocks-source
+            tar -xJf /tmp/stocks-source.tar.xz -C /tmp/stocks-source
+            find . -mindepth 1 -maxdepth 1 ! -name '.git' ! -name '.github' -exec rm -rf {} +
+            cp -a /tmp/stocks-source/. .
+            rm -f stocks-free-src-*.part
+          fi
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-      - name: Upload site artifact
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install free app dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Generate public market-data snapshots
+        run: npm run feeds:generate
+
+      - name: Validate free-only source and market data
+        run: npm run validate
+
+      - name: Typecheck application and data collector
+        run: npm run lint
+
+      - name: Build static PWA for this GitHub Pages path
+        env:
+          GITHUB_PAGES: 'true'
+        run: npm run build
+
+      - name: Commit clean Stocks source tree to main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m 'Replace APIS workspace with free Stocks market terminal' -m '[skip ci]'
+            git push origin HEAD:main
+          fi
+
+      - name: Upload static site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          name: apis-pages
-          path: .
+          name: stocks-pages
+          path: dist
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
         with:
-          artifact_name: apis-pages
+          artifact_name: stocks-pages

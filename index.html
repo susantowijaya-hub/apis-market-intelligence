@@ -1,343 +1,145 @@
 <!doctype html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f5f6f5">
-<meta name="build-version" content="2.11.0">
-<meta name="description" content="APIS browser-based market intelligence terminal with public market feeds, transparent source status and local analytical tools.">
-<title>APIS — The Market Terminal v2.11.0</title>
-<link rel="stylesheet" href="assets/css/app.css">
-</head>
-<body>
-<div class="topbar"><div class="topbar-inner">
-  <a class="brand" href="#overview" aria-label="APIS home"><span class="brand-mark">A</span><span>APIS <small>MARKET INTELLIGENCE</small></span></a>
-  <nav class="nav" aria-label="Main navigation">
- <a href="#overview" class="active" data-page="home">Home</a>
- <a href="#markets" data-page="markets">Markets</a>
- <a href="#research" data-page="news">News</a>
- <a href="#macroView" data-page="macro">Macro</a>
- <a href="#moversView" data-page="movers">Movers</a>
- <details class="nav-more"><summary>More</summary><div class="nav-more-menu">
-  <a href="#filingsView" data-page="filings">Filings</a>
-  <a href="#workbench" data-page="tools">Tools</a>
-  <a href="#sources" data-page="research">Research & Sources</a>
- </div></details>
-</nav>
-  <div class="top-right"><span class="clock" id="clock">--:--:-- WIB</span><span class="feed-state"><i class="dot" id="feedDot"></i><span id="feedState">Connecting feeds</span></span><span class="refresh-hint" id="autoRefreshLabel">AUTO · FETCH 5s / VIEW 4s</span><span class="after-hours" id="marketSession">SESSION CHECK</span><span class="market-session-stamp" id="marketSessionStamp">Feed time pending</span><details class="theme-menu"><summary title="Appearance" aria-label="Appearance">◐</summary><div class="theme-menu-items"><button type="button" data-theme-choice="light">Light</button><button type="button" data-theme-choice="dark">Dark</button><button type="button" data-theme-choice="system">System</button></div></details><button class="icon-button" id="refreshBtn" title="Refresh data" aria-label="Refresh data">↻</button></div>
-</div></div>
-<div class="tape-wrap terminal-tape"><div class="tape" id="tickerTape"><div class="tape-item"><strong>APIS</strong><span class="minor">Waiting for verified provider observations…</span></div></div></div>
-<main class="container">
-<section id="overview" class="section page-view active ios-home" data-page-view="home">
-  <div class="ios-home-heading">
-    <div class="ios-home-title">
-      <div class="eyebrow">APIS · MARKET WATCH</div>
-      <h1>Stocks</h1>
-      <div class="ios-home-date" id="homeDate">—</div>
-    </div>
-    <div class="ios-home-actions">
-      <button class="ios-circle-button" id="homeSearchToggle" type="button" aria-label="Search watchlist" aria-expanded="false">⌕</button>
-      <button class="ios-circle-button" id="refreshTop" type="button" aria-label="Refresh market data" title="Refresh market data">↻</button>
-    </div>
-  </div>
-  <div class="ios-search-wrap" id="homeSearchWrap" aria-hidden="true">
-    <input id="homeSearch" type="search" placeholder="Search symbol or company…" aria-label="Search watchlist">
-    <button type="button" id="homeSearchClear" aria-label="Clear search">×</button>
-  </div>
-  <div class="ios-list-heading">
-    <div><h2>My Watchlist</h2><p id="homeWatchCount">Waiting for provider observations</p></div>
-    <div class="ios-list-meta"><span id="quoteCount">0 / 27</span><span id="lastRefresh">Not refreshed</span></div>
-  </div>
-  <div class="ios-stock-list" id="featuredQuotes" aria-live="polite">
-    <div class="empty-state">Loading verified public market observations…</div>
-  </div>
-  <section class="ios-home-aux">
-    <div class="ios-aux-heading"><div><h2>Cross-asset pulse</h2><p>Streaming and official reference data</p></div><span class="source-pill" id="homeSnapshotStamp">Awaiting feeds</span></div>
-    <div class="ios-aux-grid">
-      <article class="ios-aux-card">
-        <div class="ios-aux-card-head"><div><strong>Bitcoin</strong><small>BTC / USD · public exchange ticker</small></div><span class="ios-feed-badge" id="btcStatus">CONNECTING</span></div>
-        <div class="ios-aux-value" id="btcPrice">—</div>
-        <div class="ios-aux-foot"><span id="btcChange">Waiting for public BTC observation</span><time id="btcAsOf">—</time></div>
-      </article>
-      <article class="ios-aux-card">
-        <div class="ios-aux-card-head"><div><strong>USD / IDR</strong><small>Daily reference rate · not intraday</small></div><span class="ios-feed-badge" id="fxStatus">LOADING</span></div>
-        <div class="ios-aux-value" id="fxValue">—</div>
-        <div class="ios-aux-foot"><span id="fxPair">USD / IDR</span><time id="fxDate">—</time></div>
-      </article>
-    </div>
-    <div class="ios-data-health">
-      <div class="ios-health-top"><strong>Data coverage</strong><span id="coverageStatus">Awaiting data</span></div>
-      <div class="ios-health-progress"><strong id="coveragePct">0%</strong><div class="coverage-bar"><div class="coverage-fill" id="coverageFill"></div></div></div>
-      <div class="ios-health-foot"><span id="coverageDetails">0 updated · 27 requested</span><span id="coverageAsOf">—</span></div>
-    </div>
-    <p class="ios-data-note">Free public feeds can be delayed, snapshot-based, rate-limited or unavailable. Each row expands to show source, observation time and feed status.</p>
-  </section>
-  <div class="ios-home-tools">
-    <button class="button secondary" id="exportSnapshotTop" type="button">Export watchlist CSV</button>
-    <button class="button" id="refreshHomeBtn" type="button">Refresh data</button>
-  </div>
-</section>
-
-<section class="section page-view ios-markets" id="markets" data-page-view="markets">
-  <div class="ios-page-heading">
-    <div><div class="eyebrow">APIS · GLOBAL MARKETS</div><h1>Markets</h1><p>Public market observations, organized by asset class. Delayed and last-close data are labelled.</p></div>
-    <div class="ios-market-status"><span id="quoteCountMarkets">0 / 27</span><span id="lastRefreshMarkets">Not refreshed</span></div>
-  </div>
-  <div class="ios-market-tabs" id="marketFilters" role="tablist" aria-label="Market categories">
-    <button type="button" role="tab" aria-selected="true" class="active" data-market-filter="indices">Indices</button>
-    <button type="button" role="tab" aria-selected="false" data-market-filter="commodities">Commodities</button>
-    <button type="button" role="tab" aria-selected="false" data-market-filter="fx-crypto">FX & Crypto</button>
-    <button type="button" role="tab" aria-selected="false" data-market-filter="equities">Equities</button>
-  </div>
-  <div class="ios-market-panel">
-    <div class="ios-market-panel-head"><div><h2 id="marketSegmentTitle">Global indices</h2><p id="marketSegmentDescription">Major equity benchmarks across the US, India, Japan and Asia.</p></div><span class="source-pill" id="snapshotStamp">Waiting for quotes</span></div>
-    <div class="ios-stock-list ios-market-stock-list" id="marketSnapshotGrid" aria-live="polite">
-      <div class="empty-state">Waiting for validated public market quotes.</div>
-    </div>
-  </div>
-  <div class="ios-market-foot">
-    <span>Source order: Stooq public snapshot → Yahoo Finance public fallback.</span>
-    <span>Unavailable instruments are never replaced with estimates.</span>
-  </div>
-</section>
-
-<section class="section page-view" id="research" data-page-view="news">
- <div class="page-heading"><div><div class="eyebrow">APIS · NEWS INTELLIGENCE</div><h1>News Feed</h1><p>Publisher headlines sorted by publication time. Filter by market theme, search titles, and open the original source.</p></div><span class="source-pill" id="newsFeedStatus">Connecting to publishers</span></div>
- <div class="card news-reader">
-  <div class="news-controls">
-   <div class="news-search"><span>⌕</span><input id="newsSearch" type="search" placeholder="Search headlines, companies, central banks…" aria-label="Search news headlines"></div>
-   <label class="news-alert-control"><input id="newsAlertsToggle" type="checkbox"><span>News alerts</span></label>
-  </div>
-  <div class="news-filters" id="newsFilters">
-   <button class="news-filter active" data-news-filter="All">All</button>
-   <button class="news-filter" data-news-filter="Breaking">Breaking · 3h</button>
-   <button class="news-filter" data-news-filter="Forex">Forex</button>
-   <button class="news-filter" data-news-filter="Economy">Economy</button>
-   <button class="news-filter" data-news-filter="Central Banks">Central Banks</button>
-   <button class="news-filter" data-news-filter="Commodities">Commodities</button>
-   <button class="news-filter" data-news-filter="Geopolitical">Geopolitical</button>
-  </div>
-  <div class="news-feed-meta"><span id="newsResultsCount">0 headlines</span><span id="newsUpdatedAt">Awaiting publisher responses</span></div>
-  <div class="news-feed-list" id="newsFeedList"><div class="empty-state">Loading publisher RSS feeds…</div></div>
-  <div class="news-bottom"><span>Headlines and timestamps remain linked to the publisher.</span><button class="button secondary" id="refreshNewsBtn">Refresh news</button></div>
- </div>
- <div class="news-publishers">Sources: CNBC · BBC Business · The Guardian Business · Federal Reserve · BIS</div>
-</section>
-
-<section class="section page-view" id="macroView" data-page-view="macro">
- <div class="page-heading"><div><div class="eyebrow">APIS · MACRO INTELLIGENCE</div><h1>Macro Dashboard</h1><p>U.S. Treasury daily yields and a multi-region economic release calendar. All event times shown in WIB.</p></div><span class="source-pill">Official & public calendars</span></div>
- <div class="card treasury-terminal">
-  <div class="card-title"><div><h2>U.S. Treasury par yield curve</h2><p>Federal Reserve H.15 / FRED daily constant-maturity observations</p></div><span class="source-pill" id="tsyStatus">CONNECTING</span></div>
-  <div class="treasury-grid treasury-grid-wide">
-   <div><small>2 YEAR</small><strong id="tsy2">—</strong><em id="tsy2Date">—</em></div>
-   <div><small>5 YEAR</small><strong id="tsy5">—</strong><em id="tsy5Date">—</em></div>
-   <div><small>10 YEAR</small><strong id="tsy10">—</strong><em id="tsy10Date">—</em></div>
-   <div><small>30 YEAR</small><strong id="tsy30">—</strong><em id="tsy30Date">—</em></div>
-   <div class="spread-box"><small>10Y − 2Y</small><strong id="tsySpread">—</strong><em>Same-date observations only</em></div>
-  </div>
-  <div class="treasury-foot"><span id="tsyDate">Waiting for FRED daily observations.</span><div class="treasury-links"><a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve" target="_blank" rel="noopener">Official Treasury ↗</a><a href="https://fred.stlouisfed.org/graph/?id=DGS2%2CDGS5%2CDGS10%2CDGS30" target="_blank" rel="noopener">FRED H.15 ↗</a></div></div>
-  <div class="treasury-error" id="tsyError" hidden></div>
- </div>
- <div class="card calendar-terminal">
-  <div class="calendar-title-row">
-   <div><div class="eyebrow">FOREX FACTORY STYLE · WIB</div><h2>Economic calendar</h2><p>Previous · Forecast · Actual. Released items remain visible for the rest of the same WIB day.</p></div>
-   <div class="calendar-toolbar">
-    <div class="calendar-range-switch" role="group" aria-label="Calendar range">
-     <button type="button" data-cal-range="3" class="active" aria-pressed="true">3D</button>
-     <button type="button" data-cal-range="7" aria-pressed="false">7D</button>
-    </div>
-    <button class="button secondary" id="refreshCalendarBtn" type="button">Refresh</button>
-   </div>
-  </div>
-  <details class="calendar-filter-drawer" id="calendarFilterDrawer">
-   <summary><span>Calendar filters</span><small id="calendarFilterSummary">High + Medium · all countries · all categories</small></summary>
-   <div class="calendar-filter-content">
-    <div class="calendar-filter-block">
-     <div class="calendar-filter-heading"><strong>Expected impact</strong><span><button type="button" data-cal-all="impact">All</button><button type="button" data-cal-none="impact">None</button></span></div>
-     <div class="calendar-check-grid impact-filter-grid">
-      <label><input type="checkbox" data-cal-impact="HIGH" checked><i class="impact-swatch high"></i>High impact</label>
-      <label><input type="checkbox" data-cal-impact="MEDIUM" checked><i class="impact-swatch medium"></i>Medium impact</label>
-      <label><input type="checkbox" data-cal-impact="LOW" checked><i class="impact-swatch low"></i>Low impact</label>
-     </div>
-    </div>
-    <div class="calendar-filter-block">
-     <div class="calendar-filter-heading"><strong>Countries / currencies</strong><span><button type="button" data-cal-all="country">All</button><button type="button" data-cal-none="country">None</button></span></div>
-     <div class="calendar-check-grid currency-filter-grid">
-      <label><input type="checkbox" data-cal-country="AUD" checked>🇦🇺 AUD</label>
-      <label><input type="checkbox" data-cal-country="CAD" checked>🇨🇦 CAD</label>
-      <label><input type="checkbox" data-cal-country="CHF" checked>🇨🇭 CHF</label>
-      <label><input type="checkbox" data-cal-country="CNY" checked>🇨🇳 CNY</label>
-      <label><input type="checkbox" data-cal-country="EUR" checked>🇪🇺 EUR</label>
-      <label><input type="checkbox" data-cal-country="GBP" checked>🇬🇧 GBP</label>
-      <label><input type="checkbox" data-cal-country="IDR" checked>🇮🇩 IDR</label>
-      <label><input type="checkbox" data-cal-country="JPY" checked>🇯🇵 JPY</label>
-      <label><input type="checkbox" data-cal-country="NZD" checked>🇳🇿 NZD</label>
-      <label><input type="checkbox" data-cal-country="USD" checked>🇺🇸 USD</label>
-     </div>
-    </div>
-    <div class="calendar-filter-block">
-     <div class="calendar-filter-heading"><strong>Event types</strong><span><button type="button" data-cal-all="category">All</button><button type="button" data-cal-none="category">None</button></span></div>
-     <div class="calendar-check-grid category-filter-grid">
-      <label><input type="checkbox" data-cal-category="Growth" checked>Growth</label>
-      <label><input type="checkbox" data-cal-category="Inflation" checked>Inflation</label>
-      <label><input type="checkbox" data-cal-category="Employment" checked>Employment</label>
-      <label><input type="checkbox" data-cal-category="Central Bank" checked>Central Bank</label>
-      <label><input type="checkbox" data-cal-category="Bonds" checked>Bonds</label>
-      <label><input type="checkbox" data-cal-category="Housing" checked>Housing</label>
-      <label><input type="checkbox" data-cal-category="Consumer Surveys" checked>Consumer Surveys</label>
-      <label><input type="checkbox" data-cal-category="Business Surveys" checked>Business Surveys</label>
-      <label><input type="checkbox" data-cal-category="Speeches" checked>Speeches</label>
-      <label><input type="checkbox" data-cal-category="Misc" checked>Misc</label>
-     </div>
-    </div>
-   </div>
-  </details>
-  <div class="calendar-summary"><span id="calendarCount">Loading high and medium impact releases…</span><span id="calendarUpdatedAt">Forex Factory · Investing.com · XOOMAR · Bank Indonesia</span></div>
-  <div class="calendar-impact-legend"><span><i class="impact-swatch high"></i>High impact</span><span><i class="impact-swatch medium"></i>Medium impact</span><span class="calendar-legend-note">Times: Asia/Jakarta (WIB)</span></div>
-  <div id="calendarEvents" class="calendar-events"><div class="empty-state">Loading economic release schedules…</div></div>
-  <div class="calendar-foot">Schedule / consensus: Forex Factory weekly feed. Previous, Forecast and Actual: Investing.com occurrences where available. XOOMAR adds U.S. agency previous / actual values; Bank Indonesia supplies official RDG dates. A blank field means the connected provider did not publish that value.</div>
-  <div class="calendar-source-links"><a href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener">Forex Factory calendar ↗</a><a href="https://xoomar.com/economic-calendar-api" target="_blank" rel="noopener">XOOMAR U.S. actuals API ↗</a><a href="https://www.bi.go.id/id/publikasi/Kalender/Default.aspx" target="_blank" rel="noopener">Bank Indonesia calendar ↗</a><a href="https://www.bps.go.id/id/pressrelease" target="_blank" rel="noopener">BPS releases ↗</a></div>
- </div>
-</section>
-<section class="section page-view" id="moversView" data-page-view="movers">
- <div class="page-heading"><div><div class="eyebrow">APIS · MARKET BREADTH</div><h1>Market Movers</h1><p>Winners and decliners calculated from the latest valid provider observations. Stale and unavailable instruments are excluded.</p></div><span class="source-pill" id="moversStamp">Waiting for quotes</span></div>
- <div class="section" id="moversPanel" style="margin-top:14px">
- <div class="section-head"><div><div class="eyebrow">MARKET BREADTH</div><h2>Today's flow · winners & losers</h2><p>Sorted from latest validated provider observations; unavailable instruments are excluded.</p></div><span class="source-pill" id="moversPageStatus">Provider snapshot</span></div>
- <div class="grid two-col movers-grid">
-  <div class="card card-pad"><div class="card-title"><h3>Top gainers</h3><span class="badge good">UP</span></div><div class="mover-list" id="gainersList"><div class="empty-state">Waiting for provider quotes.</div></div></div>
-  <div class="card card-pad"><div class="card-title"><h3>Top decliners</h3><span class="badge bad">DOWN</span></div><div class="mover-list" id="losersList"><div class="empty-state">Waiting for provider quotes.</div></div></div>
- </div>
-</div>
-</section><section class="section page-view" id="filingsView" data-page-view="filings">
- <div class="page-heading"><div><div class="eyebrow">APIS · REGULATORY INTELLIGENCE</div><h1>Filings & Corporate Actions</h1><p>Public SEC EDGAR submissions for selected U.S. issuers, with direct filing links and publication dates.</p></div><span class="source-pill" id="filingsStatus">PUBLIC SOURCES</span></div>
- <div class="card filings-panel" id="filingsPanel" style="margin-top:14px">
- <div class="card-title"><div><div class="eyebrow">REGULATORY DISCLOSURES</div><h3>Filings & corporate actions</h3><p>Public filing sources · no fabricated insider trades or issuer disclosures.</p></div><span class="source-pill" id="filingsPageStatus">PUBLIC SOURCES</span></div>
- <div class="filings-feed" id="filingsFeedList"><div class="empty-state">Loading SEC EDGAR company filings…</div></div><div class="filing-links">
-  <a href="https://www.sec.gov/edgar/search/" target="_blank" rel="noopener"><strong>SEC EDGAR</strong><span>U.S. company filings · 10-K, 10-Q, 8-K</span></a>
-  <a href="https://www.idx.co.id/id/perusahaan-tercatat/keterbukaan-informasi/" target="_blank" rel="noopener"><strong>IDX disclosures</strong><span>Indonesia listed-company disclosures</span></a>
-  <a href="https://www.sec.gov/Archives/edgar/daily-index/" target="_blank" rel="noopener"><strong>SEC daily index</strong><span>Daily filing index and submissions</span></a>
- </div>
-</div>
-</section><section class="section page-view" id="workbench" data-page-view="tools">
-  <div class="section-head"><div><div class="eyebrow">TOOLS · APIS BROWSER SUITE</div><h2>Workbench institusional</h2><p>Subset APIS untuk browser: perangkat deterministik yang berjalan lokal tanpa API key privat atau backend.</p></div><span class="source-pill">Eksekusi lokal · tanpa koneksi LLM</span></div>
-  <div class="apis-banner"><div><h3>Master Control · routing lokal</h3><p>Mengarahkan tugas ke modul APIS terkecil yang relevan berdasarkan aturan kata kunci yang transparan. Ini routing deterministik, bukan AI generatif dan bukan pengganti penuh runtime APIS Python.</p></div><span class="module-status">BROWSER CORE READY</span></div>
-  <div class="field-grid" style="margin-top:13px">
-    <div class="field"><label for="taskRequest">Tugas / permintaan</label><input id="taskRequest" placeholder="e.g. Analisis valuasi BBCA dan risiko portofolio"></div>
-    <div class="field" style="justify-content:end"><button class="button" id="routeTask">Tentukan rute tugas</button></div>
-  </div>
-  <div class="result-box" id="routeResult" aria-live="polite"></div>
-  <div class="tool-subnav" aria-label="Tools submenu">
- <a href="#toolPrompt" data-tool-anchor="toolPrompt">Prompt Lab</a><a href="#toolDcf" data-tool-anchor="toolDcf">Valuation</a><a href="#toolBond" data-tool-anchor="toolBond">Fixed Income</a><a href="#toolRisk" data-tool-anchor="toolRisk">Portfolio Risk</a><a href="#toolEvidence" data-tool-anchor="toolEvidence">Evidence Book</a><a href="#toolAlerts" data-tool-anchor="toolAlerts">Alerts</a><a href="#toolData" data-tool-anchor="toolData">Data Quality</a>
-</div>
-
-  <div class="grid workbench-grid" style="margin-top:14px">
-    <div class="card tool-card" id="toolPrompt"><div class="card-title"><div><div class="small-caps">M01 / LYRA</div><h3>Prompt quality audit</h3><p>Checklist-based heuristic review; not a safety guarantee.</p></div></div>
-      <div class="field"><label for="promptText">Prompt to review</label><textarea id="promptText" placeholder="Tempel prompt yang ingin dievaluasi..."></textarea></div>
-      <div class="form-actions"><button class="button" id="auditPrompt">Audit prompt</button><button class="button secondary" id="buildPrompt">Build APIS template</button></div>
-      <div class="result-box" id="promptResult"></div><div class="field hidden" id="builtPromptWrap" style="margin-top:12px"><label for="builtPrompt">Structured prompt</label><textarea id="builtPrompt" readonly></textarea><button class="button secondary" id="copyPrompt">Copy prompt</button></div>
-    </div>
-
-    <div class="card tool-card" id="toolDcf"><div class="card-title"><div><div class="small-caps">M02 + M04</div><h3>DCF valuation model</h3><p>FCFF discounted cash flow · input units must be consistent.</p></div></div>
-      <div class="field-grid">
-        <div class="field full"><label for="fcfs">Forecast FCFF (comma-separated)</label><input id="fcfs" value="100,110,120,130,140" inputmode="decimal"></div>
-        <div class="field"><label for="wacc">WACC (%)</label><input id="wacc" type="number" value="11" step="0.1"></div>
-        <div class="field"><label for="growth">Terminal growth (%)</label><input id="growth" type="number" value="4" step="0.1"></div>
-        <div class="field"><label for="netDebt">Net debt (same unit)</label><input id="netDebt" type="number" value="100"></div>
-        <div class="field"><label for="shares">Shares (same scale as equity value)</label><input id="shares" type="number" value="50"></div>
+<html lang="en" class="obsidian">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#080C14" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Stocks" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <title>Stocks — Global Market Terminal</title>
+    <meta
+      name="description"
+      content="Free global market terminal with scheduled public market-data snapshots, local portfolio tracking, price alerts, market news and economic calendar."
+    />
+    <meta property="og:title" content="Stocks — Global Market Terminal" />
+    <meta
+      property="og:description"
+      content="Free global market terminal with scheduled public market-data snapshots, local portfolio tracking, price alerts, market news and economic calendar."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('stocks-theme-mode');
+          var mode = saved === 'arctic' || saved === 'parchment' || saved === 'obsidian' ? saved : 'obsidian';
+          var root = document.documentElement;
+          root.classList.remove('obsidian', 'dark', 'arctic', 'parchment');
+          root.classList.add(mode);
+          if (mode === 'obsidian') root.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
+    <style>
+      #boot-shell {
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        background: #080b12;
+        color: #f8fafc;
+        font-family: -apple-system, BlinkMacSystemFont, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      html.arctic #boot-shell {
+        background: #edf3fa;
+        color: #151821;
+      }
+      html.parchment #boot-shell {
+        background: #f4f0e6;
+        color: #191815;
+      }
+      .boot-bar {
+        height: 58px;
+        padding: 0 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(18px);
+      }
+      html.arctic .boot-bar,
+      html.parchment .boot-bar {
+        border-bottom-color: rgba(15, 23, 42, 0.08);
+      }
+      .boot-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        font-size: 16px;
+        letter-spacing: -0.02em;
+      }
+      .boot-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #38bdf8;
+      }
+      .boot-pill {
+        font-size: 11px;
+        font-weight: 700;
+        opacity: 0.72;
+      }
+      .boot-body {
+        max-width: 1440px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 18px;
+        display: grid;
+        gap: 16px;
+      }
+      .boot-strip {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+      }
+      .boot-card {
+        height: 82px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .boot-main {
+        height: 360px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      html.arctic .boot-card,
+      html.arctic .boot-main,
+      html.parchment .boot-card,
+      html.parchment .boot-main {
+        background: rgba(255, 255, 255, 0.58);
+        border-color: rgba(15, 23, 42, 0.08);
+      }
+    </style>
+  </head>
+  <body class="antialiased selection:bg-[#0066CC] dark:selection:bg-[#0066CC] selection:text-white">
+    <div id="root">
+      <div id="boot-shell" aria-busy="true" aria-label="Loading Stocks Global Market Terminal">
+        <div class="boot-bar">
+          <div class="boot-brand">
+            <span class="boot-dot"></span>
+            <span>Stocks</span>
+          </div>
+          <span class="boot-pill">Loading free public market snapshots...</span>
+        </div>
+        <div class="boot-body">
+          <div class="boot-strip">
+            <div class="boot-card"></div>
+            <div class="boot-card"></div>
+            <div class="boot-card"></div>
+            <div class="boot-card"></div>
+            <div class="boot-card"></div>
+            <div class="boot-card"></div>
+          </div>
+          <div class="boot-main"></div>
+        </div>
       </div>
-      <div class="form-actions"><button class="button" id="runDcf">Calculate DCF</button></div><div class="result-box" id="dcfResult"></div>
-      <div class="footnote">Gordon Growth terminal value. No company data is preloaded. This calculator does not determine a fair value without validated inputs, forecast period, currency, capital structure and valuation date.</div>
     </div>
-
-    <div class="card tool-card" id="toolBond"><div class="card-title"><div><div class="small-caps">M04 / FIXED INCOME</div><h3>Bond price calculator</h3><p>Periodic fixed coupon; clean price approximation, excluding accrued interest.</p></div></div>
-      <div class="field-grid">
-        <div class="field"><label for="bondFace">Face value</label><input id="bondFace" type="number" value="100"></div>
-        <div class="field"><label for="bondCoupon">Coupon (%)</label><input id="bondCoupon" type="number" value="6" step="0.01"></div>
-        <div class="field"><label for="bondYtm">YTM (%)</label><input id="bondYtm" type="number" value="7" step="0.01"></div>
-        <div class="field"><label for="bondYears">Years to maturity</label><input id="bondYears" type="number" value="5" step="1"></div>
-        <div class="field full"><label for="bondFreq">Coupon frequency</label><select id="bondFreq"><option value="1">Annual</option><option value="2" selected>Semi-annual</option><option value="4">Quarterly</option><option value="12">Monthly</option></select></div>
-      </div><div class="form-actions"><button class="button" id="runBond">Calculate bond price</button></div><div class="result-box" id="bondResult"></div>
-      <div class="footnote">Calculation does not include tax, transaction costs, day-count convention, accrued coupon or issuer default risk.</div>
-    </div>
-
-    <div class="card tool-card" id="toolRisk"><div class="card-title"><div><div class="small-caps">M04 / PORTFOLIO RISK</div><h3>Portfolio risk calculator</h3><p>Historical returns entered by the user; no sample market data is loaded.</p></div></div>
-      <div class="field-grid">
-        <div class="field full"><label for="portfolioReturns">Periodic portfolio returns (%) · chronological</label><textarea id="portfolioReturns" placeholder="e.g. 1.2, -0.8, 2.1, -1.4, 0.6"></textarea></div>
-        <div class="field"><label for="riskFreeRate">Annual risk-free rate (%)</label><input id="riskFreeRate" type="number" value="0" step="0.01"></div>
-        <div class="field"><label for="returnFrequency">Return frequency</label><select id="returnFrequency"><option value="12" selected>Monthly · 12 periods</option><option value="52">Weekly · 52 periods</option><option value="252">Daily · 252 periods</option></select></div>
-      </div><div class="form-actions"><button class="button" id="runPortfolioRisk">Calculate portfolio risk</button></div><div class="result-box" id="portfolioRiskResult"></div>
-      <div class="footnote">Metrik sampel historis, bukan proyeksi. VaR / ES are one-period historical estimates at 95%; returns must be ordered oldest to newest and expressed in percent.</div>
-    </div>
-
-    <div class="card tool-card" id="toolEvidence"><div class="card-title"><div><div class="small-caps">M05 / DEEP RESEARCH</div><h3>Buku bukti</h3><p>Capture claims and provenance. Data is saved in this browser only.</p></div><span class="source-pill" id="ledgerCount">0 records</span></div>
-      <div class="field-grid">
-        <div class="field full"><label for="claimText">Claim / evidence statement</label><input id="claimText" placeholder="What statement are you validating?"></div>
-        <div class="field"><label for="claimTopic">Topic</label><input id="claimTopic" placeholder="e.g. BI rate decision"></div>
-        <div class="field"><label for="claimValue">Comparable value (optional)</label><input id="claimValue" placeholder="e.g. 5.00%"></div>
-        <div class="field"><label for="claimPublisher">Publisher</label><input id="claimPublisher" placeholder="e.g. Bank Indonesia"></div>
-        <div class="field"><label for="claimTier">Source tier</label><select id="claimTier"><option value="TIER_1">Tier 1 · Official / primary</option><option value="TIER_2">Tier 2 · Multilateral / official research</option><option value="TIER_3">Tier 3 · Reputable media / data</option><option value="TIER_4">Tier 4 · Supplementary</option><option value="UNKNOWN">Unknown</option></select></div>
-        <div class="field"><label for="claimDate">Published / observed date</label><input id="claimDate" type="date"></div>
-        <div class="field"><label for="claimUrl">Source URL / reference</label><input id="claimUrl" placeholder="https://..." type="url"></div>
-        <div class="field full"><label for="claimCorroboration">Independent corroboration (optional)</label><input id="claimCorroboration" placeholder="Second source / independent reference"></div>
-      </div><div class="form-actions"><button class="button" id="addEvidence">Add evidence</button><button class="button secondary" id="clearEvidence">Clear ledger</button></div>
-      <div class="ledger-list" id="ledgerList"><div class="empty-state">No evidence records saved.</div></div>
-      <div class="footnote">The source score is a screening heuristic, not proof that a claim is true. Different values for the same topic are flagged for review, not automatically reconciled.</div>
-    </div>
-
-    <div class="card tool-card" id="toolData"><div class="card-title"><div><div class="small-caps">M06 / DATA ANALYTICS</div><h3>Data quality & export</h3><p>Coverage and provenance for this browser's quote set.</p></div></div>
-      <div class="result-grid"><div class="result-metric"><small>Requested</small><strong id="dqRequested">19</strong></div><div class="result-metric"><small>Timestamped observations</small><strong id="dqUsable">0</strong></div><div class="result-metric"><small>Unavailable</small><strong id="dqUnavailable">19</strong></div><div class="result-metric"><small>Timestamp pass</small><strong id="dqTimestamp">0</strong></div></div>
-      <div class="divider"></div><div class="source-list" id="sourceHealth"></div><div class="form-actions"><button class="button" id="exportDataQuality">Export quote CSV</button><button class="button secondary" id="exportEvidence">Export evidence CSV</button></div>
-      <div class="footnote">The APIS Python engine includes additional ingestion and analysis functions. They are not assumed to execute inside this standalone HTML; this section reports only the data actually loaded by this page.</div>
-    </div>
-
-    <div class="card tool-card" id="toolAlerts"><div class="card-title"><div><div class="small-caps">M07 / AUTOMATION</div><h3>Browser threshold monitor</h3><p>Alerts evaluate only when this file is open and a valid quote updates.</p></div></div>
-      <div class="field-grid"><div class="field"><label for="alertSymbol">Symbol</label><select id="alertSymbol"></select></div><div class="field"><label for="alertOperator">Condition</label><select id="alertOperator"><option value=">=">Greater / equal</option><option value="<=">Less / equal</option><option value=">">Greater than</option><option value="<">Less than</option></select></div><div class="field full"><label for="alertThreshold">Threshold (same unit as symbol quote)</label><input id="alertThreshold" type="number" step="any" placeholder="Enter threshold"></div></div>
-      <div class="form-actions"><button class="button" id="addAlert">Add alert rule</button><button class="button secondary" id="requestNotify">Enable browser notifications</button></div>
-      <div class="alert-list" id="alertList"><div class="empty-state">No threshold rules created.</div></div>
-      <div class="footnote">Ini bukan cloud scheduler, tidak berjalan saat browser ditutup, dan tidak menempatkan order atau melakukan tindakan eksternal. Notifications depend on browser permission.</div>
-    </div>
-  </div>
-</section>
-
-<section class="section page-view" id="sources" data-page-view="research">
-  <div class="section-head"><div><div class="eyebrow">04 / Tata kelola</div><h2>Sumber data & catatan operasional</h2><p>Asal-usul data, batasan penyedia, dan batas kemampuan edisi browser.</p></div></div>
-  <div class="grid two-col">
-    <div class="card card-pad"><div class="card-title"><div><h3>Registri sumber</h3><p>Dependensi data dan visualisasi</p></div></div><div class="source-list">
-      <div class="source-row"><div><strong>Stooq public CSV snapshots</strong><small>No paid subscription or API key. Daily/delayed public quote snapshots for mapped instruments; coverage is selective and the provider may rate-limit or block automated requests.</small></div><span class="badge warn">FREE · EOD / DELAYED</span></div>
-      <div class="source-row"><div><strong>Yahoo Finance public chart fallback</strong><small>Unofficial public endpoint through CORS relays. Used only when Stooq has no mapped symbol or its public endpoint is unavailable. May be delayed and can be blocked.</small></div><span class="badge warn">FREE · BEST EFFORT</span></div>
-
-      <div class="source-row"><div><strong>Binance / Coinbase / Kraken public streams</strong><small>BTC spot WebSocket tickers with REST snapshot fallback. Tick-by-tick label only while a provider WebSocket message is fresh.</small></div><span class="badge good">PUBLIC STREAM</span></div>
-      <div class="source-row"><div><strong>U.S. Treasury / FRED H.15</strong><small>Daily par yield curve 2Y/5Y/10Y/30Y; official Treasury table first, free FRED CSV fallback; not intraday.</small></div><span class="badge good">DAILY</span></div>
-      <div class="source-row"><div><strong>Publisher RSS / news aggregation</strong><small>CNBC, BBC, Guardian, Reuters, Bloomberg and Investing.com headlines. Reuters/Bloomberg/Investing headlines are discovered via Google News RSS; these are news sources, not price feeds.</small></div><span class="badge good">PUBLIC HEADLINES</span></div>
-      <div class="source-row"><div><strong>Google Finance</strong><small>GOOGLEFINANCE is a Google Sheets function, not a public JavaScript quote API; some futures are unsupported and quotes may be delayed.</small></div><span class="badge warn">SHEETS FUNCTION</span></div>
-      <div class="source-row"><div><strong>Reuters / Bloomberg professional data</strong><small>Reuters news/data is delivered through LSEG services; Bloomberg market data through SAPI, B-PIPE or Data License. Access and display require licensed entitlements.</small></div><span class="badge warn">LICENSED FEEDS</span></div>
-      <div class="source-row"><div><strong>BLS / BEA / Federal Reserve calendars</strong><small>Official release schedules filtered to major macro releases.</small></div><span class="badge good">OFFICIAL SCHEDULE</span></div>
-      <div class="source-row"><div><strong>Frankfurter reference-rate API</strong><small>USD/IDR central-bank reference rate; not a live executable FX quote.</small></div><span class="badge warn">REFERENCE</span></div>
-    </div></div>
-    <div class="card card-pad"><div class="card-title"><div><h3>Batasan yang diketahui</h3><p>Kemampuan yang tersedia dan yang tidak diklaim</p></div></div>
-      <ul class="check-list">
-        <li><span class="check-mark">✓</span><span>Runs as a static HTML app with no paid API keys. Market prices use free public endpoints and are validated before display.</span></li>
-        <li><span class="check-mark">✓</span><span>Only provider responses with a valid price and observation timestamp enter the quote table and CSV export.</span></li>
-        <li><span class="check-mark">✓</span><span>Binance BTC/USDT is labelled live only when a timestamped WebSocket message is received.</span></li>
-        <li><span class="check-miss">!</span><span>Stooq coverage is selective and EOD/delayed; Yahoo public endpoints are unofficial. Neither source guarantees live tick-by-tick prices or uninterrupted availability.</span></li>
-        <li><span class="check-miss">!</span><span>Feed tanpa autentikasi tidak menjamin real-time. Data live berlisensi untuk indeks/futures/BEI memerlukan entitlement provider yang sesuai.</span></li>
-        <li><span class="check-miss">!</span><span>No guaranteed live IDX equities feed is included. IDX real-time market data requires the appropriate licensed source.</span></li>
-        <li><span class="check-miss">!</span><span>Full APIS Python orchestration, database, background automation, LLM features, issuer ingestion and persistent cloud storage are not ported into this single HTML file.</span></li>
-      </ul>
-    </div>
-  </div>
-  <div class="note" style="margin-top:14px"><strong>Cara menjalankan:</strong> simpan file ini di komputer lalu buka dengan Chrome, Edge, Safari, atau Firefox yang terhubung ke internet. Sebagian jaringan memblokir penyedia data pasar publik atau widget eksternal; dashboard akan menandainya unavailable dan tidak mengganti data dengan simulasi. Untuk akses provider yang lebih konsisten, file dapat dijalankan melalui web server statis lokal (opsional)—tanpa backend API.</div>
-</section>
-</main>
-<footer class="footer"><div class="footer-inner"><span><strong>APIS The Market Terminal v2.10.0</strong> · Terminal redesign · free public data connectors</span><span>Built for local browser use · Asia/Jakarta · Data status is provider-dependent</span><span><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a> · <a href="https://finance.yahoo.com/" target="_blank" rel="noopener">Yahoo Finance</a> · <a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a> · <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a></span></div></footer>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-<script src="assets/js/compat.js"></script>
-<script src="assets/js/core.js"></script>
-<script src="assets/js/market-data.js"></script>
-<script src="assets/js/realtime-data.js"></script>
-<script src="assets/js/workspace.js"></script>
-<script src="assets/js/bootstrap.js"></script>
-
-</body>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

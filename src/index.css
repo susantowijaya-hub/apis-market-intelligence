@@ -1,0 +1,398 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.obsidian, .obsidian *, .dark, .dark *));
+@custom-variant obsidian (&:where(.obsidian, .obsidian *));
+@custom-variant arctic (&:where(.arctic, .arctic *));
+@custom-variant parchment (&:where(.parchment, .parchment *));
+
+@theme {
+  --color-gain: #22C55E;
+  --color-gain-text-light: #0F7033;
+  --color-loss: #EF4444;
+  --color-loss-text-light: #C41C16;
+  --color-breaking: #FF375F;
+  --color-accent-light: #0066CC;
+  --color-accent-dark: #3898FF;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+    font-family: var(--font-sans);
+  }
+
+  html.theme-switching *,
+  html.theme-switching *::before,
+  html.theme-switching *::after {
+    transition: none !important;
+  }
+
+  /* ==========================================================================
+     Theme 2 (Surviving): Arctic Cobalt (Synthesized from Refs 04 Turbine & 05 Fenisco)
+     ========================================================================== */
+  html.arctic,
+  html:not(.obsidian):not(.parchment) {
+    color-scheme: light;
+  }
+
+  body,
+  html.arctic body {
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    background-color: #EDF3FA;
+    color: #151821;
+  }
+
+  /* ==========================================================================
+     Theme 1 (Surviving): Obsidian Amber (Warm Tungsten + Smoked Liquid Glass)
+     ========================================================================== */
+  html.obsidian,
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html.obsidian body,
+  html.dark body {
+    background-color: #080B12;
+    color: #F8FAFC;
+  }
+
+  /* ==========================================================================
+     Theme 3 (Surviving): Warm Editorial (Synthesized from Refs 01 Worktail & 03 SentinelAI)
+     ========================================================================== */
+  html.parchment {
+    color-scheme: light;
+  }
+
+  html.parchment body {
+    background-color: #F4F0E6;
+    color: #191815;
+  }
+
+  button,
+  a,
+  select,
+  input {
+    touch-action: manipulation;
+  }
+}
+
+/* ============================================================================
+   Fixed Ambient Theme Canvas (Works identically on Mobile Safari/Chrome & Desktop)
+   Provides colorful radial depth behind cards so backdrop-filter frost refracts cleanly
+   ============================================================================ */
+.ambient-theme-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: #EDF3FA;
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(29, 99, 237, 0.22), transparent 44%),
+    radial-gradient(circle at 86% 22%, rgba(56, 189, 248, 0.20), transparent 42%),
+    radial-gradient(circle at 46% 84%, rgba(14, 165, 233, 0.14), transparent 50%);
+}
+
+html.obsidian .ambient-theme-canvas,
+html.dark .ambient-theme-canvas {
+  background-color: #080B12;
+  background-image:
+    radial-gradient(ellipse 68% 48% at 18% 12%, rgba(245, 158, 11, 0.30), transparent 62%),
+    radial-gradient(ellipse 56% 44% at 84% 24%, rgba(217, 119, 6, 0.22), transparent 60%),
+    radial-gradient(ellipse 64% 52% at 52% 88%, rgba(245, 158, 11, 0.15), rgba(30, 58, 138, 0.24) 55%, transparent 78%);
+}
+
+html.parchment .ambient-theme-canvas {
+  background-color: #F4F0E6;
+  background-image:
+    radial-gradient(circle at 14% 8%, rgba(194, 65, 12, 0.12), transparent 44%),
+    radial-gradient(circle at 86% 20%, rgba(22, 163, 74, 0.10), transparent 44%),
+    radial-gradient(circle at 50% 88%, rgba(180, 148, 92, 0.18), transparent 52%);
+}
+
+/* ============================================================================
+   Translucent Liquid Glass System — 3 Surviving Themes (Mobile + Desktop Tuned)
+   ============================================================================ */
+
+/* Arctic Cobalt (Default Light Translucent Crystal Glass) */
+.liquid-glass,
+.liquid-glass-card {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.68) 0%, rgba(241, 247, 255, 0.54) 100%);
+  backdrop-filter: blur(22px) saturate(190%);
+  -webkit-backdrop-filter: blur(22px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  box-shadow:
+    0 8px 26px rgba(15, 23, 42, 0.065),
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    inset 0 -1px 0 rgba(196, 210, 228, 0.34);
+}
+
+.liquid-glass-strong {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.78) 0%, rgba(240, 246, 255, 0.64) 100%);
+  backdrop-filter: blur(28px) saturate(195%);
+  -webkit-backdrop-filter: blur(28px) saturate(195%);
+  border: 1px solid rgba(255, 255, 255, 0.90);
+  box-shadow:
+    0 14px 36px rgba(15, 23, 42, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    inset 0 -1px 0 rgba(186, 202, 224, 0.34);
+}
+
+.liquid-glass-pill {
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.045),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
+}
+
+.liquid-glass-inset {
+  background: rgba(235, 242, 252, 0.56);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid rgba(196, 211, 230, 0.65);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+/* Obsidian Amber Translucent Smoked Glass (Warm Tungsten Amber Edge + Glow) */
+html.obsidian .liquid-glass,
+html.obsidian .liquid-glass-card,
+html.dark .liquid-glass,
+html.dark .liquid-glass-card {
+  background: linear-gradient(155deg, rgba(25, 24, 30, 0.62) 0%, rgba(13, 15, 22, 0.52) 100%);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.50),
+    0 0 22px rgba(245, 158, 11, 0.06),
+    inset 0 1px 0 rgba(251, 191, 36, 0.16),
+    inset 0 -1px 0 rgba(245, 158, 11, 0.10);
+}
+
+html.obsidian .liquid-glass-strong,
+html.dark .liquid-glass-strong {
+  background: linear-gradient(155deg, rgba(24, 23, 30, 0.72) 0%, rgba(12, 14, 21, 0.64) 100%);
+  backdrop-filter: blur(28px) saturate(195%);
+  -webkit-backdrop-filter: blur(28px) saturate(195%);
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  box-shadow:
+    0 18px 46px rgba(0, 0, 0, 0.62),
+    0 0 28px rgba(245, 158, 11, 0.09),
+    inset 0 1px 0 rgba(251, 191, 36, 0.20);
+}
+
+html.obsidian .liquid-glass-pill,
+html.dark .liquid-glass-pill {
+  background: rgba(28, 26, 32, 0.56);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(251, 191, 36, 0.14);
+}
+
+html.obsidian .liquid-glass-inset,
+html.dark .liquid-glass-inset {
+  background: rgba(16, 15, 22, 0.52);
+  backdrop-filter: blur(12px) saturate(165%);
+  -webkit-backdrop-filter: blur(12px) saturate(165%);
+  border: 1px solid rgba(245, 158, 11, 0.18);
+  box-shadow: inset 0 1px 0 rgba(251, 191, 36, 0.09);
+}
+
+html.obsidian .bg-\[\#0066CC\],
+html.obsidian .bg-\[\#0071E3\] {
+  background-color: #B45309;
+  box-shadow: 0 2px 12px rgba(245, 158, 11, 0.28);
+}
+
+/* Warm Editorial (Refined Worktail Parchment + SentinelAI Hairline Glass) */
+html.parchment .liquid-glass,
+html.parchment .liquid-glass-card {
+  background: linear-gradient(155deg, rgba(253, 251, 245, 0.76) 0%, rgba(247, 242, 231, 0.64) 100%);
+  backdrop-filter: blur(20px) saturate(155%);
+  -webkit-backdrop-filter: blur(20px) saturate(155%);
+  border: 1px solid rgba(190, 180, 160, 0.50);
+  box-shadow:
+    0 6px 22px rgba(62, 48, 26, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    inset 0 -1px 0 rgba(190, 178, 156, 0.24);
+}
+
+html.parchment .liquid-glass-strong {
+  background: linear-gradient(155deg, rgba(254, 252, 247, 0.84) 0%, rgba(246, 241, 229, 0.72) 100%);
+  backdrop-filter: blur(26px) saturate(165%);
+  -webkit-backdrop-filter: blur(26px) saturate(165%);
+  border: 1px solid rgba(182, 170, 148, 0.56);
+  box-shadow:
+    0 12px 32px rgba(62, 48, 26, 0.095),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+}
+
+html.parchment .liquid-glass-pill {
+  background: rgba(252, 249, 241, 0.70);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid rgba(185, 174, 154, 0.50);
+  box-shadow:
+    0 2px 6px rgba(62, 48, 26, 0.045),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+html.parchment .liquid-glass-inset {
+  background: rgba(238, 232, 218, 0.58);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(184, 173, 153, 0.46);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+/* ============================================================================
+   WCAG High-Contrast Legibility Calibration Across All 3 Themes
+   ============================================================================ */
+html.arctic .text-\[\#6C6C70\],
+html:not(.obsidian):not(.parchment) .text-\[\#6C6C70\] {
+  color: #454954;
+}
+
+html.parchment .text-\[\#1C1C1E\] {
+  color: #191815;
+}
+
+html.parchment .text-\[\#6C6C70\],
+html.parchment .text-\[\#4A4D57\] {
+  color: #4D473C;
+}
+
+html.parchment .border-\[\#E5E5EA\] {
+  border-color: rgba(182, 170, 148, 0.42);
+}
+
+html.parchment .text-\[\#0071E3\],
+html.parchment .text-\[\#005BB8\] {
+  color: #B4410E;
+}
+
+html.obsidian .text-\[\#8E8E93\],
+html.dark .text-\[\#8E8E93\] {
+  color: #A8B6C8;
+}
+
+html.obsidian .text-\[\#9EB5C8\],
+html.dark .text-\[\#9EB5C8\] {
+  color: #B4C6DA;
+}
+
+html.obsidian .text-\[\#AEAEB2\],
+html.dark .text-\[\#AEAEB2\] {
+  color: #CBD5E1;
+}
+
+html:not(.obsidian) .text-\[\#16803C\] {
+  color: #0D6B31;
+}
+
+html.obsidian .text-\[\#30D158\],
+html.dark .text-\[\#30D158\] {
+  color: #4ADE80;
+}
+
+html:not(.obsidian) .text-\[\#D7261C\] {
+  color: #B91C1C;
+}
+
+html.obsidian .text-\[\#FF453A\],
+html.dark .text-\[\#FF453A\] {
+  color: #FF6B63;
+}
+
+/* Thin Apple-style scrollbar on desktop, clean hidden scrollbars on horizontal carousels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(142, 142, 147, 0.35);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(142, 142, 147, 0.55);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Marquee Ticker (GPU-composited across Desktop, Android, and iOS Safari) */
+.ticker-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  width: max-content;
+  animation-name: ticker-slide;
+  animation-duration: 360s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+}
+
+@media (hover: hover) {
+  .ticker-scroll:hover {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes ticker-slide {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-scroll {
+    animation-duration: 480s;
+  }
+}
+
+/* Sparkline subtle drop glow */
+.sparkline-glow-gain {
+  filter: drop-shadow(0 2px 5px rgba(34, 197, 94, 0.25));
+}
+
+.sparkline-glow-loss {
+  filter: drop-shadow(0 2px 5px rgba(239, 68, 68, 0.25));
+}
+
+/* Safe area bottom padding for iOS Safari & Android gesture bar */
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}

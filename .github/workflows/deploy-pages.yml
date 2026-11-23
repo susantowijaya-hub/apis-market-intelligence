@@ -44,6 +44,20 @@ jobs:
             rm -f stocks-free-src-*.part
           fi
 
+      - name: Apply strict-null-safe market delta guard
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("src/utils/marketSignals.ts")
+          source = path.read_text()
+          old = "const deltaPct = Number.isFinite(verifiedMove) ? verifiedMove : computedDelta;"
+          new = "const deltaPct = typeof verifiedMove === 'number' and Number.isFinite(verifiedMove) ? verifiedMove : computedDelta;"
+          new = new.replace(" and ", " && ")
+          if old not in source:
+              raise SystemExit("Expected strict-nullability expression was not found")
+          path.write_text(source.replace(old, new, 1))
+          PY
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 

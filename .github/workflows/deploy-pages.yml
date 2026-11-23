@@ -89,6 +89,9 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # Keep the repository's active deployment workflow: the extracted bundle
+          # contains an older workflow that the Actions token cannot overwrite.
+          git checkout -- .github/workflows/deploy-pages.yml
           git add -A
           if ! git diff --cached --quiet; then
             git commit -m 'Replace APIS workspace with free Stocks market terminal' -m '[skip ci]'

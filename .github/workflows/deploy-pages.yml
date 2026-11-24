@@ -1,11 +1,7 @@
-name: Free Stocks Terminal
+name: APIS Pages Deployment (Manual Only)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: '17 * * * *'
 
 permissions:
   contents: write
@@ -26,84 +22,29 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Restore Stocks source bundle (first deployment only)
-        shell: bash
-        run: |
-          shopt -s nullglob
-          parts=(stocks-free-src-*.part)
-          if ((${#parts[@]})); then
-            : > /tmp/stocks-source.tar.xz
-            for part in "${parts[@]}"; do
-              base64 --decode "$part" >> /tmp/stocks-source.tar.xz
-            done
-            mkdir -p /tmp/stocks-source
-            tar -xJf /tmp/stocks-source.tar.xz -C /tmp/stocks-source
-            find . -mindepth 1 -maxdepth 1 ! -name '.git' ! -name '.github' -exec rm -rf {} +
-            cp -a /tmp/stocks-source/. .
-            rm -f stocks-free-src-*.part
-          fi
-
-      - name: Apply strict-null-safe market delta guard
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path("src/utils/marketSignals.ts")
-          source = path.read_text()
-          old = "const deltaPct = Number.isFinite(verifiedMove) ? verifiedMove : computedDelta;"
-          new = "const deltaPct = typeof verifiedMove === 'number' and Number.isFinite(verifiedMove) ? verifiedMove : computedDelta;"
-          new = new.replace(" and ", " && ")
-          if old not in source:
-              raise SystemExit("Expected strict-nullability expression was not found")
-          path.write_text(source.replace(old, new, 1))
-          PY
-
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Install free app dependencies
+      - name: Install dependencies
         run: npm install --no-audit --no-fund
-
-      - name: Generate public market-data snapshots
+      - name: Generate market-data snapshots
         run: npm run feeds:generate
-
-      - name: Validate free-only source and market data
+      - name: Validate source
         run: npm run validate
-
-      - name: Typecheck application and data collector
+      - name: Typecheck application
         run: npm run lint
-
-      - name: Build static PWA for this GitHub Pages path
+      - name: Build static PWA
         env:
           GITHUB_PAGES: 'true'
         run: npm run build
-
-      - name: Commit clean Stocks source tree to main
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          # Keep the repository's active deployment workflow: the extracted bundle
-          # contains an older workflow that the Actions token cannot overwrite.
-          git checkout -- .github/workflows/deploy-pages.yml
-          git add -A
-          if ! git diff --cached --quiet; then
-            git commit -m 'Replace APIS workspace with free Stocks market terminal' -m '[skip ci]'
-            git push origin HEAD:main
-          fi
-
       - name: Upload static site artifact
         uses: actions/upload-pages-artifact@v3
         with:
           name: stocks-pages
           path: dist
-
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
